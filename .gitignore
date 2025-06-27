@@ -1,5 +1,19 @@
-# Object file
-*.o
-
-# Ada Library Information
-*.ali
+*~
+*.pyc
+.config
+.coverage
+*.orig
+*.rej
+*.bak
+.idea/
+.venv/
+.env
+.secret
+.log
+.DS_Store
+Script/zsh-script-v1.sh
+Script/zsh-script-v2.sh
+Script/zsh-script-v3.sh
+Script/zsh-script-v4.sh
+Neofetch/motd-script-v2.sh
+Neofetch/motd-multi-os.sh
