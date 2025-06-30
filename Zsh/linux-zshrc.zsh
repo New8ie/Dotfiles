@@ -1,5 +1,5 @@
 # ============================ PATH dan Variabel  ================================
-export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:/usr/local/share/myenv/bin:$PATH
 export PATH="$HOME/Library/Python/3.13/bin:$PATH"
 export PATH="$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
 export PYTHONPATH=/opt/homebrew/lib/python3.9/site-packages:$PYTHONPATH
@@ -18,17 +18,31 @@ source $ZSH/oh-my-zsh.sh
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # ========================= Konfigurasi MacOS =========================
-source ~/.config/iterm2/iterm2_shell_integration.zsh
-test -e "${HOME}/.config/iterm2_shell_integration.zsh" && source "${HOME}/.config/iterm2_shell_integration.zsh"
-export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
-export PATH="$PATH:/Applications/OpenVPN Connect/OpenVPN Connect.app/contents/MacOS/"
-export PATH="/opt/homebrew/opt/curl/bin:$PATH"
-export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
-export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
+#source ~/.iterm2_shell_integration.zsh
+#test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+#export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
+#export PATH="$PATH:/Applications/OpenVPN Connect/OpenVPN Connect.app/contents/MacOS/"
+#export PATH="/opt/homebrew/opt/curl/bin:$PATH"
+#export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+#export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 
+# Detect OS
+OS_TYPE="$(uname)"
+LINUX_DISTRO=""
 
+# Function: Detect Linux Distro
+detect_linux_distro() {
+  if [[ -f /etc/debian_version ]]; then
+    LINUX_DISTRO="debian"
+  elif [[ -f /etc/arch-release ]]; then
+    LINUX_DISTRO="arch"
+  elif [[ -f /etc/redhat-release ]]; then
+    LINUX_DISTRO="redhat"
+  fi
+}
 # ========================= Alias untuk MacOS =========================
-if [[ "$(uname)" == "Darwin" ]]; then
+# macOS Aliases
+if [[ "$OS_TYPE" == "Darwin" ]]; then
   alias showroute="netstat -nr -f inet" ## untuk melihat routing table
   alias rsdock="defaults write com.apple.dock ResetLaunchPad -bool true && killall Dock" ## reset Launchpad di Mac
   alias flushdns="sudo killall -HUP mDNSResponder" ## flush DNS cache
@@ -61,65 +75,48 @@ if [[ "$(uname)" == "Darwin" ]]; then
   alias cleanup="rm -rf ~/Library/Caches/* && sudo purge" ## membersihkan file sementara dan cache
   alias listport="sudo lsof -i -P -n | grep LISTEN" ## melihat port yang sedang listening
   alias netport="netstat -an | grep LISTEN"
-  alias opvn="OpenVPN Connect" ## membuka aplikasi OpenVPN Connect
-fi
-# ========================= Alias untuk Linux (Ubuntu/Debian & lainnya) =========================
-if [[ "$(uname -s)" == "Darwin" ]]; then
-  ## Alias khusus untuk macOS
+  ## Brew
   alias update="brew update && brew upgrade"
   alias inst="brew install"
   alias remove="brew uninstall"
   alias cleanup="brew cleanup"
-  alias flushdns="sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"
 
-  alias myip="ipconfig getifaddr en0" # Bisa diganti ke en1 jika pakai Wi-Fi eksternal
-  alias showroute="netstat -rn"
-  alias listport="lsof -i -n -P | grep LISTEN"
+# Linux Aliases
+elif [[ "$OS_TYPE" == "Linux" ]]; then
+  detect_linux_distro
 
-elif [[ "$(uname -s)" == "Linux" ]]; then
-  if [[ -f /etc/debian_version ]]; then
+  # Universal Linux Aliases
+  alias showroute="ip route show"
+  alias myip="hostname -I | awk '{print $1}'"
+  alias listport="sudo lsof -i -P -n | grep LISTEN"
+  alias netport="netstat -tulpn | grep LISTEN"
+  alias sysinfo="top -o %CPU"
+  alias runningapps="ps aux | grep -v grep | grep -i"
+  alias killapp="pkill -f"
+
+  # Distro-Specific Package Management
+  if [[ "$LINUX_DISTRO" == "debian" ]]; then
     alias update="sudo apt update && sudo apt upgrade -y"
-    alias inst="sudo apt install"
-    alias remove="sudo apt remove"
-    alias search="apt search"
+    alias inst="sudo apt install -y"
+    alias remove="sudo apt remove -y"
     alias cleanup="sudo apt autoremove -y && sudo apt autoclean -y"
     alias flushdns="sudo systemd-resolve --flush-caches"
 
-  elif [[ -f /etc/arch-release ]]; then
+  elif [[ "$LINUX_DISTRO" == "arch" ]]; then
     alias update="sudo pacman -Syu"
     alias inst="sudo pacman -S"
     alias remove="sudo pacman -Rns"
     alias cleanup="sudo pacman -Sc"
     alias flushdns="sudo systemctl restart systemd-resolved"
 
-  elif [[ -f /etc/redhat-release ]]; then
+  elif [[ "$LINUX_DISTRO" == "redhat" ]]; then
     alias update="sudo dnf update -y"
-    alias inst="sudo dnf install"
-    alias remove="sudo dnf remove"
+    alias inst="sudo dnf install -y"
+    alias remove="sudo dnf remove -y"
     alias cleanup="sudo dnf autoremove -y && sudo dnf clean all"
     alias flushdns="sudo systemctl restart NetworkManager"
   fi
-
-  ## Alias umum untuk semua distro Linux
-  alias myip="curl ifconfig.me"
-  alias showroute="ip route show"
-  alias listport="netstat -tulnp"
 fi
-# ========================= Bantuan untuk Alias =========================
-function alias-help() {
-  echo -e "\e[1;34mDaftar Alias yang Tersedia:\e[0m"
-  if [[ "$(uname)" == "Darwin" ]]; then
-    alias | grep -E 'dnsflush|showroute|restartfinder|restartdock|rsdock' | sed 's/=.*##/ -->/' | while read -r line; do
-      printf "\e[1;32m%s\e[0m\n" "$line"
-    done
-  elif [[ "$(uname -s)" == "Linux" ]]; then
-    alias | grep -E 'flushdns|update|showroute|listport' | sed 's/=.*##/ -->/' | while read -r line; do
-      printf "\e[1;32m%s\e[0m\n" "$line"
-    done
-  fi
-}
-alias alias-help="alias-help"
-
 # ========================= Alias Umum =========================
 alias reload="source ~/.zshrc" ## memuat ulang konfigurasi zsh
 alias clr="clear" ## membersihkan terminal
