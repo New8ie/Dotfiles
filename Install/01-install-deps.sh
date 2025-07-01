@@ -49,21 +49,6 @@ prompt_package_type() {
 SERVER_PACKAGES=(zsh git curl fzf grc gnupg eza lolcat neofetch pv bat nmap fd zoxide fastfetch unzip nano)
 DESKTOP_PACKAGES=(yazi kitty iterm2 telnet mounty raycast vlc awscli btop coreutils w3m openvpn-connect speedtest keepassxc ollama)
 
-### ========= Fungsi Install per Paket ========= ###
-install_each() {
-  for pkg in "$@"; do
-    if command -v "$pkg" &>/dev/null; then
-      log "[SKIP] $pkg sudah terinstall."
-    else
-      if $1 "$pkg"; then
-        log "[OK] $pkg berhasil diinstall."
-      else
-        warn "[FAIL] Gagal menginstall $pkg."
-      fi
-    fi
-  done
-}
-
 ### ========= Install Paket Berdasarkan OS ========= ###
 install_packages() {
   local packages=("${SERVER_PACKAGES[@]}")
@@ -101,7 +86,7 @@ install_packages() {
           fi
         fi
       done
-      curl -sS https://deb.gierens.de/gpg.txt | sudo tee /etc/apt/trusted.gpg.d/gierens.asc
+      curl -sS https://deb.gierens.de/gpg.txt | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/gierens.gpg > /dev/null || warn "Gagal mengunduh Gierens GPG key."
       echo "deb [arch=$(dpkg --print-architecture)] https://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
       sudo apt update
       for pkg in bat eza viu fastfetch; do
@@ -155,8 +140,14 @@ clone_dotfiles() {
 
 ### ========= Jalankan Script Kedua ========= ###
 run_next_script() {
-  chmod +x "$HOME/.dotfiles/scripts/02-setup-zsh.sh"
-  "$HOME/.dotfiles/scripts/02-setup-zsh.sh"
+  local next_script="$HOME/.dotfiles/scripts/02-setup-zsh.sh"
+  if [ -f "$next_script" ]; then
+    chmod +x "$next_script"
+    log "Menjalankan konfigurasi Zsh dari $next_script"
+    "$next_script" 2>&1 | tee -a install-log.txt
+  else
+    warn "Script konfigurasi kedua tidak ditemukan: $next_script"
+  fi
 }
 
 ### ========= Main ========= ###
