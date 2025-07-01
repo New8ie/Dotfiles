@@ -46,7 +46,7 @@ prompt_package_type() {
 }
 
 ### ========= Daftar Paket ========= ###
-SERVER_PACKAGES=(zsh git curl fzf grc gnupg eza lolcat neofetch pv bat nmap fd zoxide fastfetch unzip nano)
+SERVER_PACKAGES=(zsh git curl fzf grc gnupg lolcat neofetch pv bat nmap fd zoxide fastfetch unzip nano fontconfig)
 DESKTOP_PACKAGES=(yazi kitty iterm2 telnet mounty raycast vlc awscli btop coreutils w3m openvpn-connect speedtest keepassxc ollama)
 
 ### ========= Install Paket Berdasarkan OS ========= ###
@@ -75,7 +75,7 @@ install_packages() {
 
     debian)
       sudo apt update
-      for pkg in "${SERVER_PACKAGES[@]}"; do
+      for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
           log "[SKIP] $pkg sudah terinstall."
         else
@@ -86,22 +86,21 @@ install_packages() {
           fi
         fi
       done
-      curl -sS https://deb.gierens.de/gpg.txt | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/gierens.gpg > /dev/null || warn "Gagal mengunduh Gierens GPG key."
-      echo "deb [arch=$(dpkg --print-architecture)] https://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
-      sudo apt update
-      for pkg in bat eza viu fastfetch; do
-        if sudo apt install -y "$pkg"; then
-          log "[OK] $pkg berhasil diinstall dari gierens.de."
-        else
-          warn "[FAIL] Gagal menginstall $pkg dari gierens.de."
-        fi
-      done
-      [ "$PACKAGE_MODE" = "desktop" ] && for pkg in "${DESKTOP_PACKAGES[@]}"; do sudo apt install -y "$pkg" && log "[OK] $pkg berhasil diinstall." || warn "[FAIL] Gagal menginstall $pkg."; done
+      if ! command -v eza &>/dev/null; then
+        log "Mengunduh dan menginstall eza binary..."
+        LATEST_EZA=$(curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep browser_download_url | grep "linux-${ARCH_TYPE}.tar.gz" | cut -d '"' -f 4 | head -n1)
+        mkdir -p /tmp/eza-install && cd /tmp/eza-install
+        curl -LO "$LATEST_EZA"
+        tar -xf *.tar.gz
+        sudo mv eza /usr/local/bin/
+        cd ~ && rm -rf /tmp/eza-install
+        log "[OK] eza berhasil diinstall dari GitHub."
+      fi
       ;;
 
     arch)
       sudo pacman -Sy --noconfirm
-      for pkg in "${SERVER_PACKAGES[@]}"; do
+      for pkg in "${packages[@]}"; do
         if pacman -Qi "$pkg" &>/dev/null; then
           log "[SKIP] $pkg sudah terinstall."
         else
@@ -116,14 +115,12 @@ install_packages() {
         log "Menginstall yay AUR helper..."
         git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si --noconfirm && cd ..
       fi
-      for pkg in bat eza viu fastfetch; do yay -S --noconfirm "$pkg" && log "[OK] $pkg berhasil diinstall (yay)." || warn "[FAIL] Gagal menginstall $pkg (yay)."; done
+      for pkg in bat viu fastfetch; do yay -S --noconfirm "$pkg" && log "[OK] $pkg berhasil diinstall (yay)." || warn "[FAIL] Gagal menginstall $pkg (yay)."; done
       [ "$PACKAGE_MODE" = "desktop" ] && for pkg in "${DESKTOP_PACKAGES[@]}"; do yay -S --noconfirm "$pkg" && log "[OK] $pkg berhasil diinstall (yay)." || warn "[FAIL] Gagal menginstall $pkg (yay)."; done
       ;;
 
     fedora)
-      sudo dnf install -y "${SERVER_PACKAGES[@]}"
-      for pkg in bat eza viu fastfetch; do sudo dnf install -y "$pkg" && log "[OK] $pkg berhasil diinstall." || warn "[FAIL] Gagal menginstall $pkg."; done
-      [ "$PACKAGE_MODE" = "desktop" ] && for pkg in "${DESKTOP_PACKAGES[@]}"; do sudo dnf install -y "$pkg" && log "[OK] $pkg berhasil diinstall." || warn "[FAIL] Gagal menginstall $pkg."; done
+      sudo dnf install -y "${packages[@]}"
       ;;
   esac
 }
@@ -140,7 +137,7 @@ clone_dotfiles() {
 
 ### ========= Jalankan Script Kedua ========= ###
 run_next_script() {
-  local next_script="$HOME/.dotfiles/scripts/02-setup-zsh.sh"
+  local next_script="$HOME/.dotfiles/Install/02-setup-zsh.sh"
   if [ -f "$next_script" ]; then
     chmod +x "$next_script"
     log "Menjalankan konfigurasi Zsh dari $next_script"
