@@ -14,13 +14,6 @@ export PYTHONPATH="/opt/homebrew/lib/python3.9/site-packages:$PYTHONPATH"
 export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"
 
-# ==============================================================================
-#                                PYENV (Python)
-# ==============================================================================
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
 
 # ==============================================================================
 #                         Konfigurasi ZSH & Oh My Zsh
@@ -42,11 +35,6 @@ plugins=(
 source "$ZSH/oh-my-zsh.sh"
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 
-# ==============================================================================
-#                               Konfigurasi Iterm2 macOS
-# ==============================================================================
-source ~/.config/iterm2/iterm2_shell_integration.zsh
-test -e "$HOME/.config/iterm2_shell_integration.zsh" && source "$HOME/.config/iterm2_shell_integration.zsh"
 
 # ==============================================================================
 #                            Deteksi Sistem Operasi
