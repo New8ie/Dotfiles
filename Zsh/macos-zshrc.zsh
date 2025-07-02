@@ -114,3 +114,14 @@ elif command -v code &> /dev/null; then
 else
   export EDITOR='nano'
 fi
+
+# ==============================================================================
+#                            Skrip MOTD Login
+# ==============================================================================
+
+if [ -x "$HOME/.config/neofetch/motd-script.sh" ]; then
+    "$HOME/.config/neofetch/motd-script.sh"
+else
+    echo "[motd-script.sh tidak ditemukan atau tidak executable]" >&2
+fi
+

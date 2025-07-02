@@ -1028,7 +1028,7 @@ typeset -g POWERLEVEL9K_BATTERY_CHARGED_FOREGROUND=70
 typeset -g POWERLEVEL9K_BATTERY_DISCONNECTED_FOREGROUND=178
 
 # Battery pictograms going from low to high level of charge.
-typeset -g POWERLEVEL9K_BATTERY_STAGES=( '' '' '' '' '' )
+typeset -g POWERLEVEL9K_BATTERY_STAGES=typeset -g POWERLEVEL9K_BATTERY_STAGES=('%K{232}▁' '%K{232}▂' '%K{232}▃' '%K{232}▄' '%K{232}▅' '%K{232}▆' '%K{232}▇' '%K{232}█')
 typeset -g POWERLEVEL9K_BATTERY_VERBOSE=true
 
   ####################################[ time: current time ]####################################
