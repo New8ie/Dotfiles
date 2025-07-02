@@ -1,26 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-### ========= utils.sh style logging ========= ###
-log()  { echo -e "\033[1;32m[INFO]\033[0m $*" | tee -a install-log.txt; }
-warn() { echo -e "\033[1;33m[WARN]\033[0m $*" | tee -a install-log.txt; }
-err()  { echo -e "\033[1;31m[ERROR]\033[0m $*" | tee -a install-log.txt >&2; exit 1; }
+log()  { echo -e "\033[1;32m[INFO]\033[0m $*"; }
+warn() { echo -e "\033[1;33m[WARN]\033[0m $*"; }
+err()  { echo -e "\033[1;31m[ERROR]\033[0m $*"; exit 1; }
 
-### ========= Deteksi OS dan Arsitektur ========= ###
 detect_os() {
-  ARCH="$(uname -m)"
-  case "$ARCH" in
-    x86_64|amd64) ARCH_TYPE="amd64" ;;
-    aarch64|arm64) ARCH_TYPE="arm64" ;;
-    *) ARCH_TYPE="unknown" ;;
-  esac
-
   if [[ "$OSTYPE" == "darwin"* ]]; then
     OS_TYPE="macos"
   elif [ -f /etc/os-release ]; then
     . /etc/os-release
     case "$ID" in
-      debian|ubuntu|raspbian) OS_TYPE="debian" ;;
+      debian|ubuntu|raspbian) OS_TYPE="linux" ;;
       arch)                   OS_TYPE="arch" ;;
       fedora)                 OS_TYPE="fedora" ;;
       *) err "Distro Linux $ID belum didukung." ;;
@@ -28,53 +19,15 @@ detect_os() {
   else
     err "OS tidak dikenali."
   fi
-
-  log "Dikenali OS: $OS_TYPE ($ARCH_TYPE)"
+  log "Detected OS: $OS_TYPE"
 }
 
-### ========= Konfirmasi Interaktif ========= ###
-prompt_package_type() {
-  echo -e "\nApakah Anda ingin menginstall aplikasi desktop (GUI)?"
-  select opt in "Ya (desktop)" "Tidak (server)"; do
-    case $REPLY in
-      1) PACKAGE_MODE="desktop"; break ;;
-      2) PACKAGE_MODE="server"; break ;;
-      *) echo "Pilihan tidak valid." ;;
-    esac
-  done
-  log "Mode dipilih: $PACKAGE_MODE"
-}
-
-### ========= Daftar Paket ========= ###
-SERVER_PACKAGES=(zsh git curl fzf grc gnupg lolcat neofetch pv bat nmap fd zoxide fastfetch unzip nano fontconfig)
-DESKTOP_PACKAGES=(yazi kitty iterm2 telnet mounty raycast vlc awscli btop coreutils w3m openvpn-connect speedtest keepassxc ollama)
-
-### ========= Install Paket Berdasarkan OS ========= ###
 install_packages() {
-  local packages=("${SERVER_PACKAGES[@]}")
-  [ "$PACKAGE_MODE" = "desktop" ] && packages+=("${DESKTOP_PACKAGES[@]}")
-
   case "$OS_TYPE" in
-    macos)
-      if ! command -v brew &>/dev/null; then
-        log "Menginstall Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      fi
-      for pkg in "${packages[@]}"; do
-        if brew list "$pkg" &>/dev/null; then
-          log "[SKIP] $pkg sudah terinstall."
-        else
-          if brew install "$pkg"; then
-            log "[OK] $pkg berhasil diinstall."
-          else
-            warn "[FAIL] Gagal menginstall $pkg."
-          fi
-        fi
-      done
-      ;;
-
-    debian)
+    linux)
       sudo apt update
+      packages=(zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide)
+
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
           log "[SKIP] $pkg sudah terinstall."
@@ -86,46 +39,49 @@ install_packages() {
           fi
         fi
       done
+
+      # Alias batcat -> bat
+      if ! command -v bat &>/dev/null && command -v batcat &>/dev/null; then
+        sudo ln -sf /usr/bin/batcat /usr/local/bin/bat
+        log "[OK] Alias batcat → bat dibuat."
+      fi
+
+      # Install eza dari GitHub jika belum ada
       if ! command -v eza &>/dev/null; then
-        log "Mengunduh dan menginstall eza binary..."
-        LATEST_EZA=$(curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep browser_download_url | grep "linux-${ARCH_TYPE}.tar.gz" | cut -d '"' -f 4 | head -n1)
-        mkdir -p /tmp/eza-install && cd /tmp/eza-install
-        curl -LO "$LATEST_EZA"
-        tar -xf *.tar.gz
-        sudo mv eza /usr/local/bin/
-        cd ~ && rm -rf /tmp/eza-install
-        log "[OK] eza berhasil diinstall dari GitHub."
-      fi
-      ;;
-
-    arch)
-      sudo pacman -Sy --noconfirm
-      for pkg in "${packages[@]}"; do
-        if pacman -Qi "$pkg" &>/dev/null; then
-          log "[SKIP] $pkg sudah terinstall."
+        log "Install eza dari GitHub release..."
+        ARCH_TYPE=$(dpkg --print-architecture)
+        LATEST=$(curl -s https://api.github.com/repos/eza-community/eza/releases/latest \
+          | grep browser_download_url \
+          | grep "linux-${ARCH_TYPE}.tar.gz" \
+          | cut -d '"' -f 4 | head -n1)
+        if [ -n "$LATEST" ]; then
+          tmp=$(mktemp -d)
+          cd "$tmp"
+          curl -LO "$LATEST"
+          tar -xf *.tar.gz
+          sudo mv eza /usr/local/bin/
+          cd ~ && rm -rf "$tmp"
+          log "[OK] eza berhasil diinstall: $(eza --version)"
         else
-          if sudo pacman -S --noconfirm "$pkg"; then
-            log "[OK] $pkg berhasil diinstall."
-          else
-            warn "[FAIL] Gagal menginstall $pkg."
-          fi
+          warn "[FAIL] URL download eza tidak ditemukan."
         fi
-      done
-      if ! command -v yay &>/dev/null; then
-        log "Menginstall yay AUR helper..."
-        git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si --noconfirm && cd ..
+      else
+        log "[SKIP] eza sudah terinstall."
       fi
-      for pkg in bat viu fastfetch; do yay -S --noconfirm "$pkg" && log "[OK] $pkg berhasil diinstall (yay)." || warn "[FAIL] Gagal menginstall $pkg (yay)."; done
-      [ "$PACKAGE_MODE" = "desktop" ] && for pkg in "${DESKTOP_PACKAGES[@]}"; do yay -S --noconfirm "$pkg" && log "[OK] $pkg berhasil diinstall (yay)." || warn "[FAIL] Gagal menginstall $pkg (yay)."; done
       ;;
-
+    macos)
+      brew update
+      brew install zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide
+      ;;
+    arch)
+      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide
+      ;;
     fedora)
-      sudo dnf install -y "${packages[@]}"
+      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide
       ;;
   esac
 }
 
-### ========= Clone Dotfiles ========= ###
 clone_dotfiles() {
   if [ ! -d "$HOME/.dotfiles" ]; then
     git clone https://github.com/New8ie/Dotfiles.git "$HOME/.dotfiles"
@@ -135,21 +91,10 @@ clone_dotfiles() {
   fi
 }
 
-### ========= Jalankan Script Kedua ========= ###
-run_next_script() {
-  local next_script="$HOME/.dotfiles/Install/02-setup-zsh.sh"
-  if [ -f "$next_script" ]; then
-    chmod +x "$next_script"
-    log "Menjalankan konfigurasi Zsh dari $next_script"
-    "$next_script" 2>&1 | tee -a install-log.txt
-  else
-    warn "Script konfigurasi kedua tidak ditemukan: $next_script"
-  fi
+main() {
+  detect_os
+  install_packages
+  clone_dotfiles
+  log "Langkah selanjutnya: jalankan bash ~/.dotfiles/Install/02-setup-zsh.sh"
 }
-
-### ========= Main ========= ###
-detect_os
-prompt_package_type
-install_packages
-clone_dotfiles
-run_next_script
+main
