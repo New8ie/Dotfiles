@@ -1,81 +1,101 @@
-# 📦 Dotfiles Setup by New8ie
 
-## 🧩 Overview
+```markdown
+# 🧪 Dotfiles by New8ie
 
-Skrip ini digunakan untuk mengatur lingkungan Zsh yang lengkap dan konsisten di berbagai OS (macOS, Debian, Ubuntu, Raspberry Pi, Arch, dan Fedora).
-
-## 📁 Struktur Repository
-
-```
-Dotfiles/
-├── Install/
-│   ├── 01-install-deps.sh        # Script untuk menginstal aplikasi via APT, Brew, atau Pacman
-│   └── 01-setup-zsh.sh           # Script untuk setup Zsh, plugin, font, dan konfigurasi
-├── Zsh/
-│   └── Alias/
-│       └── alias.zsh             # Alias shell untuk Linux/macOS
-├── Nano/
-│   └── nanorc.nanorc             # Highlighting config Nano
-├── neofetch/
-│   └── config.conf
-│   └── motd-script.sh
-│   └── *.png                     # Logo distro custom
-├── zsh/
-│   └── .p10k.zsh
-│   └── .zprofile
-```
-
-## ⚙️ Cara Instalasi
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/New8ie/Dotfiles.git ~/Dotfiles
-cd ~/Dotfiles/Install
-```
-
-### 2. Jalankan Instalasi
-
-```bash
-bash 01-install-deps.sh    # Optional - install software seperti git, curl, zsh, dll
-bash 02-setup-zsh.sh       # Backup konfigurasi lama dan pasang semua dotfiles
-```
-
-## 🛠️ Yang Dilakukan oleh `01-setup-zsh.sh`
-
-* Membackup konfigurasi Zsh, Nano, dan Neofetch ke folder: `~/dotfiles-backup-<tanggal>`
-* Menginstal Oh-My-Zsh (unattended)
-* Mengunduh plugin Zsh:
-
-  * zsh-autosuggestions
-  * zsh-syntax-highlighting
-  * zsh-you-should-use
-  * zsh-bat
-  * zsh-eza
-* Mengunduh Meslo Nerd Font (untuk Powerlevel10k)
-* Mengunduh konfigurasi dari GitHub:
-
-  * `.p10k.zsh`, `.zprofile`, `.nanorc`, `alias.zsh`, dll
-  * MotD logo dan konfigurasi `neofetch`
-* Mengatur shell default ke `zsh`
-
-## 🔁 Catatan Tambahan
-
-* Anda bisa menambahkan baris berikut ke `.zshrc` untuk memastikan alias termuat:
-
-  ```zsh
-  source ~/.config/zsh/alias.zsh
-  ```
-* Script bersifat *idempotent*, artinya bisa dijalankan ulang tanpa merusak sistem.
-
-## 🧪 Diuji pada
-
-* macOS (Intel & Apple Silicon)
-* Debian 12/13
-* Ubuntu 20.04–24.04
-* Raspberry Pi OS (Bookworm)
-* Arch Linux & Fedora Workstation
+🛠️ Konfigurasi shell interaktif dan terminal environment untuk Linux (Debian/Ubuntu) dan macOS — termasuk `zsh`, `oh-my-zsh`, `powerlevel10k`, plugin, alias, `neofetch`, `nano`, dan `fastfetch`. Dirancang untuk produktivitas dan estetika maksimal.
 
 ---
 
-Maintained by: [New8ie](https://github.com/New8ie)
+## 🧬 Struktur Repositori
+
+```bash
+Dotfiles/
+├── Install/
+│   ├── 01-install-deps.sh        # Instalasi dependencies (zsh, curl, git, bat, eza, dll)
+│   └── 01-setup-zsh.sh           # Setup oh-my-zsh, plugin, powerlevel10k, dan konfigurasi
+├── Zsh/
+│   ├── macos-zshrc.zsh           # Konfigurasi .zshrc untuk macOS
+│   ├── linux-zshrc.zsh           # Konfigurasi .zshrc untuk Linux
+│   ├── .p10k.zsh                 # Tema Powerlevel10k
+│   ├── .zprofile                 # Konfigurasi shell startup
+│   └── Alias/
+│       └── alias.zsh             # Alias perintah untuk Linux/macOS
+├── Nano/
+│   └── nanorc.nanorc             # Konfigurasi highlight Nano
+├── Neofetch/
+│   ├── config.conf               # Konfigurasi neofetch
+│   ├── motd-script.sh           # Skrip MOTD bergambar
+│   └── *-logo.png                # Logo distro (macOS, Debian, Ubuntu, Raspberry Pi)
+├── fastfetch/
+│   ├── config.conf               # Konfigurasi fastfetch horizontal
+│   ├── motd-fastfetch.sh        # Skrip MOTD untuk fastfetch
+│   └── logo/
+│       └── *-logo.png            # Logo distro untuk fastfetch
+├── Iterm2/
+│   ├── bin/                      # Binary tools (imgcat, dll)
+│   └── iterm2_shell_integration.zsh
+```
+
+---
+
+## 🚀 Instalasi Cepat
+
+### 1. Clone repositori
+```bash
+git clone https://github.com/New8ie/Dotfiles.git ~/.dotfiles
+```
+
+### 2. Jalankan skrip instalasi Zsh dan konfigurasi:
+```bash
+bash ~/.dotfiles/Install/01-setup-zsh.sh
+```
+
+> Pastikan Anda memiliki `git`, `curl`, dan akses `sudo`. Skrip akan:
+> - Menginstal oh-my-zsh + plugin
+> - Mengganti `.zshrc`, `.p10k.zsh`, `.zprofile`, alias, dan konfigurasi lainnya
+> - Menyalin konfigurasi `nano`, `neofetch`, dan `fastfetch`
+> - Otomatis mengganti shell default ke Zsh
+> - Membuat backup konfigurasi lama ke `.tar.gz`
+
+---
+
+## 💡 Dukungan Sistem
+
+| OS        | Status     | Keterangan                    |
+|-----------|------------|-------------------------------|
+| Debian 11+| ✅ Stabil   | Paket diinstal via APT        |
+| Ubuntu 22+| ✅ Stabil   | eza fallback dari GitHub      |
+| macOS 13+ | ✅ Stabil   | Menggunakan Homebrew & iTerm2 |
+
+---
+
+## 📦 Tools yang Digunakan
+
+- `zsh` + [oh-my-zsh](https://ohmyz.sh)
+- [powerlevel10k](https://github.com/romkatv/powerlevel10k)
+- Plugin: syntax-highlighting, autosuggestions, you-should-use, bat, eza
+- `bat`, `eza`, `zoxide`, `neofetch`, `fastfetch`
+- `nano` dengan syntax highlighting
+- Logo bergambar untuk `neofetch` dan `fastfetch`
+
+---
+
+## 🧯 Troubleshooting
+
+- **.zshrc tidak berubah?** → Pastikan tidak ada `.zshrc` custom yang dikunci permission-nya.
+- **bat tidak ditemukan?** → Jalankan manual: `sudo ln -s /usr/bin/batcat /usr/local/bin/bat`
+- **Zsh bukan default shell?** → Jalankan: `chsh -s $(which zsh)`
+
+---
+
+## 🧰 Kontributor
+
+Dibuat dan dirawat oleh [New8ie](https://github.com/New8ie).  
+Feel free untuk fork dan kirim pull request.
+
+---
+
+## 📝 Lisensi
+
+MIT License. Gunakan, modifikasi, atau distribusikan dengan bebas.
+```
