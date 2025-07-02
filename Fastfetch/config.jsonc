@@ -1,0 +1,18 @@
+{
+  "logo": {
+    "type": "none"
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "icons",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "memory",
+    "break",
+  ]
+}

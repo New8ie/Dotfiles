@@ -38,7 +38,7 @@ cd ~/Dotfiles/Install
 
 ```bash
 bash 01-install-deps.sh    # Optional - install software seperti git, curl, zsh, dll
-bash 01-setup-zsh.sh       # Backup konfigurasi lama dan pasang semua dotfiles
+bash 02-setup-zsh.sh       # Backup konfigurasi lama dan pasang semua dotfiles
 ```
 
 ## 🛠️ Yang Dilakukan oleh `01-setup-zsh.sh`

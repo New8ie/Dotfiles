@@ -41,48 +41,47 @@
   # The list of segments shown on the right
   typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
       # =========================[ Line #1 ]=========================
-      status                  # exit code of the last command
+       status                  # exit code of the last command
       # command_execution_time  # duration of the last command
       # background_jobs         # presence of background jobs
       # direnv                  # direnv status (https://direnv.net/)
-      virtualenv              # python virtual environment (https://docs.python.org/3/library/venv.html)
+       virtualenv            # python virtual environment (https://docs.python.org/3/library/venv.html)
       # anaconda              # conda environment (https://conda.io/)
-      # pyenv                   # python environment (https://github.com/pyenv/pyenv)
+      # pyenv                 # python environment (https://github.com/pyenv/pyenv)
       # goenv                 # go environment (https://github.com/syndbg/goenv)
-      nodenv                  # node.js version from nodenv (https://github.com/nodenv/nodenv)
-      nvm                     # node.js version from nvm (https://github.com/nvm-sh/nvm)
-      nodeenv                 # node.js environment (https://github.com/ekalinin/nodeenv)
+       nodenv                # node.js version from nodenv (https://github.com/nodenv/nodenv)
+      # nvm                   # node.js version from nvm (https://github.com/nvm-sh/nvm)
+      # nodeenv               # node.js environment (https://github.com/ekalinin/nodeenv)
       # node_version          # node.js version
       # go_version            # go version (https://golang.org)
       # rust_version          # rustc version (https://www.rust-lang.org)
       # dotnet_version        # .NET version (https://dotnet.microsoft.com)
-      rbenv                   # ruby version from rbenv (https://github.com/rbenv/rbenv)
-      rvm                     # ruby version from rvm (https://rvm.io)
+      # rbenv                 # ruby version from rbenv (https://github.com/rbenv/rbenv)
+      # rvm                   # ruby version from rvm (https://rvm.io)
       # fvm                   # flutter version management (https://github.com/leoafarias/fvm)
       # luaenv                # lua version from luaenv (https://github.com/cehoffman/luaenv)
       # jenv                  # java version from jenv (https://github.com/jenv/jenv)
       # plenv                 # perl version from plenv (https://github.com/tokuhirom/plenv)
-      kubecontext           # current kubernetes context (https://kubernetes.io/)
+      # kubecontext           # current kubernetes context (https://kubernetes.io/)
       # terraform             # terraform workspace (https://www.terraform.io)
-      aws                     # aws profile (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html)
-      aws_eb_env              # aws elastic beanstalk environment (https://aws.amazon.com/elasticbeanstalk/)
+        aws                   # aws profile (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html)
+        aws_eb_env            # aws elastic beanstalk environment (https://aws.amazon.com/elasticbeanstalk/)
       # azure                 # azure account name (https://docs.microsoft.com/en-us/cli/azure)
       # gcloud                # google cloud cli acccount and project (https://cloud.google.com/)
       # google_app_cred       # google application credentials (https://cloud.google.com/docs/authentication/production)
       # nordvpn               # nordvpn connection status, linux only (https://nordvpn.com/)
       # ranger                # ranger shell (https://github.com/ranger/ranger)
       # nnn                   # nnn shell (https://github.com/jarun/nnn)
-      vim_shell               # vim shell indicator (:sh)
-      # battery               # internal battery 
-      # vpn_ip                # virtual private network indicator
+      # vim_shell             # vim shell indicator (:sh)
+       vpn_ip                # virtual private network indicator
 #       ip                    # ip address and bandwidth usage for a specified network interface
-      # disk_usage            # fill percentage HD
-      # ram                   # free RAM
-      # load                  # CPU load
-      # todo                  # todo items (https://github.com/todotxt/todo.txt-cli)
-#      cpu_arch                # CPU architecture
-      battery                 # internal battery
-      time                    # current time
+#       disk_usage            # fill percentage HD
+#       ram                   # free RAM
+#       load                  # CPU load
+#       todo                  # todo items (https://github.com/todotxt/todo.txt-cli)
+#      cpu_arch               # CPU architecture
+       battery               # internal battery
+        time                   # current time
       # =========================[ Line #2 ]=========================
       newline
 #       vpn_ip                  # virtual private network indicator
@@ -1016,22 +1015,28 @@
 # Battery Segment Configuration
 # ─────────────────────────────────────────────────────────────
 
-# Show battery in red when it's below this level and not connected to power supply.
-typeset -g POWERLEVEL9K_BATTERY_LOW_THRESHOLD=20
-typeset -g POWERLEVEL9K_BATTERY_LOW_FOREGROUND=160
-
-# Show battery in green when it's charging or fully charged.
-typeset -g POWERLEVEL9K_BATTERY_CHARGING_FOREGROUND=70
-typeset -g POWERLEVEL9K_BATTERY_CHARGED_FOREGROUND=70
-
-# Show battery in yellow when it's discharging.
-typeset -g POWERLEVEL9K_BATTERY_DISCONNECTED_FOREGROUND=178
-
-# Battery pictograms going from low to high level of charge.
-typeset -g POWERLEVEL9K_BATTERY_STAGES=typeset -g POWERLEVEL9K_BATTERY_STAGES=('%K{232}▁' '%K{232}▂' '%K{232}▃' '%K{232}▄' '%K{232}▅' '%K{232}▆' '%K{232}▇' '%K{232}█')
+# ==========================
+# POWERLEVEL9K: Battery Display
+# ==========================
+# Aktifkan verbose output
 typeset -g POWERLEVEL9K_BATTERY_VERBOSE=true
 
-  ####################################[ time: current time ]####################################
+# Simbol custom
+typeset -g POWERLEVEL9K_BATTERY_STAGES=('🪫' '🪫' '🪫' '🪫' '🪫' '🔋' '🔋' '🔋' '🔋' '🔋')
+typeset -g POWERLEVEL9K_BATTERY_CHARGING_ICON='🔌'
+typeset -g POWERLEVEL9K_BATTERY_CHARGED_ICON='🔋'
+
+# Warna ikon
+typeset -g POWERLEVEL9K_BATTERY_LOW_THRESHOLD=30
+typeset -g POWERLEVEL9K_BATTERY_LOW_FOREGROUND=196       # merah
+typeset -g POWERLEVEL9K_BATTERY_DISCONNECTED_FOREGROUND=178
+typeset -g POWERLEVEL9K_BATTERY_CHARGING_FOREGROUND=82
+typeset -g POWERLEVEL9K_BATTERY_CHARGED_FOREGROUND=77
+
+typeset -g POWERLEVEL9K_BATTERY_PERCENTAGE_CONTENT_EXPANSION='${P9K_BATTERY_PERCENTAGE}%%'
+
+
+####################################[ time: current time ]####################################
   # Current time color.
   typeset -g POWERLEVEL9K_TIME_FOREGROUND=48
   # Format for the current time: 09:51:02. See `man 3 strftime`.
@@ -1111,3 +1116,34 @@ typeset -g POWERLEVEL9K_BATTERY_VERBOSE=true
 
 (( ${#p10k_config_opts} )) && setopt ${p10k_config_opts[@]}
 'builtin' 'unset' 'p10k_config_opts'
+
+function prompt_battery_custom() {
+  local percent color icon
+
+  percent=${P9K_BATTERY_PERCENTAGE:-0}
+
+  # Warna berdasarkan level baterai
+  if (( percent >= 70 )); then
+    color=82        # Hijau terang
+    icon='🔋'
+  elif (( percent >= 30 )); then
+    color=178       # Kuning/Oranye
+    icon='🔋'
+  else
+    color=196       # Merah
+    icon='🪫'
+  fi
+
+  # Jika sedang charging
+  if [[ "$P9K_BATTERY_STATUS" == CHARGING ]]; then
+    icon='🔌'
+  elif (( percent == 100 )); then
+    icon='🔋 FULL'
+    color=82
+    p10k segment -f $color -t "$icon"
+    return
+  fi
+
+  p10k segment -f $color -t "$icon ${percent}%"
+}
+

@@ -3,11 +3,6 @@
 # ==============================================================================
 export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$HOME/.config/venv/myvenv/bin:$PATH"
 export PATH="$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
-export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
-export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
-export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
-
-
 
 export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"

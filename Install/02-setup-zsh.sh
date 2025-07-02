@@ -37,6 +37,7 @@ backup_existing_dotfiles() {
     "$HOME/.nano"
     "$HOME/.config/nano"
     "$HOME/.config/neofetch"
+    "$HOME/.config/fastfetch"
     "$HOME/.config/zsh"
     "$HOME/.oh-my-zsh"
   )
@@ -88,7 +89,7 @@ install_zsh_plugins() {
 
 ### ========= Unduh Konfigurasi dan Font ========= ###
 download_configs() {
-  log "Mengunduh konfigurasi .zsh, nano, neofetch, dan alias dari repo ZshStyle"
+  log "Copy konfigurasi .zsh, nano, neofetch, dan alias "
 
   mkdir -p "$HOME/.config/neofetch"
   mkdir -p "$HOME/.config/nano"

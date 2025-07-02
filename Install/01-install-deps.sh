@@ -34,7 +34,7 @@ detect_os() {
 
 ### ========= Konfirmasi Interaktif ========= ###
 prompt_package_type() {
-  echo -e "\nApakah Anda ingin menginstall paket desktop tambahan (GUI)?"
+  echo -e "\nApakah Anda ingin menginstall aplikasi desktop (GUI)?"
   select opt in "Ya (desktop)" "Tidak (server)"; do
     case $REPLY in
       1) PACKAGE_MODE="desktop"; break ;;
