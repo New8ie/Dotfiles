@@ -117,8 +117,8 @@ fi
 # ==============================================================================
 #                            Skrip MOTD Login
 # ==============================================================================
-if [[ -x "$HOME/.config/fastfetch/motd-fastfetch.sh" ]]; then
-  "$HOME/.config/fastfetch/motd-fastfetch.sh"
+if [[ -x "$HOME/.config/fastfetch/mod-fastfetch.sh" ]]; then
+  "$HOME/.config/fastfetch/mod-fastfetch.sh"
 else
-  echo "[/.config/fastfetch/motd-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
+  echo "[.config/fastfetch/mod-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
 fi
