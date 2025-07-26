@@ -74,7 +74,7 @@
       # nnn                   # nnn shell (https://github.com/jarun/nnn)
       # vim_shell             # vim shell indicator (:sh)
        vpn_ip                # virtual private network indicator
-#       ip                    # ip address and bandwidth usage for a specified network interface
+       ip                    # ip address and bandwidth usage for a specified network interface
 #       disk_usage            # fill percentage HD
 #       ram                   # free RAM
 #       load                  # CPU load
