@@ -1,12 +1,33 @@
 # ==============================================================================
 #                                PATH dan Variabel
 # ==============================================================================
-export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$HOME/.config/venv/myvenv/bin:$PATH"
-export PATH="$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
 
+# PATH Base
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+# PATH Extras : Venv, lokal, plugin, apps , script
+export PATH="$HOME/.config/venv/myvenv/bin:$PATH"
+export PATH="$HOME/.config/script:$PATH"
+export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
+
+# Path lolcat (via Ruby gem, jika digunakan)
+if [[ -d "$HOME/.gem/ruby/3.2.0/bin" ]]; then
+  export PATH="$HOME/.gem/ruby/3.2.0/bin:$PATH"
+fi
+
+# Python & lain-lain
 export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"
 
+# ==============================================================================
+#                                PYENV (Python)
+# ==============================================================================
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+if command -v pyenv &> /dev/null; then
+  eval "$(pyenv init --path)"
+  eval "$(pyenv init -)"
+fi
 
 # ==============================================================================
 #                         Konfigurasi ZSH & Oh My Zsh
@@ -27,7 +48,6 @@ plugins=(
 
 source "$ZSH/oh-my-zsh.sh"
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
-
 
 # ==============================================================================
 #                            Deteksi Sistem Operasi
@@ -63,9 +83,7 @@ fi
 # ==============================================================================
 #                             Custom Alias File
 # ==============================================================================
-if [[ -f "$HOME/.config/zsh/alias.zsh" ]]; then
-  source "$HOME/.config/zsh/alias.zsh"
-fi
+[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
 
 # ==============================================================================
 #                                Integrasi Zoxide
@@ -94,4 +112,13 @@ elif command -v code &> /dev/null; then
   export EDITOR='code -w'
 else
   export EDITOR='nano'
+fi
+
+# ==============================================================================
+#                            Skrip MOTD Login
+# ==============================================================================
+if [[ -x "$HOME/.config/fastfetch/motd-fastfetch.sh" ]]; then
+  "$HOME/.config/fastfetch/motd-fastfetch.sh"
+else
+  echo "[/.config/fastfetch/motd-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
 fi

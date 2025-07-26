@@ -1,15 +1,32 @@
 # ==============================================================================
 #                                PATH dan Variabel
 # ==============================================================================
-export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$HOME/.config/venv/myvenv/bin:$PATH"
-export PATH="$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
-export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
-export PATH="$PATH:/Applications/OpenVPN Connect/OpenVPN Connect.app/contents/MacOS/"
-export PATH="/opt/homebrew/opt/curl/bin:$PATH"
-export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
-export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
-export PATH="$PATH:/Users/fachmi/.lmstudio/bin" # LM Studio CLI
 
+# PATH Base
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+# PATH Homebrew (Apple Silicon /opt/homebrew)
+if [[ -d "/opt/homebrew/bin" ]]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+fi
+
+# PATH Extras : Venv, lokal, plugin, apps , script
+export PATH="$HOME/.config/venv/myvenv/bin:$PATH"
+export PATH="$HOME/.config/script:$PATH"
+export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
+export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
+export PATH="/opt/homebrew/opt/curl/bin:$PATH"
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
+export PATH="/Applications/OpenVPN Connect/OpenVPN Connect.app/Contents/MacOS:$PATH"
+export PATH="/Applications/Visual Studio Code.app/Contents/Resources/app/bin:$PATH"
+export PATH="$HOME/.lmstudio/bin:$PATH"
+
+# Path lolcat (via Ruby gem, jika digunakan)
+if [[ -d "$HOME/.gem/ruby/3.2.0/bin" ]]; then
+  export PATH="$HOME/.gem/ruby/3.2.0/bin:$PATH"
+fi
+
+# Python & lain-lain
 export PYTHONPATH="/opt/homebrew/lib/python3.9/site-packages:$PYTHONPATH"
 export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"
@@ -19,8 +36,10 @@ export ARCHFLAGS="-arch $(uname -m)"
 # ==============================================================================
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
+if command -v pyenv &> /dev/null; then
+  eval "$(pyenv init --path)"
+  eval "$(pyenv init -)"
+fi
 
 # ==============================================================================
 #                         Konfigurasi ZSH & Oh My Zsh
@@ -45,8 +64,8 @@ source "$ZSH/oh-my-zsh.sh"
 # ==============================================================================
 #                               Konfigurasi Iterm2 macOS
 # ==============================================================================
-source ~/.config/iterm2/iterm2_shell_integration.zsh
-test -e "$HOME/.config/iterm2_shell_integration.zsh" && source "$HOME/.config/iterm2_shell_integration.zsh"
+export PATH="$HOME/.config/iterm2/bin:$PATH"
+[[ -f "$HOME/.config/iterm2/iterm2_shell_integration.zsh" ]] && source "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
 
 # ==============================================================================
 #                            Deteksi Sistem Operasi
@@ -82,9 +101,7 @@ fi
 # ==============================================================================
 #                             Custom Alias File
 # ==============================================================================
-if [[ -f "$HOME/.config/zsh/alias.zsh" ]]; then
-  source "$HOME/.config/zsh/alias.zsh"
-fi
+[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
 
 # ==============================================================================
 #                                Integrasi Zoxide
@@ -118,10 +135,8 @@ fi
 # ==============================================================================
 #                            Skrip MOTD Login
 # ==============================================================================
-
-if [ -x "$HOME/.config/neofetch/motd-script.sh" ]; then
-    "$HOME/.config/neofetch/motd-script.sh"
+if [[ -x "$HOME/.config/fastfetch/motd-fastfetch.sh" ]]; then
+  "$HOME/.config/fastfetch/motd-fastfetch.sh"
 else
-    echo "[motd-script.sh tidak ditemukan atau tidak executable]" >&2
+  echo "[/.config/fastfetch/motd-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
 fi
-

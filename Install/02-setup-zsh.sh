@@ -47,6 +47,7 @@ install_plugins() {
 download_configs() {
   log "Menyalin konfigurasi dari ~/.dotfiles"
   mkdir -p "$HOME/.config"/{zsh,nano,neofetch,fastfetch}
+  mkdir -p "$HOME/.config/fastfetch/logo"
 
   # zshrc
   if [[ "$OS_TYPE" == "macos" ]]; then
@@ -54,12 +55,12 @@ download_configs() {
   else
     cp -f ~/.dotfiles/Zsh/linux-zshrc.zsh ~/.zshrc
   fi
-  cp -f ~/.dotfiles/Zsh/.p10k.zsh ~/.p10k.zsh
-  cp -f ~/.dotfiles/Zsh/.zprofile ~/.zprofile
+  cp -f ~/.dotfiles/OhMyZsh/p10k.zsh ~/.p10k.zsh
+  cp -f ~/.dotfiles/Zsh/zprofile.zsh ~/.zprofile
   cp -f ~/.dotfiles/Zsh/Alias/alias.zsh ~/.config/zsh/alias.zsh
 
   # nano
-  cp -f ~/.dotfiles/Nano ~/.config/nano
+  cp -rf ~/.dotfiles/Nano ~/.config/nano
   echo 'include ~/.config/nano/Config/nanorc' > ~/.nanorc
 
   # neofetch
@@ -68,11 +69,11 @@ download_configs() {
   chmod +x ~/.config/neofetch/motd-script.sh
   cp -f ~/.dotfiles/Neofetch/*-logo.png ~/.config/neofetch/ 2>/dev/null || true
 
-  # fastfetch
-  cp -f ~/.dotfiles/fastfetch/config.conf ~/.config/neofetch/config.conf
-  cp -f ~/.dotfiles/fastfetch/motd-fastfetch.sh ~/.config/fastfetch/motd-fastfetch.sh
+# fastfetch
+  cp -f ~/.dotfiles/Fastfetch/config.jsonc ~/.config/fastfetch/config.jsonc
+  cp -f ~/.dotfiles/Fastfetch/motd-fastfetch.sh ~/.config/fastfetch/motd-fastfetch.sh
   chmod +x ~/.config/fastfetch/motd-fastfetch.sh
-  cp -f ~/.dotfiles/fastfetch/logo/*-logo.png ~/.config/fastfetch/logo/ 2>/dev/null || true
+  cp -f ~/.dotfiles/Fastfetch/logo/*-logo.png ~/.config/fastfetch/logo/ 2>/dev/null || 
 
    # Iterm2 khusus macOS
   if [[ "$OS_TYPE" == "macos" ]]; then
@@ -82,8 +83,6 @@ download_configs() {
   fi
 }
   # Windows: alias eza etc not needed here
-
-
 set_shell() {
   NEW=$(which zsh)
   [ "$SHELL" != "$NEW" ] && {

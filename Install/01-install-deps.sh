@@ -14,6 +14,7 @@ detect_os() {
       debian|ubuntu|raspbian) OS_TYPE="linux" ;;
       arch)                   OS_TYPE="arch" ;;
       fedora)                 OS_TYPE="fedora" ;;
+      rhel|centos|rocky|almalinux) OS_TYPE="redhat" ;;
       *) err "Distro Linux $ID belum didukung." ;;
     esac
   else
@@ -26,7 +27,7 @@ install_packages() {
   case "$OS_TYPE" in
     linux)
       sudo apt update
-      packages=(zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide)
+      packages=(zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m fd yazi zoxide)
 
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
@@ -69,15 +70,38 @@ install_packages() {
         log "[SKIP] eza sudah terinstall."
       fi
       ;;
+    redhat)
+      sudo yum install -y epel-release
+      sudo yum install -y zsh git curl fzf grc gnupg2 lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide net-tools 
+      ;;
     macos)
+      if ! command -v brew &>/dev/null; then
+        while true; do
+          read -rp "Homebrew belum terinstall. Install Homebrew? (y/n): " jawab
+          case "$jawab" in
+            y|Y)
+              /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+              eval "$($(command -v brew) shellenv)"
+              break
+              ;;
+            n|N)
+              warn "Homebrew sudah diinstall. Melewati instalasi paket Homebrew."
+              return
+              ;;
+            *)
+              warn "Input tidak valid. Pilih y atau n."
+              ;;
+          esac
+        done
+      fi
       brew update
-      brew install zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide
+      brew install zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide eza nano yazi fd
       ;;
     arch)
-      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide
+      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide fd net-tools
       ;;
     fedora)
-      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide
+      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide net-tools
       ;;
   esac
 }
@@ -95,6 +119,26 @@ main() {
   detect_os
   install_packages
   clone_dotfiles
-  log "Langkah selanjutnya: jalankan bash ~/.dotfiles/Install/02-setup-zsh.sh"
+  while true; do
+    echo
+    echo "Langkah selanjutnya: setup Zsh."
+    echo "Pilih opsi berikut:"
+    echo "[1] Lanjut jalankan ~/.dotfiles/Install/02-setup-zsh.sh"
+    echo "[2] Keluar"
+    read -rp "Masukkan pilihan [1/2]: " pilihan
+    case "$pilihan" in
+      1)
+        bash ~/.dotfiles/Install/02-setup-zsh.sh
+        break
+        ;;
+      2)
+        log "Script selesai. Keluar."
+        break
+        ;;
+      *)
+        warn "Pilihan tidak valid. Silakan pilih lagi."
+        ;;
+    esac
+  done
 }
 main
