@@ -27,7 +27,7 @@ install_packages() {
   case "$OS_TYPE" in
     linux)
       sudo apt update
-      packages=(zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m fd yazi zoxide)
+      packages=(zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m fd viu zoxide)
 
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
@@ -95,7 +95,7 @@ install_packages() {
         done
       fi
       brew update
-      brew install zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide eza nano yazi fd
+      brew install zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide eza nano yazi fd ffmpeg sevenzip jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
       ;;
     arch)
       sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide fd net-tools
