@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+trap 'echo -e "\033[1;31m[ERROR]\033[0m Terjadi error pada baris $LINENO. Keluar dengan kode $?"' ERR
+
 log()  { echo -e "\033[1;32m[INFO]\033[0m $*"; }
 warn() { echo -e "\033[1;33m[WARN]\033[0m $*"; }
 err()  { echo -e "\033[1;31m[ERROR]\033[0m $*"; exit 1; }
 
 detect_os() {
+  log "Deteksi OS..."
   if [[ "$OSTYPE" == "darwin"* ]]; then
     OS_TYPE="macos"
   elif [ -f /etc/os-release ]; then
@@ -24,10 +27,12 @@ detect_os() {
 }
 
 install_packages() {
+  log "Mulai proses instalasi paket..."
+  set +e
   case "$OS_TYPE" in
     linux)
       sudo apt update
-      packages=(zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m fd viu zoxide)
+      packages=(zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m fd-find zoxide)
 
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
@@ -41,33 +46,91 @@ install_packages() {
         fi
       done
 
-      # Alias batcat -> bat
-      if ! command -v bat &>/dev/null && command -v batcat &>/dev/null; then
-        sudo ln -sf /usr/bin/batcat /usr/local/bin/bat
-        log "[OK] Alias batcat → bat dibuat."
+      # Install viu
+      if ! command -v viu &>/dev/null; then
+        log "Install viu dari GitHub release..."
+        ARCH_TYPE=$(uname -m)
+        case "$ARCH_TYPE" in
+          x86_64) VIU_ARCH="x86_64-unknown-linux-musl" ;;
+          aarch64) VIU_ARCH="aarch64-unknown-linux-musl" ;;
+          *) warn "[FAIL] Arsitektur $ARCH_TYPE belum didukung untuk viu."; VIU_ARCH="" ;;
+        esac
+        if [ -n "$VIU_ARCH" ]; then
+          LATEST=$(curl -s https://api.github.com/repos/atanunq/viu/releases/latest \
+            | grep browser_download_url \
+            | grep "$VIU_ARCH" \
+            | grep -v '\.sha256' \
+            | grep '\.tar\.gz' \
+            | cut -d '"' -f 4 | head -n1)
+          if [ -n "$LATEST" ]; then
+            tmp=$(mktemp -d)
+            cd "$tmp" || { warn "[FAIL] Tidak bisa cd ke $tmp"; set -e; }
+            curl -LO "$LATEST"
+            tar -xzf *.tar.gz
+            if [ -f viu ]; then
+              sudo mv viu /usr/local/bin/
+              log "[OK] viu berhasil diinstall: $(viu --version 2>/dev/null || echo 'Cek manual')"
+            else
+              warn "[FAIL] File viu tidak ditemukan setelah extract."
+            fi
+            cd ~ && rm -rf "$tmp"
+          else
+            warn "[FAIL] URL download viu tidak ditemukan."
+          fi
+        fi
+      else
+        log "[SKIP] viu sudah terinstall."
       fi
 
-      # Install eza dari GitHub jika belum ada
+      # Install eza
       if ! command -v eza &>/dev/null; then
         log "Install eza dari GitHub release..."
         ARCH_TYPE=$(dpkg --print-architecture)
         LATEST=$(curl -s https://api.github.com/repos/eza-community/eza/releases/latest \
           | grep browser_download_url \
-          | grep "linux-${ARCH_TYPE}.tar.gz" \
+          | grep "linux-${ARCH_TYPE}" \
+          | grep -v '\.sha256' \
+          | grep '\.tar\.gz' \
           | cut -d '"' -f 4 | head -n1)
         if [ -n "$LATEST" ]; then
           tmp=$(mktemp -d)
           cd "$tmp"
           curl -LO "$LATEST"
           tar -xf *.tar.gz
-          sudo mv eza /usr/local/bin/
+          if [ -f eza ]; then
+            sudo mv eza /usr/local/bin/
+            log "[OK] eza berhasil diinstall: $(eza --version)"
+          else
+            warn "[FAIL] File eza tidak ditemukan setelah extract."
+          fi
           cd ~ && rm -rf "$tmp"
-          log "[OK] eza berhasil diinstall: $(eza --version)"
         else
           warn "[FAIL] URL download eza tidak ditemukan."
         fi
       else
         log "[SKIP] eza sudah terinstall."
+      fi
+
+      # Install fastfetch dari GitHub
+      if ! command -v fastfetch &>/dev/null; then
+        log "Install fastfetch dari GitHub (.deb)..."
+        ARCH_TYPE=$(dpkg --print-architecture)
+        LATEST=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest \
+          | grep browser_download_url \
+          | grep "linux_${ARCH_TYPE}.deb" \
+          | cut -d '"' -f 4 | head -n1)
+        if [ -n "$LATEST" ]; then
+          tmp=$(mktemp -d)
+          cd "$tmp"
+          curl -LO "$LATEST"
+          sudo dpkg -i *.deb || sudo apt-get install -f -y
+          cd ~ && rm -rf "$tmp"
+          log "[OK] fastfetch berhasil diinstall: $(fastfetch --version 2>/dev/null || echo 'Cek manual')"
+        else
+          warn "[FAIL] URL download fastfetch tidak ditemukan."
+        fi
+      else
+        log "[SKIP] fastfetch sudah terinstall."
       fi
       ;;
     redhat)
@@ -85,7 +148,7 @@ install_packages() {
               break
               ;;
             n|N)
-              warn "Homebrew sudah diinstall. Melewati instalasi paket Homebrew."
+              warn "Melewati instalasi paket Homebrew."
               return
               ;;
             *)
@@ -104,9 +167,11 @@ install_packages() {
       sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide net-tools
       ;;
   esac
+  set -e
 }
 
 clone_dotfiles() {
+  log "Clone repo dotfiles..."
   if [ ! -d "$HOME/.dotfiles" ]; then
     git clone https://github.com/New8ie/Dotfiles.git "$HOME/.dotfiles"
     log "Repo Dotfiles berhasil diklon."
@@ -119,12 +184,18 @@ main() {
   detect_os
   install_packages
   clone_dotfiles
+
+  log "Sampai ke akhir script, masuk ke tahap setup Zsh."
+
   while true; do
     echo
-    echo "Langkah selanjutnya: setup Zsh."
+    echo "=========================================="
+    echo "Langkah selanjutnya: setup Zsh"
+    echo "=========================================="
     echo "Pilih opsi berikut:"
-    echo "[1] Lanjut jalankan ~/.dotfiles/Install/02-setup-zsh.sh"
-    echo "[2] Keluar"
+    echo "  [1] Lanjut jalankan ~/.dotfiles/Install/02-setup-zsh.sh"
+    echo "  [2] Keluar"
+    echo "------------------------------------------"
     read -rp "Masukkan pilihan [1/2]: " pilihan
     case "$pilihan" in
       1)
@@ -141,4 +212,5 @@ main() {
     esac
   done
 }
+
 main
