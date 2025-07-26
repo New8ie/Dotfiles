@@ -26,6 +26,62 @@ detect_os() {
   log "Detected OS: $OS_TYPE"
 }
 
+install_eza_deb() {
+  log "Menginstall eza dari GitHub releases resmi..."
+
+  case "$ARCH_TYPE" in
+    x86_64) ARCH_DEB="x86_64-unknown-linux-gnu" ;;
+    aarch64 | arm64) ARCH_DEB="aarch64-unknown-linux-gnu" ;;
+    armv7l) ARCH_DEB="armv7-unknown-linux-gnueabihf" ;;
+    *) err "Arsitektur tidak dikenali untuk eza." ;;
+  esac
+
+  VERSION=$(curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep '"tag_name":' | cut -d '"' -f4)
+  TARBALL="eza_${ARCH_DEB}.tar.gz"
+  URL="https://github.com/eza-community/eza/releases/download/${VERSION}/${TARBALL}"
+  TEMP_DIR="/tmp/eza-${VERSION}"
+
+  mkdir -p "$TEMP_DIR"
+  log "Mengunduh $URL ..."
+  curl -fL "$URL" | tar -xz -C "$TEMP_DIR" || err "[ERROR] Gagal mengunduh dan ekstrak eza"
+  sudo install -m755 "$TEMP_DIR/eza" /usr/local/bin/eza
+  rm -rf "$TEMP_DIR"
+
+  log "eza versi $VERSION berhasil diinstall."
+}
+
+install_viu() {
+  log "Menginstall viu..."
+
+  case "$ARCH_TYPE" in
+    x86_64) ARCH_DL="x86_64-unknown-linux-musl" ;;
+    aarch64 | arm64) ARCH_DL="aarch64-unknown-linux-musl" ;;
+    armv7l) ARCH_DL="armv7-unknown-linux-musleabihf" ;;
+    *) err "Arsitektur tidak dikenali untuk viu." ;;
+  esac
+
+  VERSION="v1.5.1"
+  FILE="viu-${ARCH_DL}"
+  URL="https://github.com/atanunq/viu/releases/download/${VERSION}/${FILE}"
+
+  TEMP_DIR=$(mktemp -d)
+  if curl -fsSL "$URL" -o "$TEMP_DIR/viu"; then
+    chmod +x "$TEMP_DIR/viu"
+    sudo install -m755 "$TEMP_DIR/viu" /usr/local/bin/viu || {
+      rm -rf "$TEMP_DIR"
+      err "Gagal install viu"
+    }
+    log "✅ viu v1.5.1 berhasil diinstall."
+  else
+    rm -rf "$TEMP_DIR"
+    if command -v imgcat >/dev/null 2>&1; then
+      warn "Gagal mengunduh viu, tapi imgcat tersedia. Melanjutkan..."
+    else
+      err "Gagal mengunduh viu dan imgcat tidak tersedia. Tidak bisa menampilkan gambar logo."
+    fi
+  fi
+}
+
 install_packages() {
   log "Mulai proses instalasi paket..."
   set +e
@@ -48,65 +104,16 @@ install_packages() {
 
       # Install viu
       if ! command -v viu &>/dev/null; then
-        log "Install viu dari GitHub release..."
         ARCH_TYPE=$(uname -m)
-        case "$ARCH_TYPE" in
-          x86_64) VIU_ARCH="x86_64-unknown-linux-musl" ;;
-          aarch64) VIU_ARCH="aarch64-unknown-linux-musl" ;;
-          *) warn "[FAIL] Arsitektur $ARCH_TYPE belum didukung untuk viu."; VIU_ARCH="" ;;
-        esac
-        if [ -n "$VIU_ARCH" ]; then
-          LATEST=$(curl -s https://api.github.com/repos/atanunq/viu/releases/latest \
-            | grep browser_download_url \
-            | grep "$VIU_ARCH" \
-            | grep -v '\.sha256' \
-            | grep '\.tar\.gz' \
-            | cut -d '"' -f 4 | head -n1)
-          if [ -n "$LATEST" ]; then
-            tmp=$(mktemp -d)
-            cd "$tmp" || { warn "[FAIL] Tidak bisa cd ke $tmp"; set -e; }
-            curl -LO "$LATEST"
-            tar -xzf *.tar.gz
-            if [ -f viu ]; then
-              sudo mv viu /usr/local/bin/
-              log "[OK] viu berhasil diinstall: $(viu --version 2>/dev/null || echo 'Cek manual')"
-            else
-              warn "[FAIL] File viu tidak ditemukan setelah extract."
-            fi
-            cd ~ && rm -rf "$tmp"
-          else
-            warn "[FAIL] URL download viu tidak ditemukan."
-          fi
-        fi
+        install_viu
       else
         log "[SKIP] viu sudah terinstall."
       fi
 
       # Install eza
       if ! command -v eza &>/dev/null; then
-        log "Install eza dari GitHub release..."
-        ARCH_TYPE=$(dpkg --print-architecture)
-        LATEST=$(curl -s https://api.github.com/repos/eza-community/eza/releases/latest \
-          | grep browser_download_url \
-          | grep "linux-${ARCH_TYPE}" \
-          | grep -v '\.sha256' \
-          | grep '\.tar\.gz' \
-          | cut -d '"' -f 4 | head -n1)
-        if [ -n "$LATEST" ]; then
-          tmp=$(mktemp -d)
-          cd "$tmp"
-          curl -LO "$LATEST"
-          tar -xf *.tar.gz
-          if [ -f eza ]; then
-            sudo mv eza /usr/local/bin/
-            log "[OK] eza berhasil diinstall: $(eza --version)"
-          else
-            warn "[FAIL] File eza tidak ditemukan setelah extract."
-          fi
-          cd ~ && rm -rf "$tmp"
-        else
-          warn "[FAIL] URL download eza tidak ditemukan."
-        fi
+        ARCH_TYPE=$(uname -m)
+        install_eza_deb
       else
         log "[SKIP] eza sudah terinstall."
       fi

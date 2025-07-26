@@ -61,7 +61,7 @@ download_configs() {
 
   # nano
   cp -rf ~/.dotfiles/Nano ~/.config/nano
-  echo 'include ~/.config/nano/Config/nanorc' > ~/.nanorc
+  echo 'include ~/.config/nano/*.nanorc' > ~/.nanorc
 
   # neofetch
   cp -f ~/.dotfiles/Neofetch/config.conf ~/.config/neofetch/config.conf
