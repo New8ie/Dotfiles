@@ -15,6 +15,9 @@ Script/zsh-script-v1.sh
 Script/zsh-script-v2.sh
 Script/zsh-script-v3.sh
 Script/zsh-script-v4.sh
+Script/zsh-script.sh
 Neofetch/motd-script-v2.sh
 Neofetch/motd-multi-os.sh
 Zsh/Alias/alias-mini.zsh
+Zsh/linux-zshrc-full.zsh
+Zsh/zshrc-old.zsh

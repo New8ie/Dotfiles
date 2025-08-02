@@ -63,6 +63,10 @@ download_configs() {
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
   cp -rf ~/.config/nano/Config/nanorc > ~/.nanorc
 
+  # Script
+  cp -rf ~/.dotfiles/Script/* ~/.config/Script
+
+
   # neofetch
   cp -f ~/.dotfiles/Neofetch/config.conf ~/.config/neofetch/config.conf
   cp -f ~/.dotfiles/Neofetch/motd-script.sh ~/.config/neofetch/motd-script.sh
