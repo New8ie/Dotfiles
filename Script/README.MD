@@ -36,6 +36,6 @@ git clone https://github.com/New8ie/ZshStyle.git
 cd script
 chmod +x zsh-script.sh
 ./zsh-script.sh
-
+```
 
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/New8ie/ZshStyle/refs/heads/main/script/zabbix-install.sh)"
