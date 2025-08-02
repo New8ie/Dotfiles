@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # PATH System Base
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/fachmi/.local/bin/"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/fachmi/.local/bin/:/usr/games:"
 
 # ============================================
 # 🍺 HOMEBREW
@@ -14,7 +14,7 @@ if [[ -d "/opt/homebrew/bin" ]]; then
 fi
 
 # PATH Tambahan: Venv, lokal, plugin, apps
-export PATH="$HOME/.config/venv/myvenv/bin:$PATH"
+export PATH="$HOME/.config/Scripts:$PATH"
 export PATH="/usr/local/bin/nvim/bin:$PATH"
 export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
 export PATH="/opt/homebrew/opt/curl/bin:$PATH"
@@ -57,8 +57,7 @@ if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
   conda config --set auto_activate false
 fi
 
-# Load custom alias untuk venv
-[[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
+
 
 # ==============================================================================
 #                         Konfigurasi ZSH & Oh My Zsh
@@ -162,10 +161,17 @@ if [[ -o interactive && -z "$__FASTFETCH_RUN" && -x "$FASTFETCH_SCRIPT" ]]; then
   "$FASTFETCH_SCRIPT"
 fi
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
+# Docker CLI completions
 fpath=(/Users/fachmi/.docker/completions $fpath)
+
+# Load zsh completion system
 autoload -Uz compinit
 compinit
-# End of Docker CLI completions
 
-
+# ==============================================================================
+#                             Custom Alias File
+# ==============================================================================
+[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
+# Load custom alias untuk venv
+[[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
 

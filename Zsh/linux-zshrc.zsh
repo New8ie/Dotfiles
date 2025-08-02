@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # PATH Base
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/fachmi/.local/bin/:/usr/games:"
 
 # PATH Extras : Venv, lokal, plugin, apps , script
 export PATH="$HOME/.config/venv/myvenv/bin:$PATH"
@@ -135,8 +135,8 @@ fi
 # ==============================================================================
 #                            Skrip MOTD Login
 # ==============================================================================
-if [[ -x "$HOME/.config/fastfetch/mod-fastfetch.sh" ]]; then
+if [[ -x "$HOME/.config/fastfetch/motd-fastfetch.sh" ]]; then
   "$HOME/.config/fastfetch/mod-fastfetch.sh"
 else
-  echo "[.config/fastfetch/mod-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
+  echo "[.config/fastfetch/motd-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
 fi

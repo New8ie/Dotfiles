@@ -12,7 +12,7 @@
 Dotfiles/
 ├── Install/
 │   ├── 01-install-deps.sh        # Instalasi dependencies (zsh, curl, git, bat, eza, dll)
-│   └── 01-setup-zsh.sh           # Setup oh-my-zsh, plugin, powerlevel10k, dan konfigurasi
+│   └── 02-setup-zsh.sh           # Setup oh-my-zsh, plugin, powerlevel10k, dan konfigurasi
 ├── Zsh/
 │   ├── macos-zshrc.zsh           # Konfigurasi .zshrc untuk macOS
 │   ├── linux-zshrc.zsh           # Konfigurasi .zshrc untuk Linux
