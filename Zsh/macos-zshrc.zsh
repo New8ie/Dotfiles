@@ -2,18 +2,20 @@
 #                                PATH dan Variabel
 # ==============================================================================
 
-# PATH Base
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# PATH System Base
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/fachmi/.local/bin/"
 
+# ============================================
+# 🍺 HOMEBREW
+# ============================================
 # PATH Homebrew (Apple Silicon /opt/homebrew)
 if [[ -d "/opt/homebrew/bin" ]]; then
   export PATH="/opt/homebrew/bin:$PATH"
 fi
 
-# PATH Extras : Venv, lokal, plugin, apps , script
+# PATH Tambahan: Venv, lokal, plugin, apps
 export PATH="$HOME/.config/venv/myvenv/bin:$PATH"
-export PATH="$HOME/.config/script:$PATH"
-export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
+export PATH="/usr/local/bin/nvim/bin:$PATH"
 export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
 export PATH="/opt/homebrew/opt/curl/bin:$PATH"
 export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
@@ -26,20 +28,37 @@ if [[ -d "$HOME/.gem/ruby/3.2.0/bin" ]]; then
   export PATH="$HOME/.gem/ruby/3.2.0/bin:$PATH"
 fi
 
-# Python & lain-lain
-export PYTHONPATH="/opt/homebrew/lib/python3.9/site-packages:$PYTHONPATH"
+# ============================================
+# 🧱 Compiler Flags for Building Python
+# ============================================
+export LDFLAGS="-L/opt/homebrew/opt/zlib/lib -L/opt/homebrew/opt/sqlite/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/zlib/include -I/opt/homebrew/opt/sqlite/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/zlib/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig"
+
 export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"
 
-# ==============================================================================
-#                                PYENV (Python)
-# ==============================================================================
+# ============================================
+# 🐍 PYENV: Manajemen Python
+# ============================================
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
+
+# Jalankan pyenv hanya jika tersedia
 if command -v pyenv &> /dev/null; then
   eval "$(pyenv init --path)"
   eval "$(pyenv init -)"
 fi
+# ============================================
+# 🧪 CONDA (manual activation only)
+# ============================================
+if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
+  . "/opt/miniconda3/etc/profile.d/conda.sh"
+  conda config --set auto_activate false
+fi
+
+# Load custom alias untuk venv
+[[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
 
 # ==============================================================================
 #                         Konfigurasi ZSH & Oh My Zsh
@@ -135,8 +154,18 @@ fi
 # ==============================================================================
 #                            Skrip MOTD Login
 # ==============================================================================
-if [[ -x "$HOME/.config/fastfetch/motd-fastfetch.sh" ]]; then
-  "$HOME/.config/fastfetch/motd-fastfetch.sh"
-else
-  echo "[/.config/fastfetch/motd-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
+FASTFETCH_SCRIPT="$HOME/.config/fastfetch/motd-fastfetch.sh"
+
+# Jalankan hanya jika interaktif dan belum dijalankan sebelumnya
+if [[ -o interactive && -z "$__FASTFETCH_RUN" && -x "$FASTFETCH_SCRIPT" ]]; then
+  export __FASTFETCH_RUN=1
+  "$FASTFETCH_SCRIPT"
 fi
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+fpath=(/Users/fachmi/.docker/completions $fpath)
+autoload -Uz compinit
+compinit
+# End of Docker CLI completions
+
+
+

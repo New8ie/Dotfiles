@@ -15,20 +15,38 @@ if [[ -d "$HOME/.gem/ruby/3.2.0/bin" ]]; then
   export PATH="$HOME/.gem/ruby/3.2.0/bin:$PATH"
 fi
 
-# Python & lain-lain
+
+# ============================================
+# 🧱 Compiler Flags for Building Python
+# ============================================
+export LDFLAGS="-L/opt/homebrew/opt/zlib/lib -L/opt/homebrew/opt/sqlite/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/zlib/include -I/opt/homebrew/opt/sqlite/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/zlib/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig"
+
 export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"
 
-# ==============================================================================
-#                                PYENV (Python)
-# ==============================================================================
+# ============================================
+# 🐍 PYENV: Manajemen Python
+# ============================================
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
+
+# Jalankan pyenv hanya jika tersedia
 if command -v pyenv &> /dev/null; then
   eval "$(pyenv init --path)"
   eval "$(pyenv init -)"
 fi
+# ============================================
+# 🧪 CONDA (manual activation only)
+# ============================================
+if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
+  . "/opt/miniconda3/etc/profile.d/conda.sh"
+  conda config --set auto_activate false
+fi
 
+# Load custom alias untuk venv
+[[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
 # ==============================================================================
 #                         Konfigurasi ZSH & Oh My Zsh
 # ==============================================================================

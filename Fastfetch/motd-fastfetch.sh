@@ -96,7 +96,6 @@ if command -v last >/dev/null; then
   echo -e "👤  Last Login : $last_login" | lolcat
 fi
 
-# Pastikan fungsi lolcat dummy didefinisikan sebelum pemakaian lolcat
 if ! command -v lolcat &>/dev/null; then
   lolcat() { cat; }
 fi
