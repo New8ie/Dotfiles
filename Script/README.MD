@@ -1,41 +1,99 @@
-# 🧰 ZshStyle Installer
+# 🛠️ Koleksi Script Pribadi
 
-Automated Zsh environment setup script for **macOS**, **Debian/Ubuntu**, and **Raspberry Pi OS** systems.
+Kumpulan bash script utilitas untuk keperluan jaringan dan manajemen server pribadi.
 
-## 🚀 Features
+---
 
-✅ Detects OS and CPU architecture  
-✅ Installs essential CLI tools:
-- `zsh`, `git`, `curl`, `nanorc`, `fzf`, `grc`, `gnupg`,`lolcat`,`neofetch`, `pv`
-- `bat` and `eza` with architecture-aware `.deb` or `tar.gz` install (Debian/RPi)
-  
-✅ Installs and configures **Oh My Zsh**  
-✅ Clones and updates custom Zsh plugins:
-- `zsh-syntax-highlighting`
-- `zsh-autosuggestions`
-- `zsh-you-should-use`
-- `zsh-bat`
-- `zsh-eza`
+## 📦 Daftar Script & Cara Penggunaan
 
-✅ Sets up **Powerlevel10k** theme and downloads curated configs from GitHub  
-✅ Creates symlinks to root for shared config  
-✅ Compatible with **Raspberry Pi 5**  
-✅ Fully idempotent – safe to re-run anytime
+### 1. `mylocalip.sh`
+🔍 Menampilkan IP lokal aktif pada semua interface jaringan Anda (bukan hanya `eth0` atau `wlan0`).
 
-## 🧰 Requirements
-
-- macOS, Debian/Ubuntu, or Raspberry Pi OS
-- `bash`
-- Internet connection
-- `sudo` privileges
-
-## 📦 Installation
-
+**Cara pakai:**
 ```bash
-git clone https://github.com/New8ie/ZshStyle.git
-cd script
-chmod +x zsh-script.sh
-./zsh-script.sh
+bash mylocalip.sh
 ```
 
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/New8ie/ZshStyle/refs/heads/main/script/zabbix-install.sh)"
+---
+
+### 2. `sshcpid.sh`
+📂 Copy file dari remote host ke lokal menggunakan SCP. Script ini menggunakan `sshpass` jika diperlukan.
+
+**Cara pakai:**
+```bash
+bash sshcpid.sh <remote_user>@<remote_host>:/path/to/file /local/destination/
+```
+
+Contoh:
+```bash
+bash sshcpid.sh user@192.168.1.10:/etc/nginx/nginx.conf /tmp/
+```
+
+> Pastikan `sshpass` telah terinstall jika password-based login digunakan.
+
+---
+
+### 3. `static_route.sh`
+🌐 Menambahkan static route ke tabel routing sistem.
+
+**Cara pakai:**
+```bash
+sudo bash static_route.sh <destination_network> <gateway_ip> <interface>
+```
+
+Contoh:
+```bash
+sudo bash static_route.sh 192.168.50.0/24 192.168.1.1 eth0
+```
+
+> Berguna untuk konfigurasi jaringan manual di VM atau server dengan banyak interface.
+
+---
+
+### 4. `zabbix-install.sh`
+📈 Script instalasi otomatis Zabbix agent di sistem Linux (Debian/Ubuntu/CentOS).
+
+**Cara pakai:**
+```bash
+sudo bash zabbix-install.sh
+```
+
+Script akan:
+- Mendeteksi OS
+- Menambahkan repository Zabbix sesuai distro
+- Install dan konfigurasi Zabbix agent
+- Mengaktifkan dan menjalankan servicenya
+
+---
+
+## 📝 Prasyarat Umum
+
+Pastikan Anda memiliki:
+- Akses root (`sudo`)
+- Koneksi internet
+- Bash shell
+- Paket `curl`, `git`, `sshpass` jika diperlukan
+
+---
+
+## 📂 Struktur Direktori
+
+```bash
+📁 scripts/
+├── mylocalip.sh
+├── sshcpid.sh
+├── static_route.sh
+└── zabbix-install.sh
+```
+
+---
+
+## 🧾 Lisensi
+
+Proyek ini menggunakan lisensi MIT — silakan gunakan, modifikasi, dan distribusikan.
+
+---
+
+## 🙌 Kontribusi
+
+Pull request dan saran sangat diterima! Jangan ragu untuk fork dan ubah sesuai kebutuhan Anda.
