@@ -14,7 +14,7 @@ if [[ -d "/opt/homebrew/bin" ]]; then
 fi
 
 # PATH Tambahan: Venv, lokal, plugin, apps
-export PATH="$HOME/.config/Scripts:$PATH"
+export PATH="$HOME/.config/script:$PATH"
 export PATH="/usr/local/bin/nvim/bin:$PATH"
 export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
 export PATH="/opt/homebrew/opt/curl/bin:$PATH"
