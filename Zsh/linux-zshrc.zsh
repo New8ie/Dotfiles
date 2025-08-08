@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # PATH Base
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/fachmi/.local/bin/:/usr/games:"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/fachmi/.local/bin/:/usr/games:"
 
 # PATH Extras : Venv, lokal, plugin, apps , script
 export PATH="$HOME/.config/venv/myvenv/bin:$PATH"
@@ -19,9 +19,9 @@ fi
 # ============================================
 # 🧱 Compiler Flags for Building Python
 # ============================================
-export LDFLAGS="-L/opt/homebrew/opt/zlib/lib -L/opt/homebrew/opt/sqlite/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/zlib/include -I/opt/homebrew/opt/sqlite/include"
-export PKG_CONFIG_PATH="/opt/homebrew/opt/zlib/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig"
+#export LDFLAGS="-L/opt/homebrew/opt/zlib/lib -L/opt/homebrew/opt/sqlite/lib"
+#export CPPFLAGS="-I/opt/homebrew/opt/zlib/include -I/opt/homebrew/opt/sqlite/include"
+#export PKG_CONFIG_PATH="/opt/homebrew/opt/zlib/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig"
 
 export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"
