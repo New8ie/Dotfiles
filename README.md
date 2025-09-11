@@ -47,7 +47,7 @@ git clone https://github.com/New8ie/Dotfiles.git ~/.dotfiles
 
 ### 2. Jalankan skrip instalasi Zsh dan konfigurasi:
 ```bash
-bash ~/.dotfiles/Install/01-setup-zsh.sh
+bash ~/.dotfiles/Install/01-install-deps.sh
 ```
 
 > Pastikan Anda memiliki `git`, `curl`, dan akses `sudo`. Skrip akan:

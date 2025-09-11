@@ -61,7 +61,7 @@ download_configs() {
 
   # nano
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
-  cp -rf ~/.config/nano/Config/nanorc > ~/.nanorc
+  cp -rf ~/.config/nano/Config/nanorc ~/.nanorc
 
   # Script
   cp -rf ~/.dotfiles/Script/* ~/.config/script
