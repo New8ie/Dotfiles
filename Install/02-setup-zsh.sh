@@ -46,7 +46,7 @@ install_plugins() {
 
 download_configs() {
   log "Menyalin konfigurasi dari ~/.dotfiles"
-  mkdir -p "$HOME/.config"/{zsh,nano,neofetch,fastfetch}
+  mkdir -p "$HOME/.config"/{zsh,nano,neofetch,fastfetch,script}
   mkdir -p "$HOME/.config/fastfetch/logo"
 
   # zshrc
