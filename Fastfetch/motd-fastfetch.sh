@@ -2,7 +2,7 @@
 # ~/.config/fastfetch/motd-fastfetch.sh
 
 # === PATH TAMBAHAN ===
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/.dotfiles/Iterm2/bin:$PATH"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/.config/iterm2/bin:$PATH"
 
 # === DETEKSI OS & DISTRO ===
 os_name="$(uname -s)"

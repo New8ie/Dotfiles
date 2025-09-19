@@ -1,41 +1,79 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Logging
 log()  { echo -e "\033[1;32m[INFO]\033[0m $*"; }
 warn() { echo -e "\033[1;33m[WARN]\033[0m $*"; }
-err()  { echo -e "\033[1;31m[ERROR]\033[0m $*" >&2; exit 1; }
+err()  { echo -e "\033[1;31m[ERROR]\033[0m $*"; exit 1; }
 
+# ================
+# Detect OS
+# ================
 detect_os() {
-  if [[ "$OSTYPE" == "darwin"* ]]; then OS_TYPE="macos"; else OS_TYPE="linux"; fi
-  log "Detected OS: $OS_TYPE"
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if [ -f /etc/debian_version ]; then
+      OS_TYPE="debian"
+    elif [ -f /etc/redhat-release ]; then
+      OS_TYPE="redhat"
+    elif [ -f /etc/arch-release ]; then
+      OS_TYPE="arch"
+    else
+      OS_TYPE="linux"
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    OS_TYPE="macos"
+  elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    OS_TYPE="windows"
+  else
+    OS_TYPE="unknown"
+  fi
+  log "Terdeteksi OS: $OS_TYPE"
 }
 
+# ================
+# Backup Dotfiles
+# ================
 backup_dotfiles() {
   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
   DEST="$HOME/dotfiles-backup-$TIMESTAMP"
   mkdir -p "$DEST"
+
   files=(~/.zshrc ~/.zprofile ~/.p10k.zsh ~/.config/zsh ~/.config/nano ~/.config/fastfetch ~/.oh-my-zsh)
-  for f in "${files[@]}"; do [ -e "$f" ] && cp -r "$f" "$DEST"; done
+  for f in "${files[@]}"; do
+    [ -e "$f" ] && cp -r "$f" "$DEST"
+  done
+
   tar -czf "$DEST.tar.gz" -C "$HOME" "$(basename "$DEST")"
   rm -rf "$DEST"
   log "Backup berhasil: $DEST.tar.gz"
 }
 
+# ================
+# Setup Oh My Zsh
+# ================
 setup_ohmyzsh() {
   if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    RUNZSH=no CHSH=no KEEP_ZSHRC=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-    log "Oh-My-Zsh installed."
+    RUNZSH=no CHSH=no KEEP_ZSHRC=no sh -c \
+      "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    log "Oh-My-Zsh berhasil diinstall."
+  else
+    log "Oh-My-Zsh sudah ada, skip install."
   fi
 }
 
+# Clone helper
 clone_plugin() {
-  local repo dest; repo="$1"; dest="$2"
-  [ -d "$dest" ] || ( git clone "$repo" "$dest" && log "Plugin $(basename $dest) cloned." )
+  local repo dest
+  repo="$1"
+  dest="$2"
+  [ -d "$dest" ] || ( git clone "$repo" "$dest" && log "Plugin $(basename "$dest") cloned." )
 }
 
+# Install plugins
 install_plugins() {
   ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
   mkdir -p "$ZSH_CUSTOM"/{plugins,themes}
+
   clone_plugin https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
   clone_plugin https://github.com/zsh-users/zsh-autosuggestions.git "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
   clone_plugin https://github.com/MichaelAquilina/zsh-you-should-use.git "$ZSH_CUSTOM/plugins/zsh-you-should-use"
@@ -44,9 +82,31 @@ install_plugins() {
   clone_plugin https://github.com/romkatv/powerlevel10k.git "$ZSH_CUSTOM/themes/powerlevel10k"
 }
 
+# ================
+# Install Fastfetch
+# ================
+install_fastfetch() {
+  case "$OS_TYPE" in
+    debian)
+      log "Install Fastfetch via dpkg/apt..."
+      wget -O /tmp/fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-amd64.deb || err "Gagal download fastfetch"
+      sudo apt install -y /tmp/fastfetch.deb || err "Gagal install fastfetch"
+      rm -f /tmp/fastfetch.deb
+      ;;
+    arch)    sudo pacman -S --noconfirm fastfetch ;;
+    redhat)  sudo dnf install -y fastfetch ;;
+    macos)   brew install fastfetch ;;
+    windows) warn "Windows terdeteksi – install manual dari release page" ;;
+    *)       err "OS tidak didukung: $OS_TYPE" ;;
+  esac
+}
+
+# ================
+# Copy Configs
+# ================
 download_configs() {
   log "Menyalin konfigurasi dari ~/.dotfiles"
-  mkdir -p "$HOME/.config"/{zsh,nano,fastfetch,script}
+  mkdir -p "$HOME/.config"/{zsh,nano,fastfetch,iterm2,script}
   mkdir -p "$HOME/.config/fastfetch/logo"
 
   # zshrc
@@ -66,39 +126,57 @@ download_configs() {
   # Script
   cp -rf ~/.dotfiles/Script/* ~/.config/script
 
-
-# fastfetch
+  # fastfetch
   cp -f ~/.dotfiles/Fastfetch/config.jsonc ~/.config/fastfetch/config.jsonc
   cp -f ~/.dotfiles/Fastfetch/motd-fastfetch.sh ~/.config/fastfetch/motd-fastfetch.sh
   chmod +x ~/.config/fastfetch/motd-fastfetch.sh
-  cp -f ~/.dotfiles/Fastfetch/logo/*-logo.png ~/.config/fastfetch/logo/ 2>/dev/null || 
+  cp -f ~/.dotfiles/Fastfetch/logo/*-logo.png ~/.config/fastfetch/logo/ 2>/dev/null || true
 
-   # Iterm2 khusus macOS
-  if [[ "$OS_TYPE" == "macos" ]]; then
-    mkdir -p "$HOME/.config/iterm2/bin"
+  # iTerm2 khusus macOS
     cp -rf ~/.dotfiles/Iterm2/bin/* "$HOME/.config/iterm2/bin" 2>/dev/null || true
     cp -f ~/.dotfiles/Iterm2/iterm2_shell_integration.zsh "$HOME/.config/iterm2/iterm2_shell_integration.zsh" 2>/dev/null || true
-  fi
+    chmod +x ~/.config/iterm2/bin/*
 }
-  # Windows: alias eza etc not needed here
+
+# ================
+# Set default shell
+# ================
 set_shell() {
   NEW=$(which zsh)
-  [ "$SHELL" != "$NEW" ] && {
+  if [ "$SHELL" != "$NEW" ]; then
     if sudo -n true 2>/dev/null; then
       sudo chsh -s "$NEW" "$USER" && log "Default shell diubah ke zsh."
     else
-      chsh -s "$NEW" || warn "Jalankan: chsh -s $NEW"
+      chsh -s "$NEW" || warn "Jalankan manual: chsh -s $NEW"
     fi
-  }
+  fi
 }
 
+# ================
+# Verify Fastfetch
+# ================
+verify_fastfetch() {
+  if command -v fastfetch >/dev/null 2>&1; then
+    log "Fastfetch berhasil terinstall."
+    fastfetch --version || warn "Fastfetch terinstall tapi gagal dijalankan"
+  else
+    err "Fastfetch tidak ditemukan setelah instalasi"
+  fi
+}
+
+# ================
+# Main
+# ================
 main() {
   detect_os
   backup_dotfiles
   setup_ohmyzsh
   install_plugins
+  install_fastfetch
   download_configs
   set_shell
-  log "Setup complete! Jalankan ulang terminal atau `exec zsh`."
+  verify_fastfetch
+  log "Setup selesai! Restart terminal atau jalankan \`exec zsh\`."
 }
+
 main
