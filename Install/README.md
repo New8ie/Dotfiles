@@ -65,17 +65,16 @@ Script ini akan:
 
 ## 📦 Tools yang Terinstall
 
-| Tool       | Fungsi                              |
-|------------|-------------------------------------|
-| `eza`      | Pengganti `ls` modern               |
-| `viu`      | Viewer gambar di terminal           |
-| `zsh`      | Shell interaktif                    |
-| `fzf`      | Fuzzy finder                        |
-| `bat`      | Pengganti `cat` dengan highlight    |
-| `neofetch` | Tampilan sistem info                |
-| `fastfetch`| Alternatif cepat `neofetch`         |
-| `zoxide`   | Autojump direktori efisien          |
-| dan lainnya... | ...                             |
+| Tool           | Fungsi                           |
+| -------------- | -------------------------------- |
+| `eza`          | Pengganti `ls` modern            |
+| `viu`          | Viewer gambar di terminal        |
+| `zsh`          | Shell interaktif                 |
+| `fzf`          | Fuzzy finder                     |
+| `bat`          | Pengganti `cat` dengan highlight |
+| `fastfetch`    | Alternatif cepat `neofetch`      |
+| `zoxide`       | Autojump direktori efisien       |
+| dan lainnya... | ...                              |
 
 ---
 
@@ -104,12 +103,12 @@ exec zsh
 
 ## 🧪 Troubleshooting
 
-| Masalah                      | Solusi                                   |
-|------------------------------|------------------------------------------|
-| `chsh: permission denied`    | Jalankan `sudo chsh -s $(which zsh)`     |
-| `brew not found` (macOS)     | Akan otomatis ditawarkan untuk install   |
-| `command not found: curl`    | Install `curl` terlebih dahulu           |
-| `zsh tidak berubah`          | Logout dan login kembali atau `exec zsh` |
+| Masalah                   | Solusi                                   |
+| ------------------------- | ---------------------------------------- |
+| `chsh: permission denied` | Jalankan `sudo chsh -s $(which zsh)`     |
+| `brew not found` (macOS)  | Akan otomatis ditawarkan untuk install   |
+| `command not found: curl` | Install `curl` terlebih dahulu           |
+| `zsh tidak berubah`       | Logout dan login kembali atau `exec zsh` |
 
 ---
 

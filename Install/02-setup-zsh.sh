@@ -14,7 +14,7 @@ backup_dotfiles() {
   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
   DEST="$HOME/dotfiles-backup-$TIMESTAMP"
   mkdir -p "$DEST"
-  files=(~/.zshrc ~/.zprofile ~/.p10k.zsh ~/.config/zsh ~/.config/nano ~/.config/neofetch ~/.oh-my-zsh)
+  files=(~/.zshrc ~/.zprofile ~/.p10k.zsh ~/.config/zsh ~/.config/nano ~/.config/fastfetch ~/.oh-my-zsh)
   for f in "${files[@]}"; do [ -e "$f" ] && cp -r "$f" "$DEST"; done
   tar -czf "$DEST.tar.gz" -C "$HOME" "$(basename "$DEST")"
   rm -rf "$DEST"
@@ -46,7 +46,7 @@ install_plugins() {
 
 download_configs() {
   log "Menyalin konfigurasi dari ~/.dotfiles"
-  mkdir -p "$HOME/.config"/{zsh,nano,neofetch,fastfetch,script}
+  mkdir -p "$HOME/.config"/{zsh,nano,fastfetch,script}
   mkdir -p "$HOME/.config/fastfetch/logo"
 
   # zshrc
@@ -66,12 +66,6 @@ download_configs() {
   # Script
   cp -rf ~/.dotfiles/Script/* ~/.config/script
 
-
-  # neofetch
-  cp -f ~/.dotfiles/Neofetch/config.conf ~/.config/neofetch/config.conf
-  cp -f ~/.dotfiles/Neofetch/motd-script.sh ~/.config/neofetch/motd-script.sh
-  chmod +x ~/.config/neofetch/motd-script.sh
-  cp -f ~/.dotfiles/Neofetch/*-logo.png ~/.config/neofetch/ 2>/dev/null || true
 
 # fastfetch
   cp -f ~/.dotfiles/Fastfetch/config.jsonc ~/.config/fastfetch/config.jsonc

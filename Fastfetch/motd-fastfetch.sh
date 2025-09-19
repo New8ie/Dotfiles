@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ~/.config/fastfetch/motd-fastfetch.sh
 
-# === Tambahkan PATH untuk environment tertentu ===
+# === PATH TAMBAHAN ===
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/.dotfiles/Iterm2/bin:$PATH"
 
 # === DETEKSI OS & DISTRO ===
@@ -15,28 +15,28 @@ if grep -qi 'Raspberry Pi' /proc/cpuinfo 2>/dev/null; then
   is_rpi=true
 fi
 
-# === TENTUKAN LOGO SESUAI OS ===
+# === PILIH LOGO SESUAI OS/DISTRO ===
 case "$os_name" in
-Darwin)
-  logo_name="macos-logo.png"
-  ;;
-Linux)
-  if [ "$is_rpi" = true ]; then
-    logo_name="raspberrypi-logo.png"
-  elif [[ "$distro" == "ubuntu" ]]; then
-    logo_name="ubuntu-logo.png"
-  elif [[ "$distro" == "debian" ]]; then
-    logo_name="debian-logo.png"
-  else
-    logo_name="linux-generic-logo.png"
-  fi
-  ;;
-*)
-  logo_name="unknown-logo.png"
-  ;;
+  Darwin)
+    logo_name="macos-logo.png"
+    ;;
+  Linux)
+    if [ "$is_rpi" = true ]; then
+      logo_name="raspberrypi-logo.png"
+    elif [[ "$distro" == "ubuntu" ]]; then
+      logo_name="ubuntu-logo.png"
+    elif [[ "$distro" == "debian" ]]; then
+      logo_name="debian-logo.png"
+    else
+      logo_name="linux-generic-logo.png"
+    fi
+    ;;
+  *)
+    logo_name="unknown-logo.png"
+    ;;
 esac
 
-# === LOKASI LOGO (ubah ke direktori fastfetch) ===
+# === LOKASI LOGO ===
 image_path="$HOME/.config/fastfetch/logo/$logo_name"
 
 # === CETAK FASTFETCH TANPA LOGO ===
@@ -44,33 +44,33 @@ fastfetch_output=$(fastfetch --logo none)
 output_lines=$(echo "$fastfetch_output" | wc -l)
 IFS=$'\n' read -rd '' -a output_array <<<"$fastfetch_output"
 
-# Tampilkan output fastfetch dengan lolcat
 for line in "${output_array[@]}"; do
   echo -e "$line"
 done | lolcat
 
-# === HITUNG OFFSET UNTUK POSISI GAMBAR DI KANAN ===
+# === POSISI LOGO DI KANAN ===
 vertical_offset=$((output_lines - 2))
 horizontal_offset=80
 
 printf "\033[%dA" "$vertical_offset"
 printf "\033[%dC" "$horizontal_offset"
 
-# === TAMPILKAN LOGO HANYA DI ITERM2 ===
+# === TAMPILKAN LOGO HANYA JIKA iTerm2 ===
 if [[ -f "$image_path" ]]; then
-  if [[ -n "$ITERM_SESSION_ID" ]] && command -v imgcat &>/dev/null; then
+  if [[ "$TERM" == "iTerm.app" ]] && command -v imgcat &>/dev/null; then
     imgcat "$image_path"
   else
-    echo "[Logo hanya ditampilkan jika menggunakan iTerm2 + imgcat]" >&2
+    echo "[Logo hanya ditampilkan di iTerm2 + imgcat]" >&2
   fi
 else
   echo "[Logo '$logo_name' tidak ditemukan di $image_path]" >&2
 fi
 
-# === Informasi tambahan ===
+# === INFORMASI TAMBAHAN ===
 echo -e "📅  $(date)" | lolcat
 
-if [[ "$(uname)" == "Darwin" ]]; then
+# Uptime
+if [[ "$os_name" == "Darwin" ]]; then
   boot_time=$(sysctl -n kern.boottime | awk -F'[=,]' '{print $2}' | tr -d ' ')
   now=$(date +%s)
   up=$((now - boot_time))
@@ -78,10 +78,13 @@ if [[ "$(uname)" == "Darwin" ]]; then
   hours=$(((up % 86400) / 3600))
   mins=$(((up % 3600) / 60))
   echo -e "🕒  Uptime: ${days}d ${hours}h ${mins}m" | lolcat
+else
+  uptime -p | sed 's/^/🕒  /' | lolcat
 fi
 
+# IP Address
 echo -e "📡  IP Address :" | lolcat
-if [[ "$(uname)" == "Darwin" ]]; then
+if [[ "$os_name" == "Darwin" ]]; then
   for iface in en0 en1; do
     ip=$(ipconfig getifaddr "$iface" 2>/dev/null)
     [[ -n "$ip" ]] && echo "   $iface: $ip" | lolcat
@@ -90,6 +93,7 @@ else
   hostname -I | awk '{print "   "$0}' | lolcat
 fi
 
+# Last Login
 if command -v last >/dev/null; then
   last_login=$(last -n 1 "$USER" | head -n 1)
   echo -e "👤  Last Login : $last_login" | lolcat

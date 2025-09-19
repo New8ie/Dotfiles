@@ -50,37 +50,7 @@ install_eza_deb() {
   log "eza versi $VERSION berhasil diinstall."
 }
 
-install_viu() {
-  log "Menginstall viu..."
 
-  case "$ARCH_TYPE" in
-    x86_64) ARCH_DL="x86_64-unknown-linux-musl" ;;
-    aarch64 | arm64) ARCH_DL="aarch64-unknown-linux-musl" ;;
-    armv7l) ARCH_DL="armv7-unknown-linux-musleabihf" ;;
-    *) err "Arsitektur tidak dikenali untuk viu." ;;
-  esac
-
-  VERSION="v1.5.1"
-  FILE="viu-${ARCH_DL}"
-  URL="https://github.com/atanunq/viu/releases/download/${VERSION}/${FILE}"
-
-  TEMP_DIR=$(mktemp -d)
-  if curl -fsSL "$URL" -o "$TEMP_DIR/viu"; then
-    chmod +x "$TEMP_DIR/viu"
-    sudo install -m755 "$TEMP_DIR/viu" /usr/local/bin/viu || {
-      rm -rf "$TEMP_DIR"
-      err "Gagal install viu"
-    }
-    log "✅ viu v1.5.1 berhasil diinstall."
-  else
-    rm -rf "$TEMP_DIR"
-    if command -v imgcat >/dev/null 2>&1; then
-      warn "Gagal mengunduh viu, tapi imgcat tersedia. Melanjutkan..."
-    else
-      err "Gagal mengunduh viu dan imgcat tidak tersedia. Tidak bisa menampilkan gambar logo."
-    fi
-  fi
-}
 
 install_packages() {
   log "Mulai proses instalasi paket..."
@@ -88,7 +58,7 @@ install_packages() {
   case "$OS_TYPE" in
     linux)
       sudo apt update
-      packages=(zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m fd-find zoxide)
+      packages=(zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m fd-find zoxide)
 
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
@@ -101,14 +71,6 @@ install_packages() {
           fi
         fi
       done
-
-      # Install viu
-      if ! command -v viu &>/dev/null; then
-        ARCH_TYPE=$(uname -m)
-        install_viu
-      else
-        log "[SKIP] viu sudah terinstall."
-      fi
 
       # Install eza
       if ! command -v eza &>/dev/null; then
@@ -142,7 +104,7 @@ install_packages() {
       ;;
     redhat)
       sudo yum install -y epel-release
-      sudo yum install -y zsh git curl fzf grc gnupg2 lolcat pv neofetch bat fastfetch awscli btop coreutils w3m zoxide net-tools 
+      sudo yum install -y zsh git curl fzf grc gnupg2 lolcat pv bat fastfetch awscli btop coreutils w3m zoxide net-tools 
       ;;
     macos)
       if ! command -v brew &>/dev/null; then
@@ -165,13 +127,13 @@ install_packages() {
         done
       fi
       brew update
-      brew install zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide eza nano yazi fd ffmpeg sevenzip jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
+      brew install zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m zoxide eza nano yazi fd ffmpeg sevenzip jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
       ;;
     arch)
-      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide fd net-tools
+      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m zoxide fd net-tools
       ;;
     fedora)
-      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv neofetch bat fastfetch coreutils w3m zoxide net-tools
+      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m zoxide net-tools
       ;;
   esac
   set -e
