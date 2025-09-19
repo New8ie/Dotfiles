@@ -1,7 +1,8 @@
 #!/bin/bash
+# ~/.config/fastfetch/motd-fastfetch.sh
 
 # === Tambahkan PATH untuk environment tertentu ===
-export PATH="/snap/bin:/usr/local/bin:$PATH"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/.dotfiles/Iterm2/bin:$PATH"
 
 # === DETEKSI OS & DISTRO ===
 os_name="$(uname -s)"
@@ -49,30 +50,24 @@ for line in "${output_array[@]}"; do
 done | lolcat
 
 # === HITUNG OFFSET UNTUK POSISI GAMBAR DI KANAN ===
-vertical_offset=$((output_lines - 2)) # naik ke atas
-horizontal_offset=80                  # geser ke kanan
+vertical_offset=$((output_lines - 2))
+horizontal_offset=80
 
 printf "\033[%dA" "$vertical_offset"
 printf "\033[%dC" "$horizontal_offset"
 
-# === TAMPILKAN LOGO GAMBAR JIKA TERSEDIA ===
+# === TAMPILKAN LOGO HANYA DI ITERM2 ===
 if [[ -f "$image_path" ]]; then
-  if command -v imgcat &>/dev/null; then
+  if [[ -n "$ITERM_SESSION_ID" ]] && command -v imgcat &>/dev/null; then
     imgcat "$image_path"
-  elif command -v /usr/local/bin/imgcat &>/dev/null; then
-    /usr/local/bin/imgcat "$image_path"
-  elif command -v viu &>/dev/null; then
-    viu -w 30 -h 15 "$image_path"
-  elif command -v chafa &>/dev/null; then
-    chafa "$image_path"
   else
-    echo "[imgcat/viu/chafa tidak tersedia]" >&2
+    echo "[Logo hanya ditampilkan jika menggunakan iTerm2 + imgcat]" >&2
   fi
 else
   echo "[Logo '$logo_name' tidak ditemukan di $image_path]" >&2
 fi
 
-# 3️⃣ Informasi tambahan
+# === Informasi tambahan ===
 echo -e "📅  $(date)" | lolcat
 
 if [[ "$(uname)" == "Darwin" ]]; then
@@ -86,16 +81,16 @@ if [[ "$(uname)" == "Darwin" ]]; then
 fi
 
 echo -e "📡  IP Address :" | lolcat
-for iface in en0 en1; do
-  ip=$(ipconfig getifaddr "$iface" 2>/dev/null)
-  [[ -n "$ip" ]] && echo "   $iface: $ip" | lolcat
-done
+if [[ "$(uname)" == "Darwin" ]]; then
+  for iface in en0 en1; do
+    ip=$(ipconfig getifaddr "$iface" 2>/dev/null)
+    [[ -n "$ip" ]] && echo "   $iface: $ip" | lolcat
+  done
+else
+  hostname -I | awk '{print "   "$0}' | lolcat
+fi
 
 if command -v last >/dev/null; then
   last_login=$(last -n 1 "$USER" | head -n 1)
   echo -e "👤  Last Login : $last_login" | lolcat
-fi
-
-if ! command -v lolcat &>/dev/null; then
-  lolcat() { cat; }
 fi

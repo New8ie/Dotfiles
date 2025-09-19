@@ -75,7 +75,7 @@ bash ~/.dotfiles/Install/01-install-deps.sh
 
 - `zsh` + [oh-my-zsh](https://ohmyz.sh)
 - [powerlevel10k](https://github.com/romkatv/powerlevel10k)
-- Plugin: syntax-highlighting, autosuggestions, you-should-use, bat, eza
+- Plugin: syntax-highlighting, autosuggestions, you-should-use, bat, eza, fzf
 - `bat`, `eza`, `zoxide`, `neofetch`, `fastfetch`
 - `nano` dengan syntax highlighting
 - Logo bergambar untuk `neofetch` dan `fastfetch`

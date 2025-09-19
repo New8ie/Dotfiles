@@ -8,13 +8,19 @@ export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/fachmi/.local/bi
 # PATH Extras : Venv, lokal, plugin, apps , script
 export PATH="$HOME/.config/venv/myvenv/bin:$PATH"
 export PATH="$HOME/.config/script:$PATH"
+export PATH="$HOME/.config/fastfetch/bin:$PATH"
 export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
+
+# Path imgcat (iTerm2 utils)
+export PATH="$HOME/.dotfiles/Iterm2/bin:$PATH"
 
 # Path lolcat (via Ruby gem, jika digunakan)
 if [[ -d "$HOME/.gem/ruby/3.2.0/bin" ]]; then
   export PATH="$HOME/.gem/ruby/3.2.0/bin:$PATH"
 fi
 
+# Alias imgcat biar gampang dipakai
+alias imgcat="$HOME/.dotfiles/Iterm2/bin/imgcat"
 
 # ============================================
 # 🧱 Compiler Flags for Building Python
@@ -32,11 +38,11 @@ export ARCHFLAGS="-arch $(uname -m)"
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 
-# Jalankan pyenv hanya jika tersedia
 if command -v pyenv &> /dev/null; then
   eval "$(pyenv init --path)"
   eval "$(pyenv init -)"
 fi
+
 # ============================================
 # 🧪 CONDA (manual activation only)
 # ============================================
@@ -45,8 +51,8 @@ if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
   conda config --set auto_activate false
 fi
 
-# Load custom alias untuk venv
 [[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
+
 # ==============================================================================
 #                         Konfigurasi ZSH & Oh My Zsh
 # ==============================================================================
@@ -116,9 +122,9 @@ fi
 if [[ "$PLATFORM" == "macOS" ]]; then
   [[ -s "/opt/homebrew/etc/grc.zsh" ]] && source "/opt/homebrew/etc/grc.zsh"
 elif [[ "$DISTRO" == "Debian" ]]; then
-  [[ -s "/etc/grc.zsh" ]] && source "/etc/grc.zsh"
+  [[ -s "/etc/grc.zsh" ]] && source /etc/grc.zsh
 elif [[ "$DISTRO" == "Arch" ]]; then
-  [[ -s "/usr/share/grc/grc.zsh" ]] && source "/usr/share/grc/grc.zsh"
+  [[ -s "/usr/share/grc/grc.zsh" ]] && source /usr/share/grc/grc.zsh
 fi
 
 # ==============================================================================
