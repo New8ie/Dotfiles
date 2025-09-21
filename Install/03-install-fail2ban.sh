@@ -107,8 +107,8 @@ touch /var/log/fail2ban-cloudflare.log
 chown root:root /var/log/fail2ban-cloudflare.log || true
 chmod 640 /var/log/fail2ban-cloudflare.log
 
-log "Copy action iptables-custom-logging-ipv6..."
-cp -f "$DOTFILES_DIR/Fail2Ban/Iptables-custom-logging-ipv6.conf" /etc/fail2ban/action.d/iptables-custom-logging-ipv6.conf
+log "Copy action iptables-custom..."
+cp -f "$DOTFILES_DIR/Fail2Ban/Iptables.conf" /etc/fail2ban/action.d/iptables-custom.conf
 touch /var/log/fail2ban-iptables.log
 chown root:root /var/log/fail2ban-iptables.log || true
 chmod 640 /var/log/fail2ban-iptables.log
