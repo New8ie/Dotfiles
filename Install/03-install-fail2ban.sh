@@ -1,51 +1,71 @@
-#!/bin/bash
-# ======================================================================
-# Script Instalasi & Konfigurasi Fail2ban dengan Telegram & Cloudflare
-# Debian/Ubuntu
-# Author : Fachmi Homelab
-# ======================================================================
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e  # hentikan script jika ada error
-
-# Pastikan dijalankan sebagai root
+# =============================================================================
+# Auto elevate jika bukan root
+# =============================================================================
 if [[ $EUID -ne 0 ]]; then
-   echo "⚠️  Harus dijalankan sebagai root (gunakan sudo)." 
-   exit 1
+   echo "⚠️  Script butuh akses root, mencoba sudo..."
+   exec sudo bash "$0" "$@"
 fi
 
-echo "===> Update repository & upgrade paket..."
+# =============================================================================
+# Logging Helpers
+# =============================================================================
+log()  { echo -e "\033[1;32m[INFO]\033[0m $*"; }
+warn() { echo -e "\033[1;33m[WARN]\033[0m $*"; }
+err()  { echo -e "\033[1;31m[ERROR]\033[0m $*"; exit 1; }
+
+
+
+# =============================================================================
+# Install & Konfigurasi Fail2ban
+# =============================================================================
+log "Update repository..."
+
+# Tentukan lokasi dotfiles yang benar
+if [ -n "${SUDO_USER-}" ] && [ "$SUDO_USER" != "root" ]; then
+  DOTFILES_DIR="/home/$SUDO_USER/.dotfiles"
+else
+  DOTFILES_DIR="$HOME/.dotfiles"
+fi
+
+log "Copy action telegram.conf..."
+cp -f "$DOTFILES_DIR/Fail2Ban/Telegram.conf" /etc/fail2ban/action.d/telegram.conf
+
+
 apt update -y && apt upgrade -y
 
-echo "===> Install Fail2ban & curl..."
+log "Install Fail2ban & curl..."
 apt install -y fail2ban curl
 
-echo "===> Backup konfigurasi default jail.conf..."
-cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.bak.$(date +%F)
+log "Backup konfigurasi default..."
+cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.bak.$(date +%Y%m%d)
 
-echo "===> Deploy konfigurasi action Telegram..."
-cp -f ~/.dotfiles/Fail2Ban/Telegram.conf /etc/fail2ban/action.d/telegram.conf
+log "Copy action telegram.conf..."
+cp -f "$DOTFILES_DIR/Fail2Ban/Telegram.conf" /etc/fail2ban/action.d/telegram.conf
 
-echo "===> Buat folder script jika belum ada..."
+log "Buat folder script jika belum ada..."
 mkdir -p /etc/fail2ban/script
 
-echo "===> Deploy script notifikasi Telegram..."
-cp -f ~/.dotfiles/Fail2Ban/send_telegram_notif.sh /etc/fail2ban/script/send_telegram_notif.sh
+log "Copy script telegram_notif..."
+cp -f "$DOTFILES_DIR/Fail2Ban/send_telegram_notif.sh" /etc/fail2ban/script/send_telegram_notif.sh
 chmod +x /etc/fail2ban/script/send_telegram_notif.sh
 
-echo "===> Deploy konfigurasi action Cloudflare..."
-cp -f ~/.dotfiles/Fail2Ban/Cloudflare.conf /etc/fail2ban/action.d/cloudflare.conf 
+log "Copy action Cloudflare..."
+cp -f "$DOTFILES_DIR/Fail2Ban/Cloudflare.conf" /etc/fail2ban/action.d/cloudflare.conf 
 
-echo "===> Deploy konfigurasi jail.local..."
-cp -f ~/.dotfiles/Fail2Ban/Jail.conf /etc/fail2ban/jail.local
+log "Membuat konfigurasi jail.local..."
+cp -f "$DOTFILES_DIR/Fail2Ban/Jail.conf" /etc/fail2ban/jail.local
 
-echo "===> Enable & restart Fail2ban..."
+log "Enable & Restart Fail2ban..."
 systemctl enable fail2ban
 systemctl restart fail2ban
 
-echo "===> Status Fail2ban:"
-systemctl status fail2ban --no-pager || true
+log "Status Fail2ban:"
+systemctl status fail2ban --no-pager
 
 echo
-echo "✅ Fail2ban berhasil terinstal & dikonfigurasi!"
-echo "ℹ️  Cek status: fail2ban-client status"
-echo "⚙️  Jangan lupa ubah Cloudflare Token (cftoken) & Cloudflare UserID (cfuser) di /etc/fail2ban/action.d/cloudflare.conf"
+log "✅ Fail2ban + Telegram berhasil terinstal & dikonfigurasi!"
+echo "   Cek status dengan: fail2ban-client status"
+echo "   Rubah Cloudflare Token (cftoken) & Cloudflare Userid (cfuser)."
