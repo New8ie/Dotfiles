@@ -83,7 +83,8 @@ Pastikan Anda memiliki:
 ├── mylocalip.sh
 ├── sshcpid.sh
 ├── static_route.sh
-└── zabbix-install.sh
+├── zabbix-install.sh
+└── mount-ntfs.sh
 ```
 
 ---

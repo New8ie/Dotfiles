@@ -16,7 +16,6 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias capc="screencapture -c" ## menangkap layar ke clipboard
   alias capic="screencapture -i -c" ## menangkap layar secara interaktif ke clipboard
   alias capiwc="screencapture -i -w -c" ## menangkap layar interaktif dengan window
-  alias myip='curl ifconfig.me' ## menampilkan IP publik
   alias ipconfig="~/.local/bin/mylocalip.sh" ## menampilkan IP lokal dengan script bash
   alias mute="osascript -e 'set volume output muted true'" ## menonaktifkan suara
   alias unmute="osascript -e 'set volume output muted false'" ## mengaktifkan suara kembali
@@ -29,6 +28,7 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias wifi-off="networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/{getline; print \$NF}' | xargs -I{} networksetup -setairportpower {} off" ## menonaktifkan Wi-Fi secara otomatis di antarmuka yang benar
   alias openhere="open ." ## membuka folder saat ini di Finder
   alias cleanup="rm -rf ~/Library/Caches/* && sudo purge" ## membersihkan file sementara dan cache
+  
   
   # Aliases untuk macOS sama dengan linux
 
@@ -52,11 +52,11 @@ elif [[ "$PLATFORM" == "Linux" ]]; then
   # Aliases untuk Linux Sama dengan macOS 
   alias showroute="ip route show"
   alias myip="hostname -I | awk '{print \$1}'"
-  alias listport="sudo lsof -i -P -n | grep LISTEN"
-  alias netport="netstat -tulpn | grep LISTEN"
+  alias listport="ss -tlupn"
   alias sysinfo="top -o %CPU"
   alias runningapps="ps aux | grep -v grep | grep -i"
   alias killapp="pkill -f"
+  alias du="du -sh ./*/" # menampilkan ukuran file dan folder
 
   if [[ "$DISTRO" == "Debian" ]]; then
     alias update="sudo apt update && sudo apt upgrade -y"
@@ -64,6 +64,7 @@ elif [[ "$PLATFORM" == "Linux" ]]; then
     alias remove="sudo apt remove -y"
     alias cleanup="sudo apt autoremove -y && sudo apt autoclean -y"
     alias flushdns="sudo systemd-resolve --flush-caches"
+    
 
   elif [[ "$DISTRO" == "Arch" ]]; then
     alias update="sudo pacman -Syu"
@@ -90,7 +91,7 @@ alias clearall='clear && history -c' # Menghapus isi direktori dan menghapus riw
 alias lss='ls -lhG' # Menampilkan isi direktori dengan ukuran file dalam format yang lebacakan
 alias clr="clear"
 alias quit="exit"
-alias du="du -sh *" 
+alias du="du -sh ./*/" 
 alias df="df -h"
 alias h="history"
 alias j="jobs"
@@ -102,19 +103,20 @@ alias showaliases="alias | less"
 
 # ========================= Konfigurasi bat (Pengganti cat) =========================
 
-if command -v bat &>/dev/null; then
+if command -v bat &> /dev/null; then
   alias cat="bat"
   export BAT_THEME="Dracula"
   export BAT_STYLE="snip"
   alias cat-l="bat --style=numbers"
-elif command -v batcat &>/dev/null; then
-  alias cat="batcat"
+if command -v batcat &> /dev/null; then
+  alias cat="bat"
   export BAT_THEME="Dracula"
   export BAT_STYLE="snip"
-  alias cat-l="batcat --style=numbers"
+  alias cat-l="bat --style=numbers"
 else
-  alias cat="command cat"  # fallback ke cat asli
+  alias cat="command cat" ## Menggunakan perintah cat asli jika bat tidak tersedia
 fi
+
 
 # ========================= Konfigurasi eza (Pengganti ls) =========================
 if command -v eza &> /dev/null; then

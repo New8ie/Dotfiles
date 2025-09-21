@@ -1,97 +1,80 @@
 #!/bin/bash
 
+# ========= util =========
+# Warna aman untuk Readline (dibungkus \001 .. \002 agar tidak dihitung panjangnya)
+RED=$'\001\033[0;31m\002'
+GREEN=$'\001\033[0;32m\002'
+YELLOW=$'\001\033[1;33m\002'
+BLUE=$'\001\033[1;34m\002'
+CYAN=$'\001\033[1;36m\002'
+NC=$'\001\033[0m\002'
+
 # Fungsi konversi CIDR ke netmask untuk macOS
 cidr_to_netmask() {
-    local cidr=$1
-    local i
-    local mask=""
-
+    local cidr=$1 i mask=""
     if ! [[ $cidr =~ ^[0-9]+$ ]] || [ "$cidr" -lt 0 ] || [ "$cidr" -gt 32 ]; then
         echo "❌ CIDR tidak valid: $cidr"
         return 1
     fi
-
-    for ((i=0; i<4; i++)); do
+    for ((i=0;i<4;i++)); do
         if [ "$cidr" -ge 8 ]; then
-            mask+="255"
-            cidr=$((cidr - 8))
+            mask+="255"; cidr=$((cidr-8))
         else
-            mask+=$(( 256 - 2 ** (8 - cidr) ))
-            cidr=0
+            mask+=$((256 - 2 ** (8 - cidr))); cidr=0
         fi
-
-        [ "$i" -lt 3 ] && mask+="."
+        (( i<3 )) && mask+="."
     done
-
     echo "$mask"
 }
 
-# Fungsi untuk cetak routing table dengan/ tanpa grc
 print_routing_table() {
     local OS="$1"
-
     echo -e "\n📡 Routing table saat ini:"
     if command -v grc >/dev/null 2>&1; then
         echo "✨ Menggunakan grc untuk pewarnaan output"
-        if [[ "$OS" == "Darwin" ]]; then
-            grc netstat -rn -f inet
-        else
-            grc ip route show
-        fi
+        if [[ "$OS" == "Darwin" ]]; then grc netstat -rn -f inet; else grc ip route show; fi
     else
         echo "⚠️  grc tidak ditemukan, menampilkan output biasa"
-        if [[ "$OS" == "Darwin" ]]; then
-            netstat -rn -f inet
-        else
-            ip route show
-        fi
+        if [[ "$OS" == "Darwin" ]]; then netstat -rn -f inet; else ip route show; fi
     fi
 }
 
-# Cek root
+# ========= guard =========
 if [ "$EUID" -ne 0 ]; then
     echo "❌ Anda harus menjalankan skrip ini dengan sudo/root."
     exit 1
 fi
 
-# Menu loop
-
-# Warna ANSI
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-CYAN='\033[1;36m'
-NC='\033[0m' # No Color
-
+# ========= main loop =========
 while true; do
     echo -e "${CYAN}=== MENU STATIC ROUTE ===${NC}"
     echo -e "${GREEN}1)${NC} Tambah static route"
     echo -e "${GREEN}2)${NC} Hapus static route"
     echo -e "${GREEN}3)${NC} Print routing table"
     echo -e "${RED}4)${NC} Exit"
-    # Gunakan echo -en agar escape sequence warna tidak mengganggu input
-    echo -en "${YELLOW}Pilih opsi [1/2/3/4]: ${NC}"
-    read -r opsi
+    echo -e "${RED}q)${NC} Exit cepat"
 
+    # Menu 1 tombol: q keluar langsung tanpa Enter
+    read -r -n 1 -p $' \001\033[1;33m\002Pilih opsi [1/2/3/4/q]: \001\033[0m\002' opsi
+    echo  # newline setelah 1 tombol
     case "$opsi" in
+        q|Q) echo -e "${CYAN}Keluar.${NC}"; break ;;
         1|2)
-            echo -en "${BLUE}Masukkan subnet destination (format: IP/CIDR, contoh: 192.168.2.0/24): ${NC}"
-            read -r subnet_destination
-            if ! echo "$subnet_destination" | grep -E '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$' >/dev/null; then
+            # Input subnet (Readline aktif, backspace aman)
+            read -e -r -p $'\001\033[1;34m\002Masukkan subnet destination (format: IP/CIDR, contoh: 192.168.2.0/24): \001\033[0m\002' subnet_destination
+            if ! echo "$subnet_destination" | grep -Eq '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$'; then
                 echo -e "${RED}❌ Format subnet tidak valid.${NC}"
                 continue
             fi
 
-            # Deteksi OS
             OS="$(uname)"
-            ip=$(echo "$subnet_destination" | cut -d'/' -f1)
-            cidr=$(echo "$subnet_destination" | cut -d'/' -f2)
+            ip=${subnet_destination%/*}
+            cidr=${subnet_destination#*/}
 
-            if [ "$opsi" == "1" ]; then
-                echo -en "${BLUE}Masukkan IP Gateway: ${NC}"
-                read -r gateway
-                if ! echo "$gateway" | grep -E '^[0-9]{1,3}(\.[0-9]{1,3}){3}$' >/dev/null; then
+            if [ "$opsi" = "1" ]; then
+                # Tambah route
+                read -e -r -p $'\001\033[1;34m\002Masukkan IP Gateway: \001\033[0m\002' gateway
+                if ! echo "$gateway" | grep -Eq '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'; then
                     echo -e "${RED}❌ IP Gateway tidak valid.${NC}"
                     continue
                 fi
@@ -99,35 +82,35 @@ while true; do
                 if [[ "$OS" == "Darwin" ]]; then
                     netmask=$(cidr_to_netmask "$cidr") || continue
                     echo -e "${YELLOW}🔧 Menambahkan route di macOS: $ip netmask $netmask via $gateway${NC}"
-                    if ! sudo route -n add -net "$ip" "$gateway" "$netmask" 2>&1; then
+                    if ! route -n add -net "$ip" -netmask "$netmask" "$gateway"; then
                         echo -e "${RED}❌ Gagal menambahkan route.${NC}"
                         continue
                     fi
-                elif [[ "$OS" == "Linux" ]]; then
+                else
                     echo -e "${YELLOW}🔧 Menambahkan route di Linux: $subnet_destination via $gateway${NC}"
-                    if ! sudo ip route add "$subnet_destination" via "$gateway" 2>&1; then
+                    if ! ip route add "$subnet_destination" via "$gateway"; then
                         echo -e "${RED}❌ Gagal menambahkan route. Mungkin route sudah ada.${NC}"
                         continue
                     fi
                 fi
 
-            elif [ "$opsi" == "2" ]; then
+            else
+                # Hapus route
                 if [[ "$OS" == "Darwin" ]]; then
                     netmask=$(cidr_to_netmask "$cidr") || continue
-                    echo -e "${YELLOW}🗑️ Menghapus route di macOS: $ip netmask $netmask${NC}"
-                    if ! sudo route -n delete -net "$ip" "$netmask" 2>&1; then
+                    echo -e "${YELLOW}🗑️  Menghapus route di macOS: $ip netmask $netmask${NC}"
+                    if ! route -n delete -net "$ip" -netmask "$netmask"; then
                         echo -e "${RED}❌ Gagal menghapus route.${NC}"
                         continue
                     fi
-                elif [[ "$OS" == "Linux" ]]; then
-                    echo -e "${YELLOW}🗑️ Menghapus route di Linux: $subnet_destination${NC}"
-                    if ! sudo ip route delete "$subnet_destination" 2>&1; then
+                else
+                    echo -e "${YELLOW}🗑️  Menghapus route di Linux: $subnet_destination${NC}"
+                    if ! ip route delete "$subnet_destination"; then
                         echo -e "${RED}❌ Gagal menghapus route. Pastikan route ada.${NC}"
                         continue
                     fi
                 fi
             fi
-            # print_routing_table "$OS" (dihapus sesuai permintaan)
             ;;
         3)
             OS="$(uname)"

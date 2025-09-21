@@ -21,11 +21,7 @@ Dotfiles/
 │   └── Alias/
 │       └── alias.zsh             # Alias perintah untuk Linux/macOS
 ├── Nano/
-│   └── nanorc.nanorc             # Konfigurasi highlight Nano
-├── Neofetch/
-│   ├── config.conf               # Konfigurasi neofetch
-│   ├── motd-script.sh           # Skrip MOTD bergambar
-│   └── *-logo.png                # Logo distro (macOS, Debian, Ubuntu, Raspberry Pi)
+│   └── nanorc.nanorc             # Konfigurasi highlight Nano              # Logo distro (macOS, Debian, Ubuntu, Raspberry Pi)
 ├── fastfetch/
 │   ├── config.conf               # Konfigurasi fastfetch horizontal
 │   ├── motd-fastfetch.sh        # Skrip MOTD untuk fastfetch
@@ -63,11 +59,11 @@ bash ~/.dotfiles/Install/01-install-deps.sh
 
 ## 💡 Dukungan Sistem
 
-| OS        | Status     | Keterangan                    |
-|-----------|------------|-------------------------------|
-| Debian 11+| ✅ Stabil   | Paket diinstal via APT        |
-| Ubuntu 22+| ✅ Stabil   | eza fallback dari GitHub      |
-| macOS 13+ | ✅ Stabil   | Menggunakan Homebrew & iTerm2 |
+| OS         | Status   | Keterangan                    |
+| ---------- | -------- | ----------------------------- |
+| Debian 11+ | ✅ Stabil | Paket diinstal via APT        |
+| Ubuntu 22+ | ✅ Stabil | eza fallback dari GitHub      |
+| macOS 13+  | ✅ Stabil | Menggunakan Homebrew & iTerm2 |
 
 ---
 
@@ -76,9 +72,9 @@ bash ~/.dotfiles/Install/01-install-deps.sh
 - `zsh` + [oh-my-zsh](https://ohmyz.sh)
 - [powerlevel10k](https://github.com/romkatv/powerlevel10k)
 - Plugin: syntax-highlighting, autosuggestions, you-should-use, bat, eza, fzf
-- `bat`, `eza`, `zoxide`, `neofetch`, `fastfetch`
+- `bat`, `eza`, `zoxide`, `fastfetch`
 - `nano` dengan syntax highlighting
-- Logo bergambar untuk `neofetch` dan `fastfetch`
+- Logo bergambar untuk `fastfetch`
 
 ---
 

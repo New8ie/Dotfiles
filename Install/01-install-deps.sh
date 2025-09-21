@@ -50,15 +50,13 @@ install_eza_deb() {
   log "eza versi $VERSION berhasil diinstall."
 }
 
-
-
 install_packages() {
   log "Mulai proses instalasi paket..."
   set +e
   case "$OS_TYPE" in
     linux)
       sudo apt update
-      packages=(zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m fd-find zoxide)
+      packages=(zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m fd-find zoxide net-tools iproute2)
 
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
@@ -79,32 +77,10 @@ install_packages() {
       else
         log "[SKIP] eza sudah terinstall."
       fi
-
-      # Install fastfetch dari GitHub
-      if ! command -v fastfetch &>/dev/null; then
-        log "Install fastfetch dari GitHub (.deb)..."
-        ARCH_TYPE=$(dpkg --print-architecture)
-        LATEST=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest \
-          | grep browser_download_url \
-          | grep "linux_${ARCH_TYPE}.deb" \
-          | cut -d '"' -f 4 | head -n1)
-        if [ -n "$LATEST" ]; then
-          tmp=$(mktemp -d)
-          cd "$tmp"
-          curl -LO "$LATEST"
-          sudo dpkg -i *.deb || sudo apt-get install -f -y
-          cd ~ && rm -rf "$tmp"
-          log "[OK] fastfetch berhasil diinstall: $(fastfetch --version 2>/dev/null || echo 'Cek manual')"
-        else
-          warn "[FAIL] URL download fastfetch tidak ditemukan."
-        fi
-      else
-        log "[SKIP] fastfetch sudah terinstall."
-      fi
-      ;;
+    ;;
     redhat)
       sudo yum install -y epel-release
-      sudo yum install -y zsh git curl fzf grc gnupg2 lolcat pv bat fastfetch awscli btop coreutils w3m zoxide net-tools 
+      sudo yum install -y zsh git curl fzf grc gnupg2 lolcat pv bat fastfetch coreutils w3m zoxide net-tools iproute2
       ;;
     macos)
       if ! command -v brew &>/dev/null; then
@@ -127,13 +103,13 @@ install_packages() {
         done
       fi
       brew update
-      brew install zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m zoxide eza nano yazi fd ffmpeg sevenzip jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
+      brew install zsh git curl fzf grc gnupg lolcat pv bat coreutils w3m zoxide eza nano yazi fd ffmpeg sevenzip jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
       ;;
     arch)
-      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m zoxide fd net-tools
+      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg lolcat pv bat coreutils w3m zoxide fd net-tools iproute2
       ;;
     fedora)
-      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv bat fastfetch coreutils w3m zoxide net-tools
+      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv bat coreutils w3m zoxide net-tools iproute2
       ;;
   esac
   set -e
@@ -168,6 +144,7 @@ main() {
     read -rp "Masukkan pilihan [1/2]: " pilihan
     case "$pilihan" in
       1)
+        chmod +x ~/.dotfiles/Install/02-setup-zsh.sh
         bash ~/.dotfiles/Install/02-setup-zsh.sh
         break
         ;;
