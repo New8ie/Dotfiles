@@ -12,7 +12,7 @@ export PATH="$HOME/.config/fastfetch/bin:$PATH"
 export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
 
 # Path imgcat (iTerm2 utils)
-export PATH="$HOME/.dotfiles/Iterm2/bin:$PATH"
+export PATH="$HOME/.config/iterm2/bin:$PATH"
 
 # Path lolcat (via Ruby gem, jika digunakan)
 if [[ -d "$HOME/.gem/ruby/3.2.0/bin" ]]; then
@@ -20,7 +20,7 @@ if [[ -d "$HOME/.gem/ruby/3.2.0/bin" ]]; then
 fi
 
 # Alias imgcat biar gampang dipakai
-alias imgcat="$HOME/.dotfiles/Iterm2/bin/imgcat"
+alias imgcat="$HOME/.config/iterm2/bin/imgcat"
 
 # ============================================
 # 🧱 Compiler Flags for Building Python
