@@ -95,11 +95,11 @@ log "Copy action telegram.conf..."
 cp -f "$DOTFILES_DIR/Fail2Ban/Telegram.conf" /etc/fail2ban/action.d/telegram.conf
 
 log "Buat folder script jika belum ada..."
-mkdir -p /etc/fail2ban/script
+mkdir -p /etc/fail2ban/scripts
 
 log "Copy script send_telegram_notif.sh..."
-cp -f "$DOTFILES_DIR/Fail2Ban/send_telegram_notif.sh" /etc/fail2ban/script/send_telegram_notif.sh
-chmod +x /etc/fail2ban/script/send_telegram_notif.sh
+cp -f "$DOTFILES_DIR/Fail2Ban/send_telegram_notif.sh" /etc/fail2ban/scripts/send_telegram_notif.sh
+chmod +x /etc/fail2ban/scripts/send_telegram_notif.sh
 
 log "Copy action Cloudflare..."
 cp -f "$DOTFILES_DIR/Fail2Ban/Cloudflare.conf" /etc/fail2ban/action.d/cloudflare-logging.conf
