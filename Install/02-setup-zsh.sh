@@ -130,7 +130,7 @@ copy_configs() {
   chmod +x ~/.config/fastfetch/motd-fastfetch.sh
   cp -f ~/.dotfiles/Fastfetch/logo/*-logo.png ~/.config/fastfetch/logo/ 2>/dev/null || true
 
-  cp -rf ~/.dotfiles/Iterm2/bin/* "$HOME/.config/iterm2/bin" 2>/dev/null || true
+  cp -rf ~/.dotfiles/Iterm2/bin "$HOME/.config/iterm2/bin" 2>/dev/null || true
   cp -f  ~/.dotfiles/Iterm2/iterm2_shell_integration.zsh "$HOME/.config/iterm2/iterm2_shell_integration.zsh" 2>/dev/null || true
   chmod +x ~/.config/iterm2/bin/* 2>/dev/null || true
 

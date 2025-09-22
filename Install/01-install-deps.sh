@@ -56,7 +56,7 @@ install_packages() {
   case "$OS_TYPE" in
     linux)
       sudo apt update
-      packages=(zsh git curl fzf grc gnupg lolcat pv bat nano fastfetch coreutils w3m fd-find zoxide net-tools iproute2)
+      packages=(zsh git curl fzf grc gnupg lolcat pv bat nano coreutils w3m fd-find zoxide net-tools iproute2)
 
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
@@ -80,7 +80,7 @@ install_packages() {
     ;;
     redhat)
       sudo yum install -y epel-release
-      sudo yum install -y zsh git curl fzf nano grc gnupg2 lolcat pv bat fastfetch coreutils w3m zoxide net-tools iproute2
+      sudo yum install -y zsh git curl fzf nano grc gnupg2 lolcat pv bat coreutils w3m zoxide net-tools iproute2
       ;;
     macos)
       if ! command -v brew &>/dev/null; then

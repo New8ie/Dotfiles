@@ -14,7 +14,7 @@
 #
 # [Init]
 # init = 123
-
+#!/bin/bash
 
 # Konfigurasi
 TELEGRAM_BOT_TOKEN="AAABBBCcccDDDeeeFFFGGGHHHCCCKLLLLL"
