@@ -84,7 +84,7 @@ fi
 
 # Aliases Global
 # =========================
-
+alias cloudflare="~/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan dan mengapus banned ip di cloudflare
 alias sshcpid="/usr/local/bin/sshcpid.sh" ## menyalin SSH public key dengan script bash
 alias reload="source ~/.zshrc" # Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
 alias clearall='clear && history -c' # Menghapus isi direktori dan menghapus riwayat perintah

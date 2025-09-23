@@ -87,19 +87,35 @@ install_plugins() {
 # =============================================================================
 install_fastfetch() {
   case "$OS_TYPE" in
-    debian)
+    debian|ubuntu)
       log "Install Fastfetch via dpkg/apt..."
       wget -O /tmp/fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-amd64.deb \
         || err "Gagal download fastfetch"
       sudo apt install -y /tmp/fastfetch.deb || err "Gagal install fastfetch"
       rm -f /tmp/fastfetch.deb
       ;;
-    arch)    sudo pacman -S --noconfirm fastfetch ;;
-    redhat)  sudo dnf install -y fastfetch ;;
-    macos)   brew install fastfetch ;;
-    *)       err "OS tidak didukung: $OS_TYPE" ;;
+    arch)
+      sudo pacman -S --noconfirm fastfetch
+      ;;
+    redhat|fedora)
+      sudo dnf install -y fastfetch || err "Gagal install fastfetch"
+      ;;
+    centos)
+      if command -v dnf >/dev/null 2>&1; then
+        sudo dnf install -y fastfetch || err "Gagal install fastfetch"
+      else
+        sudo yum install -y fastfetch || err "Gagal install fastfetch"
+      fi
+      ;;
+    macos)
+      brew install fastfetch
+      ;;
+    *)
+      err "OS tidak didukung: $OS_TYPE"
+      ;;
   esac
 }
+
 
 # =============================================================================
 # Copy Configs
