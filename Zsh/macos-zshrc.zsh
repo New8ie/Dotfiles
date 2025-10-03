@@ -65,6 +65,7 @@ fi
 export ZSH="$HOME/.oh-my-zsh"
 export ZSH_DISABLE_COMPFIX=true
 POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
+fpath+=${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-completions/src
 
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(
@@ -74,6 +75,7 @@ plugins=(
   web-search
   zsh-you-should-use
   zsh-bat
+  zsh-completions
 )
 
 source "$ZSH/oh-my-zsh.sh"
@@ -160,13 +162,13 @@ if [[ -o interactive && -z "$__FASTFETCH_RUN" && -x "$FASTFETCH_SCRIPT" ]]; then
   export __FASTFETCH_RUN=1
   "$FASTFETCH_SCRIPT"
 fi
+
+# ==============================================================================
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
 # Docker CLI completions
-fpath=(/Users/fachmi/.docker/completions $fpath)
+# ==============================================================================
 
-# Load zsh completion system
-autoload -Uz compinit
-compinit
+fpath=(/Users/fachmi/.docker/completions $fpath)
 
 # ==============================================================================
 #                             Custom Alias File
@@ -175,3 +177,14 @@ compinit
 # Load custom alias untuk venv
 [[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
 
+
+# ==============================================================================  
+# Load zsh completion system
+autoload -U +X compinit && compinit
+autoload -U +X bashcompinit && bashcompinit
+
+
+if [ -f /usr/share/bash-completion/completions/service ]; then
+  source /usr/share/bash-completion/completions/service
+fi
+# ==============================================================================  

@@ -76,6 +76,7 @@ install_plugins() {
 
   clone_plugin https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
   clone_plugin https://github.com/zsh-users/zsh-autosuggestions.git      "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+  clone_plugin https://github.com/zsh-users/zsh-completions.git          "$ZSH_CUSTOM/plugins/zsh-completions"
   clone_plugin https://github.com/MichaelAquilina/zsh-you-should-use.git "$ZSH_CUSTOM/plugins/zsh-you-should-use"
   clone_plugin https://github.com/fdellwing/zsh-bat.git                  "$ZSH_CUSTOM/plugins/zsh-bat"
   clone_plugin https://github.com/z-shell/zsh-eza.git                    "$ZSH_CUSTOM/plugins/zsh-eza"

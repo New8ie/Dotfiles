@@ -25,9 +25,9 @@ alias imgcat="$HOME/.config/iterm2/bin/imgcat"
 # ============================================
 # 🧱 Compiler Flags for Building Python
 # ============================================
-#export LDFLAGS="-L/opt/homebrew/opt/zlib/lib -L/opt/homebrew/opt/sqlite/lib"
-#export CPPFLAGS="-I/opt/homebrew/opt/zlib/include -I/opt/homebrew/opt/sqlite/include"
-#export PKG_CONFIG_PATH="/opt/homebrew/opt/zlib/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig"
+export LDFLAGS="-L/opt/homebrew/opt/zlib/lib -L/opt/homebrew/opt/sqlite/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/zlib/include -I/opt/homebrew/opt/sqlite/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/zlib/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig"
 
 export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"
@@ -105,11 +105,6 @@ else
 fi
 
 # ==============================================================================
-#                             Custom Alias File
-# ==============================================================================
-[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
-
-# ==============================================================================
 #                                Integrasi Zoxide
 # ==============================================================================
 if command -v zoxide &> /dev/null; then
@@ -146,3 +141,30 @@ if [[ -x "$HOME/.config/fastfetch/motd-fastfetch.sh" ]]; then
 else
   echo "[.config/fastfetch/motd-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
 fi
+
+
+# ==============================================================================
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+# Docker CLI completions
+# ==============================================================================
+
+fpath=(/Users/fachmi/.docker/completions $fpath)
+
+# ==============================================================================
+#                             Custom Alias File
+# ==============================================================================
+[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
+# Load custom alias untuk venv
+[[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
+
+
+# ==============================================================================  
+# Load zsh completion system
+autoload -U +X compinit && compinit
+autoload -U +X bashcompinit && bashcompinit
+
+
+if [ -f /usr/share/bash-completion/completions/service ]; then
+  source /usr/share/bash-completion/completions/service
+fi
+# ==============================================================================  
