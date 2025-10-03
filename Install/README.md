@@ -9,6 +9,7 @@ Automasi instalasi tool CLI modern, Zsh, dan dotfiles pribadi untuk Linux dan ma
 ├── Install/
 │   ├── 01-install-deps.sh     # Install dependensi CLI & clone dotfiles
 │   └── 02-setup-zsh.sh        # Setup Zsh, plugin, konfigurasi, dan theme
+│   └── 03-install-fail2ban.sh  
 ```
 
 ---
@@ -17,7 +18,7 @@ Automasi instalasi tool CLI modern, Zsh, dan dotfiles pribadi untuk Linux dan ma
 
 - Deteksi otomatis OS (Ubuntu, Debian, Fedora, Arch, macOS)
 - Instalasi paket penting: `zsh`, `fzf`, `git`, `bat`, `eza`, `fastfetch`, dll
-- Clone & setup dotfiles (`.zshrc`, `.p10k.zsh`, `alias.zsh`, `neofetch`, dll)
+- Clone & setup dotfiles (`.zshrc`, `.p10k.zsh`, `alias.zsh`, dll)
 - Otomatis install Oh-My-Zsh + plugin dan theme `powerlevel10k`
 - Backup konfigurasi Zsh lama
 - Dukungan penuh macOS (termasuk iTerm2 integration)
@@ -26,16 +27,17 @@ Automasi instalasi tool CLI modern, Zsh, dan dotfiles pribadi untuk Linux dan ma
 
 ## ⚙️ Cara Instalasi
 
-### 1. Clone repositori
+### Clone repositori
 
 ```bash
 git clone https://github.com/New8ie/Dotfiles.git ~/.dotfiles
 cd ~/.dotfiles/Install
 ```
 
-### 2. Jalankan script utama
+### Jalankan script utama
 
 ```bash
+chmod +x ./01-install-deps.sh
 ./01-install-deps.sh
 ```
 
@@ -43,15 +45,15 @@ Script ini akan:
 - Mendeteksi OS dan menginstall dependensi
 - Install `eza`, `viu`, `fastfetch` dari GitHub release
 - Clone repo dotfiles ke `~/.dotfiles`
-- Menawarkan pilihan untuk melanjutkan ke setup Zsh
 
 ---
 
-### 3. Setup Zsh dan konfigurasi
+### Setup Zsh dan konfigurasi
 
-Jika sebelumnya memilih `2`, jalankan manual:
+Jika sebelumnya memilih `2`, jalankan :
 
 ```bash
+chmod +x ./02-setup-zsh.sh
 ./02-setup-zsh.sh
 ```
 
@@ -60,6 +62,21 @@ Script ini akan:
 - Install Oh-My-Zsh dan plugin tambahan
 - Salin konfigurasi dotfiles
 - Mengatur `zsh` sebagai shell default
+
+
+### Install fail2ban dan konfigurasi
+
+Jika sebelumnya memilih `2`, jalankan :
+
+```bash
+chmod +x ./02-setup-zsh.sh
+./Install/03-install-fail2ban.sh
+```
+
+Script ini akan:
+- Install fail2ban
+- Mengonfigurasi Fail2Ban dengan notifikasi Telegram dan integrasi Cloudflare.
+- Copy script => telegram , jail , action => iptables, cloudflare & telegram dan filter => nextcloud, guacamole & immich
 
 ---
 
@@ -80,6 +97,7 @@ Script ini akan:
 
 ## 🖼️ Contoh Tampilan
 
+![Screenshot](/Source/screenshoot.png "Screenshot")
 
 ---
 
