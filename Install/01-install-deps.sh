@@ -57,7 +57,7 @@ install_packages() {
     linux)
       sudo apt update
       packages=(zsh git curl fzf grc gnupg lolcat pv bat nano coreutils w3m fd-find zoxide net-tools iproute2)
-
+      sudo ln -s $(which fdfind) /usr/local/bin/fd
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
           log "[SKIP] $pkg sudah terinstall."
@@ -80,7 +80,7 @@ install_packages() {
     ;;
     redhat)
       sudo yum install -y epel-release
-      sudo yum install -y zsh git curl fzf nano grc gnupg2 lolcat pv bat coreutils w3m zoxide net-tools iproute2
+      sudo yum install -y zsh git curl fzf nano grc gnupg2 lolcat pv bat coreutils w3m zoxide fd-find net-tools iproute2
       ;;
     macos)
       if ! command -v brew &>/dev/null; then
@@ -109,7 +109,7 @@ install_packages() {
       sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide fd net-tools iproute2
       ;;
     fedora)
-      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv nano bat coreutils w3m zoxide net-tools iproute2
+      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv nano bat coreutils w3m fd-find zoxide net-tools iproute2
       ;;
   esac
   set -e

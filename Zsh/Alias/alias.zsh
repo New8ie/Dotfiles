@@ -121,10 +121,10 @@ fi
 # ========================= Konfigurasi eza (Pengganti ls) =========================
 if command -v eza &> /dev/null; then
   alias ls="eza $eza_params --icons --group-directories-first"
-  alias ll="eza --icons --group-directories-first -AolhM"
-  alias lt="eza --icons -AiolbM --tree --level=2"
+  alias ll="eza --icons --group-directories-first --total-size -AolhM"
+  alias lt="eza --icons -AiolbM --total-size --tree --level=2"
   alias lg="eza --icons -lbGF --git"
-  alias la="eza -lbhHgUmuSao --group-directories-first --icons"
+  alias la="eza -lbhHgUmuSao --total-size --group-directories-first --icons"
 else
   alias ls="ls" ## kembali ke default ls jika eza tidak ditemukan
 fi
@@ -207,3 +207,12 @@ alias ollpull="ollama pull"
 alias ollrm="ollama rm"
 alias olllog="ollama logs"
 alias ollserve="ollama serve"
+
+
+  # ==== Docker Bulk Commands ====
+  # ============================
+  alias dstop='docker stop $(docker ps -q)' ## Stop semua container yang sedang berjalan
+  alias dstart="docker start $(docker ps -aq)" ## Start semua container yang berhenti
+  alias dclean='docker stop $(docker ps -aq) && docker rm $(docker ps -aq)' ## Stop + remove semua container
+  alias dprune='docker system prune -af --volumes' ## Bersihkan semua image, container, network, dan cache
+  alias dpsa='docker ps -a' ## Tampilkan status semua container
