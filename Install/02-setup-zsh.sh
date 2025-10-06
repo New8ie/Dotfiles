@@ -136,11 +136,13 @@ copy_configs() {
   cp -f ~/.dotfiles/OhMyZsh/p10k.zsh ~/.p10k.zsh
   cp -f ~/.dotfiles/Zsh/zprofile.zsh ~/.zprofile
   cp -f ~/.dotfiles/Zsh/Alias/alias.zsh ~/.config/zsh/alias.zsh
+  
 
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
   cp -rf ~/.config/nano/Config/nanorc ~/.nanorc
-
+  cp -rf ~/.dotfiles/Zsh/Alias/Functions ~/.config/zsh/functions
   cp -rf ~/.dotfiles/Script/* ~/.config/script
+  chmod +x ~/.config/script/* 2>/dev/null || true
 
   cp -f ~/.dotfiles/Fastfetch/config.jsonc ~/.config/fastfetch/config.jsonc
   cp -f ~/.dotfiles/Fastfetch/motd-fastfetch.sh ~/.config/fastfetch/motd-fastfetch.sh
@@ -172,11 +174,13 @@ symlink_configs() {
   ln -sf ~/.dotfiles/OhMyZsh/p10k.zsh ~/.p10k.zsh
   ln -sf ~/.dotfiles/Zsh/zprofile.zsh ~/.zprofile
   ln -sf ~/.dotfiles/Zsh/Alias/alias.zsh ~/.config/zsh/alias.zsh
-
+  
+  cp -rf ~/.dotfiles/Zsh/Alias/Functions ~/.config/zsh/functions
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
   cp -rf ~/.config/nano/Config/nanorc ~/.nanorc
 
   ln -sfn ~/.dotfiles/Script ~/.config/script
+  chmod +x ~/.config/script/* 2>/dev/null || true
 
   ln -sf ~/.dotfiles/Fastfetch/config.jsonc ~/.config/fastfetch/config.jsonc
   ln -sf ~/.dotfiles/Fastfetch/motd-fastfetch.sh ~/.config/fastfetch/motd-fastfetch.sh

@@ -1,0 +1,4 @@
+CF_EMAIL="example@mail.com"
+API_KEY="lBwsch0pruzo891W0Lf9r5pT7U10q8XbsEy"
+ZONE_ID="HKVN97y40bTe2o8y6mtvT0ppopx0H5"
+CF_API="https://api.cloudflare.com/client/v4"

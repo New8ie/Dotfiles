@@ -16,6 +16,7 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias capc="screencapture -c" ## menangkap layar ke clipboard
   alias capic="screencapture -i -c" ## menangkap layar secara interaktif ke clipboard
   alias capiwc="screencapture -i -w -c" ## menangkap layar interaktif dengan window
+  alias myip='curl ifconfig.me' ## menampilkan IP publik
   alias ipconfig="~/.local/bin/mylocalip.sh" ## menampilkan IP lokal dengan script bash
   alias mute="osascript -e 'set volume output muted true'" ## menonaktifkan suara
   alias unmute="osascript -e 'set volume output muted false'" ## mengaktifkan suara kembali
@@ -28,7 +29,6 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias wifi-off="networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/{getline; print \$NF}' | xargs -I{} networksetup -setairportpower {} off" ## menonaktifkan Wi-Fi secara otomatis di antarmuka yang benar
   alias openhere="open ." ## membuka folder saat ini di Finder
   alias cleanup="rm -rf ~/Library/Caches/* && sudo purge" ## membersihkan file sementara dan cache
-  
   
   # Aliases untuk macOS sama dengan linux
 
@@ -52,11 +52,11 @@ elif [[ "$PLATFORM" == "Linux" ]]; then
   # Aliases untuk Linux Sama dengan macOS 
   alias showroute="ip route show"
   alias myip="hostname -I | awk '{print \$1}'"
-  alias listport="ss -tlupn"
+  alias listport="sudo lsof -i -P -n | grep LISTEN"
+  alias netport="netstat -tulpn | grep LISTEN"
   alias sysinfo="top -o %CPU"
   alias runningapps="ps aux | grep -v grep | grep -i"
   alias killapp="pkill -f"
-  alias du="du -sh ./*/" # menampilkan ukuran file dan folder
 
   if [[ "$DISTRO" == "Debian" ]]; then
     alias update="sudo apt update && sudo apt upgrade -y"
@@ -64,7 +64,6 @@ elif [[ "$PLATFORM" == "Linux" ]]; then
     alias remove="sudo apt remove -y"
     alias cleanup="sudo apt autoremove -y && sudo apt autoclean -y"
     alias flushdns="sudo systemd-resolve --flush-caches"
-    
 
   elif [[ "$DISTRO" == "Arch" ]]; then
     alias update="sudo pacman -Syu"
@@ -84,48 +83,46 @@ fi
 
 # Aliases Global
 # =========================
-alias cloudflare="~/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan dan mengapus banned ip di cloudflare
-alias sshcpid="~/.config/script/sshcpid.sh" ## menyalin SSH public key dengan script bash
-alias static-route="~/.config/script/static_route.sh"
-alias reload="source ~/.zshrc" ## Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
-alias clearall='clear && history -c' ## Menghapus isi direktori dan menghapus riwayat perintah
-alias lss='ls -lhG' ## Menampilkan isi direktori dengan ukuran file dalam format yang lebacakan
+
+alias sshcpid="/usr/local/bin/sshcpid.sh" ## menyalin SSH public key dengan script bash
+alias reload="source ~/.zshrc" # Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
+alias clearall='clear && history -c' # Menghapus isi direktori dan menghapus riwayat perintah
+alias lss='ls -lhG' # Menampilkan isi direktori dengan ukuran file dalam format yang lebacakan
 alias clr="clear"
 alias quit="exit"
-alias du="du -sh ./*/" 
+alias du="du -sh *" 
 alias df="df -h"
 alias h="history"
 alias j="jobs"
 alias now='date +"%T"'
 alias today='date +"%A, %B %d, %Y"'
-alias pwdl="pwd -P" ## Memeriksa semua perintah yang tersedia dengan cara mengeksekusi script bash
-alias allcom='compgen -c' ## Memeriksa daftar semua alias yang ada
+alias pwdl="pwd -P" # Memeriksa semua perintah yang tersedia dengan cara mengeksekusi script bash
+alias allcom='compgen -c' # Memeriksa daftar semua alias yang ada
 alias showaliases="alias | less"
 
 # ========================= Konfigurasi bat (Pengganti cat) =========================
 
-if command -v bat &> /dev/null; then
-    alias cat="bat"
-    export BAT_THEME="Dracula"
-    export BAT_STYLE="snip"
-    alias cat-l="bat --style=numbers"
-elif command -v batcat &> /dev/null; then
-    alias cat="batcat"
-    export BAT_THEME="Dracula"
-    export BAT_STYLE="snip"
-    alias cat-l="batcat --style=numbers"
+if command -v bat &>/dev/null; then
+  alias cat="bat"
+  export BAT_THEME="Dracula"
+  export BAT_STYLE="snip"
+  alias cat-l="bat --style=numbers"
+elif command -v batcat &>/dev/null; then
+  alias cat="batcat"
+  export BAT_THEME="Dracula"
+  export BAT_STYLE="snip"
+  alias cat-l="batcat --style=numbers"
 else
-    alias cat="command cat"  ## Menggunakan perintah cat asli jika bat tidak tersedia
+  alias cat="command cat"  # fallback ke cat asli
 fi
-
 
 # ========================= Konfigurasi eza (Pengganti ls) =========================
 if command -v eza &> /dev/null; then
   alias ls="eza $eza_params --icons --group-directories-first"
   alias ll="eza --icons --group-directories-first -AolhM"
-  alias lt="eza --icons -AiolbM --total-size --tree --level=2"
+  alias lt="eza --icons -AiolbM --tree --level=2"
   alias lg="eza --icons -lbGF --git"
-  alias la="eza -lbhHgUmuSao --total-size --group-directories-first --icons"
+  alias la="eza -lbhHgUmuSao --group-directories-first --icons"
 else
   alias ls="ls" ## kembali ke default ls jika eza tidak ditemukan
 fi
@@ -168,58 +165,43 @@ fi
 # Deteksi zoxide
 if command -v zoxide &>/dev/null; then
   eval "$(zoxide init zsh)"
-  alias zf='zoxide query -l | fzf'             ## pilih direktori dari daftar zoxide
-  alias zj='cd "$(zoxide query -l | fzf)"'     ## cd ke direktori pilihan
+  alias zf='zoxide query -l | fzf'             # pilih direktori dari daftar zoxide
+  alias zj='cd "$(zoxide query -l | fzf)"'     # cd ke direktori pilihan
   alias zz='zoxide query -l | fzf --preview "ls -la {}"' # preview isi dir
 fi
 
 alias zf='zoxide query -l | fzf'
-alias zj='cd "$(zoxide query -l | fzf)"' ## Pindah ke direktori yang dipilih dengan fzf
-alias zz='zoxide query -l | fzf --preview "ls -la {}"' ## Preview isi direktori dengan fzf
+alias zj='cd "$(zoxide query -l | fzf)"' # Pindah ke direktori yang dipilih dengan fzf
+alias zz='zoxide query -l | fzf --preview "ls -la {}"' # Preview isi direktori dengan fzf
 
-# ======================================
+
 # Aliases untuk penggunaan astro
-# ======================================
+# ============================
 alias astrodev="astro dev"
 alias astrob="astro build"
 alias astroc="astro check"
 alias astronew="npm create astro@latest"
 
 
-# ======================================
-# Aliases untuk penggunaan Node.js
-# ======================================
 
-alias difffile="diff <(cat file1.txt) <(cat file2.txt)" ## Memeriksa perbedaan antara dua versi file dengan mengeksekusi script bash
-alias np='npm "$1"' ## Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
-alias n='node "$1"' ## Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
+# Aliases untuk penggunaan Node.js
+# ============================
+
+alias difffile="diff <(cat file1.txt) <(cat file2.txt)" # Memeriksa perbedaan antara dua versi file dengan mengeksekusi script bash
+alias np='npm "$1"' # Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
+alias n='node "$1"' # Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
 alias ndev="node -v"
 alias ninsstall="npm install"
 alias nstart="npm start"
 alias nbuild="npm run build"
 alias ntest="npm test"
 
-# ======================================
-# Ollama
-# ======================================
+
+# Aliases untuk penggunaan Ollama
+# ============================
 alias ollist="ollama list"
 alias ollrun="ollama run"
 alias ollpull="ollama pull"
 alias ollrm="ollama rm"
 alias olllog="ollama logs"
 alias ollserve="ollama serve"
-
-
-# ======================================
-# Auto load semua fungsi di ~/.config/zsh/functions
-# ======================================
-
-FUNC_DIR="$HOME/.config/zsh/functions"
-
-if [ -d "$FUNC_DIR" ]; then
-  for f in "$FUNC_DIR"/*.zsh; do
-    [ -r "$f" ] && source "$f"
-  done
-else
-  echo "⚠️ Direktori fungsi tidak ditemukan: $FUNC_DIR"
-fi
