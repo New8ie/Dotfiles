@@ -1,35 +1,37 @@
 # ======================================
 # Wazuh Management Function
 # ======================================
-# Dibuat oleh Bro Fachmi
-# Versi dengan fungsi bantuan (help)
-# ======================================
 
-# Lokasi log untuk aktivitas CLI
+
+# Log location for CLI activity
 WAZUH_LOG="$HOME/.config/zsh/logs/wazuh.log"
 mkdir -p "$(dirname "$WAZUH_LOG")"
 
+# === Color Codes ===
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 # ======================================
-# Fungsi Pengecekan Service
+# Service Check Function
 # ======================================
 _check_wazuh() {
   if ! systemctl is-active --quiet wazuh-manager; then
-    echo "❌ Service Wazuh Manager belum berjalan."
-    echo "🧩 Jalankan: sudo systemctl start wazuh-manager"
+    echo "❌ Wazuh Manager service is not running."
+    echo "🧩 Run: sudo systemctl start wazuh-manager"
     return 1
   fi
   return 0
 }
 
 # ======================================
-# Fungsi Utama
+# Main Functions
 # ======================================
 
-# Status Wazuh Manager
+# Wazuh Manager Status
 wazuh-status() {
   _check_wazuh || return 1
   local DATE=$(date +"%d-%m-%Y %H:%M:%S")
-  echo "🧠 Status Wazuh Manager:"
+  echo "🧠 Wazuh Manager Status:"
   echo "[$DATE] ▶️ wazuh-status" >> "$WAZUH_LOG"
   sudo systemctl status wazuh-manager --no-pager
 }
@@ -37,7 +39,7 @@ wazuh-status() {
 # Restart Wazuh Manager
 wazuh-restart() {
   local DATE=$(date +"%d-%m-%Y %H:%M:%S")
-  echo "♻️  Me-restart Wazuh Manager..."
+  echo "♻️ Restarting Wazuh Manager..."
   echo "[$DATE] 🔄 wazuh-restart" >> "$WAZUH_LOG"
   sudo systemctl restart wazuh-manager
 }
@@ -45,7 +47,7 @@ wazuh-restart() {
 # Stop Wazuh Manager
 wazuh-stop() {
   local DATE=$(date +"%d-%m-%Y %H:%M:%S")
-  echo "🛑 Menghentikan Wazuh Manager..."
+  echo "🛑 Stopping Wazuh Manager..."
   echo "[$DATE] ⏹️ wazuh-stop" >> "$WAZUH_LOG"
   sudo systemctl stop wazuh-manager
 }
@@ -53,92 +55,89 @@ wazuh-stop() {
 # Start Wazuh Manager
 wazuh-start() {
   local DATE=$(date +"%d-%m-%Y %H:%M:%S")
-  echo "🚀 Menjalankan Wazuh Manager..."
+  echo "🚀 Starting Wazuh Manager..."
   echo "[$DATE] ▶️ wazuh-start" >> "$WAZUH_LOG"
   sudo systemctl start wazuh-manager
 }
 
-# Lihat log Wazuh Manager realtime
+# View Wazuh Manager logs in realtime
 wazuh-log() {
   _check_wazuh || return 1
-  echo "📜 Menampilkan log Wazuh Manager..."
+  echo "📜 Displaying Wazuh Manager log..."
   sudo tail -f /var/ossec/logs/ossec.log
 }
 
-# Lihat daftar agent
+# View list of agents
 wazuh-agents() {
   _check_wazuh || return 1
-  echo "👥 Daftar agent terdaftar di Wazuh:"
+  echo "👥 List of agents registered with Wazuh:"
   sudo /var/ossec/bin/agent_control -l
 }
 
-# Lihat agent detail tertentu
-# Contoh: wazuh-agent-info 001
+# View detail for a specific agent
+# Example: wazuh-agent-info 001
 wazuh-agent-info() {
   _check_wazuh || return 1
   if [ -z "$1" ]; then
-    echo "⚠️  Gunakan: wazuh-agent-info <agent_id>"
+    echo "⚠️ Usage: wazuh-agent-info <agent_id>"
     return 1
   fi
   sudo /var/ossec/bin/agent_control -i "$1"
 }
 
-# Jalankan test rule manual
-# Contoh: wazuh-test-rule /var/ossec/logs/alerts/alerts.json
+# Run manual rule test
+# Example: wazuh-test-rule /var/ossec/logs/alerts/alerts.json
 wazuh-test-rule() {
   _check_wazuh || return 1
   if [ -z "$1" ]; then
-    echo "⚠️  Gunakan: wazuh-test-rule <path_log>"
+    echo "⚠️ Usage: wazuh-test-rule <log_path>"
     return 1
   fi
+  # Read log content and pipe it to ossec-logtest for rule testing
   sudo /var/ossec/bin/ossec-logtest < "$1"
 }
 
-# Jalankan restart untuk agen tertentu
-# Contoh: wazuh-restart-agent 001
+# Run restart for a specific agent
+# Example: wazuh-restart-agent 001
 wazuh-restart-agent() {
   _check_wazuh || return 1
   if [ -z "$1" ]; then
-    echo "⚠️  Gunakan: wazuh-restart-agent <agent_id>"
+    echo "⚠️ Usage: wazuh-restart-agent <agent_id>"
     return 1
   fi
   sudo /var/ossec/bin/agent_control -R "$1"
 }
 
 # ======================================
-# Fungsi Bantuan
+# Help Function
 # ======================================
 wazuh-help() {
-  echo "📘 Wazuh Management CLI Help"
-  echo "---------------------------------------------"
-  echo "🔧 Fungsi & Alias Tersedia:"
+  # All help text colored green
+  echo -e "${GREEN}📘 Wazuh Management CLI Help${NC}"
+  echo -e "${GREEN}---------------------------------------------${NC}"
+  echo -e "${GREEN}🔧 Available Functions & Aliases:${NC}"
   echo ""
-  echo "  wazuh-status            → Tampilkan status service Wazuh Manager"
-  echo "  wazuh-start             → Jalankan Wazuh Manager"
-  echo "  wazuh-stop              → Hentikan Wazuh Manager"
-  echo "  wazuh-restart           → Restart Wazuh Manager"
-  echo "  wazuh-log               → Lihat log realtime (ossec.log)"
-  echo "  wazuh-agents            → Daftar semua agent terdaftar"
-  echo "  wazuh-agent-info <id>   → Info detail agent berdasarkan ID"
-  echo "  wazuh-restart-agent <id>→ Restart agent tertentu"
-  echo "  wazuh-test-rule <file>  → Uji log file terhadap rule Wazuh"
+  echo -e "${GREEN}  wazuh-status             → Display Wazuh Manager service status${NC}"
+  echo -e "${GREEN}  wazuh-start              → Start Wazuh Manager${NC}"
+  echo -e "${GREEN}  wazuh-stop               → Stop Wazuh Manager${NC}"
+  echo -e "${GREEN}  wazuh-restart            → Restart Wazuh Manager${NC}"
+  echo -e "${GREEN}  wazuh-log                → View realtime log (ossec.log)${NC}"
+  echo -e "${GREEN}  wazuh-agents             → List all registered agents${NC}"
+  echo -e "${GREEN}  wazuh-agent-info <id>    → Detailed info for agent by ID${NC}"
+  echo -e "${GREEN}  wazuh-restart-agent <id> → Restart a specific agent${NC}"
+  echo -e "${GREEN}  wazuh-test-rule <file>   → Test a log file against Wazuh rules${NC}"
   echo ""
-  echo "---------------------------------------------"
-  echo "🧩 Log aktivitas disimpan di:"
-  echo "  $WAZUH_LOG"
+  echo -e "${GREEN}---------------------------------------------${NC}"
+  echo -e "${GREEN}🧩 Activity logs are saved at:${NC}"
+  echo -e "${GREEN}  $WAZUH_LOG${NC}"
   echo ""
-  echo "🧰 Contoh Penggunaan:"
-  echo "  wazuh-status"
-  echo "  wazuh-agents"
-  echo "  wazuh-agent-info 001"
-  echo "  wazuh-test-rule /var/ossec/logs/alerts/alerts.json"
+  echo -e "${GREEN}🧰 Usage Examples:${NC}"
+  echo -e "${GREEN}   wazuh-status${NC}"
+  echo -e "${GREEN}   wazuh-agents${NC}"
+  echo -e "${GREEN}   wazuh-agent-info 001${NC}"
+  echo -e "${GREEN}   wazuh-test-rule /var/ossec/logs/alerts/alerts.json${NC}"
   echo ""
-  echo "---------------------------------------------"
-  echo "🕒 Dibuat: $(date +"%d-%m-%Y") oleh Bro Fachmi"
-  echo "---------------------------------------------"
+  echo -e "${GREEN}---------------------------------------------${NC}"
 }
 
-# ======================================
-# Pesan konfirmasi saat fungsi dimuat
-# ======================================
-echo "✅ Wazuh Manager function loaded. Gunakan 'wazuh-help' untuk bantuan."
+echo -e "${GREEN}✅ Wazuh function loaded.${NC}"

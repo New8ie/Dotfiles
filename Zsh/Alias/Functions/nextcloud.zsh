@@ -1,107 +1,108 @@
+#!/usr/bin/env zsh
 # ======================================
 # Nextcloud Function
 # ======================================
-# Dibuat oleh Bro Fachmi
-# Versi dengan fungsi bantuan (help)
+# Created by Bro Fachmi
+# Version with help function
 # ======================================
 
-# Path default ke instalasi Nextcloud
+# Default path to Nextcloud installation
 NEXTCLOUD_PATH="/var/www/nextcloud"
 PHP_BIN="$(command -v php)"
 NC_LOG="$HOME/.config/zsh/logs/nextcloud.log"
+DATE="$(date +"%d-%m-%Y %H:%M:%S")"
 
-# Pastikan folder log ada
+# Ensure log folder exists
 mkdir -p "$(dirname "$NC_LOG")"
 
+# === Color Codes ===
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 # ======================================
-# Fungsi utama OCC
+# Main OCC function
 # ======================================
 occ() {
-  local DATE=$(date +"%d-%m-%Y %H:%M:%S")
-
-  # Cek apakah PHP tersedia
+  # Check if PHP is available
   if [ -z "$PHP_BIN" ]; then
-    echo "❌ PHP tidak ditemukan di PATH."
-    echo "[$DATE] ❌ PHP tidak ditemukan" >> "$NC_LOG"
+    echo "❌ PHP not found in PATH."
+    echo "[$DATE] ❌ PHP not found" >> "$NC_LOG"
     return 1
   fi
 
-  # Cek apakah direktori Nextcloud ada
+  # Check if Nextcloud directory exists
   if [ ! -d "$NEXTCLOUD_PATH" ]; then
-    echo "❌ Direktori Nextcloud tidak ditemukan di: $NEXTCLOUD_PATH"
-    echo "[$DATE] ❌ Direktori Nextcloud tidak ditemukan: $NEXTCLOUD_PATH" >> "$NC_LOG"
+    echo "❌ Nextcloud directory not found at: $NEXTCLOUD_PATH"
+    echo "[$DATE] ❌ Nextcloud directory not found: $NEXTCLOUD_PATH" >> "$NC_LOG"
     return 1
   fi
 
-  echo "⚙️  Menjalankan OCC command sebagai www-data..."
+  echo "⚙️  Running OCC command as www-data..."
   echo "[$DATE] ▶️ occ $*" >> "$NC_LOG"
 
   sudo -u www-data "$PHP_BIN" "$NEXTCLOUD_PATH/occ" "$@"
 }
 
 # ======================================
-# Shortcut tambahan (alias OCC umum)
+# Additional Shortcuts (common OCC aliases)
 # ======================================
 
-# Menampilkan status Nextcloud
+# Display Nextcloud status
 alias nc-status='occ status'
 
-# Memeriksa integritas sistem Nextcloud
+# Check Nextcloud system integrity
 alias nc-check='occ integrity:check-core'
 
-# Membersihkan cache file dan memperbaiki database
+# Clean file cache and repair database
 alias nc-maintenance='occ maintenance:repair && occ db:add-missing-indices'
 
-# Menjalankan upgrade Nextcloud
+# Run Nextcloud upgrade
 alias nc-update='occ upgrade'
 
-# Melihat log aplikasi Nextcloud
+# View Nextcloud application logs
 alias nc-log='sudo tail -f /var/log/nextcloud/nextcloud.log'
 
-# Melihat pengguna aktif
+# View active users
 alias nc-users='occ user:list'
 
-# Menjalankan perintah maintenance mode
+# Enable/disable maintenance mode
 alias nc-on='occ maintenance:mode --on'
 alias nc-off='occ maintenance:mode --off'
 
 # ======================================
-# Fungsi Bantuan
+# Help Function
 # ======================================
 nc-help() {
-  echo "📘 Nextcloud OCC Utility Help"
-  echo "---------------------------------------------"
-  echo "🔧 Fungsi & Alias Tersedia:"
+  # All help text colored green
+  echo -e "${GREEN}📘 Nextcloud OCC Utility Help${NC}"
+  echo -e "${GREEN}---------------------------------------------${NC}"
+  echo -e "${GREEN}🔧 Available Functions & Aliases:${NC}"
   echo ""
-  echo "  occ <perintah>           → Jalankan perintah OCC sebagai www-data"
-  echo "  nc-status                → Menampilkan status Nextcloud"
-  echo "  nc-check                 → Memeriksa integritas file inti"
-  echo "  nc-maintenance           → Membersihkan cache & memperbaiki DB"
-  echo "  nc-update                → Menjalankan proses upgrade Nextcloud"
-  echo "  nc-log                   → Melihat log Nextcloud realtime"
-  echo "  nc-users                 → Menampilkan daftar user"
-  echo "  nc-on / nc-off           → Aktifkan / matikan mode maintenance"
+  echo -e "${GREEN}  occ <command>          → Run an OCC command as www-data${NC}"
+  echo -e "${GREEN}  nc-status              → Display Nextcloud status${NC}"
+  echo -e "${GREEN}  nc-check               → Check core file integrity${NC}"
+  echo -e "${GREEN}  nc-maintenance         → Clean cache & repair DB${NC}"
+  echo -e "${GREEN}  nc-update              → Run the Nextcloud upgrade process${NC}"
+  echo -e "${GREEN}  nc-log                 → View Nextcloud logs in realtime${NC}"
+  echo -e "${GREEN}  nc-users               → Display a list of users${NC}"
+  echo -e "${GREEN}  nc-on / nc-off         → Enable / disable maintenance mode${NC}"
   echo ""
-  echo "---------------------------------------------"
-  echo "🧩 Log Aktivitas disimpan di:"
-  echo "  $NC_LOG"
+  echo -e "${GREEN}---------------------------------------------${NC}"
+  echo -e "${GREEN}🧩 Activity logs are saved at:${NC}"
+  echo -e "${GREEN}  $NC_LOG${NC}"
   echo ""
-  echo "🧰 Contoh Penggunaan:"
-  echo "  occ status"
-  echo "  occ maintenance:mode --on"
-  echo "  nc-maintenance"
-  echo "  nc-update"
-  echo "  nc-log"
+  echo -e "${GREEN}🧰 Usage Examples:${NC}"
+  echo -e "${GREEN}   occ status${NC}"
+  echo -e "${GREEN}   occ maintenance:mode --on${NC}"
+  echo -e "${GREEN}   nc-maintenance${NC}"
+  echo -e "${GREEN}   nc-update${NC}"
+  echo -e "${GREEN}   nc-log${NC}"
   echo ""
-  echo "---------------------------------------------"
-  echo "⚙️  Direktori Nextcloud saat ini:"
-  echo "  $NEXTCLOUD_PATH"
-  echo "---------------------------------------------"
-  echo "🕒 Dibuat: $(date +"%d-%m-%Y") oleh Bro Fachmi"
-  echo "---------------------------------------------"
+  echo -e "${GREEN}---------------------------------------------${NC}"
+  echo -e "${GREEN}⚙️  Current Nextcloud directory:${NC}"
+  echo -e "${GREEN}  $NEXTCLOUD_PATH${NC}"
+  echo -e "${GREEN}---------------------------------------------${NC}"
 }
 
-# ======================================
-# Pesan konfirmasi saat fungsi dimuat
-# ======================================
-echo "✅ Nextcloud OCC function loaded. Gunakan 'nc-help' untuk bantuan."
+
+echo -e "${GREEN}✅ Nextcloud function loaded.${NC}"

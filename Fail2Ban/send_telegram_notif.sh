@@ -1,33 +1,29 @@
-# Add to the /etc/fail2ban/jail.conf:
-# [sshd]
-# action  = iptables[name=SSH, port=22, protocol=tcp]
-#           telegram
-# Create a new file in /etc/fail2ban/action.d with the following information:
-# [Definition]
-# actionstart = /etc/fail2ban/scripts/send_telegram_notif.sh -a start
-# actionstop = /etc/fail2ban/scripts/send_telegram_notif.sh -a stop
-# actioncheck =
-# actionban = /etc/fail2ban/scripts/send_telegram_notif.sh -n <name> -b <ip>
-# actionunban = /etc/fail2ban/scripts/send_telegram_notif.sh -n <name> -u <ip>
-#
-# [Init]
-# init = 123
 #!/bin/sh
 # =================================================================
 # Fail2Ban Telegram Notification Script
-# Compatible with sh and bash
 # =================================================================
-TELEGRAM_BOT_TOKEN="AAABBBCcccDDDeeeFFFGGGHHHCCCKLLLLL"
-TELEGRAM_CHAT_ID="-1234567890"
-SERVER_NAME='Zabbix'
-DOMAIN_HOST='zabbix.thismydomains.com'
+# Dibuat oleh Bro Fachmi
+# =================================================================
+
+ENV_FILE="$HOME/.env/telegram"
+
+# Load environment jika tersedia
+if [ -f "$ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    . "$ENV_FILE"
+else
+    echo "❌ Environment file tidak ditemukan di $ENV_FILE"
+    exit 1
+fi
+
+# Log Fail2Ban
 LOG_FILE="/var/log/fail2ban.log"
 
 # Fungsi untuk mengirim pesan ke Telegram
 send_telegram_alert() {
     MESSAGE="$1"
-    curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-        -d chat_id="$TELEGRAM_CHAT_ID" \
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d chat_id="${TELEGRAM_CHAT_ID}" \
         -d text="$MESSAGE" \
         -d parse_mode="Markdown" >/dev/null 2>&1
 }
@@ -70,13 +66,13 @@ if [ -n "$action" ]; then
     case "$action" in
         start)
             if [ "$PREV_STATUS" != "started" ]; then
-                send_telegram_alert "🔔 Fail2Ban HomeLabs 🏠 $SERVER_NAME started ✅"
+                send_telegram_alert "🔔 *Fail2Ban HomeLabs* 🏠 ${SERVER_NAME} *started* ✅"
                 echo "started" > "$LOCK_FILE"
             fi
             ;;
         stop)
             if [ "$PREV_STATUS" != "stopped" ]; then
-                send_telegram_alert "⚠️ Fail2Ban HomeLabs 🏠 $SERVER_NAME stopped 🚫"
+                send_telegram_alert "⚠️ *Fail2Ban HomeLabs* 🏠 ${SERVER_NAME} *stopped* 🚫"
                 echo "stopped" > "$LOCK_FILE"
             fi
             ;;
@@ -85,21 +81,25 @@ if [ -n "$action" ]; then
             exit 1
             ;;
     esac
+
 elif [ "$ban" = "y" ]; then
-    MESSAGE="🚨 Fail2Ban Alert! 🚨%0A%0A"
-    MESSAGE="$MESSAGE🔹 Jail: $JAIL_NAME%0A"
-    MESSAGE="$MESSAGE🔹 IP: $BANNED_IP%0A"
-    MESSAGE="$MESSAGE🔹 Time: $(date +'%Y-%m-%d %H:%M:%S')%0A"
-    MESSAGE="$MESSAGE🔹 Log: $(grep "$BANNED_IP" "$LOG_FILE" | tail -n 5 | sed ':a;N;$!ba;s/\n/%0A/g')"
+    MESSAGE="🚨 *Fail2Ban Alert!* 🚨%0A%0A"
+    MESSAGE="${MESSAGE}🔹 Jail: ${JAIL_NAME}%0A"
+    MESSAGE="${MESSAGE}🔹 IP: ${BANNED_IP}%0A"
+    MESSAGE="${MESSAGE}🔹 Host: ${DOMAIN_HOST}%0A"
+    MESSAGE="${MESSAGE}🔹 Time: $(date +'%Y-%m-%d %H:%M:%S')%0A"
+    MESSAGE="${MESSAGE}🔹 Log: $(grep "$BANNED_IP" "$LOG_FILE" | tail -n 5 | sed ':a;N;$!ba;s/\n/%0A/g')"
     send_telegram_alert "$MESSAGE"
     exit 0
+
 elif [ "$unban" = "y" ]; then
-    MESSAGE="✅ 🧯 Fail2Ban HomeLabs 🏠 🔊%0A"
-    MESSAGE="$MESSAGE🔹 Jail: $JAIL_NAME%0A"
-    MESSAGE="$MESSAGE🔹 Unbanned IP: $UNBANNED_IP%0A"
-    MESSAGE="$MESSAGE🔹 Server: $SERVER_NAME%0A"
+    MESSAGE="✅ 🧯 *Fail2Ban Unban Notification* 🏠%0A"
+    MESSAGE="${MESSAGE}🔹 Jail: ${JAIL_NAME}%0A"
+    MESSAGE="${MESSAGE}🔹 Unbanned IP: ${UNBANNED_IP}%0A"
+    MESSAGE="${MESSAGE}🔹 Server: ${SERVER_NAME}%0A"
     send_telegram_alert "$MESSAGE"
     exit 0
+
 else
     echo "No valid option provided."
     exit 1

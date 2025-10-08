@@ -34,14 +34,29 @@ backup_dotfiles() {
   DEST="$HOME/dotfiles-backup-$TIMESTAMP"
   mkdir -p "$DEST"
 
-  files=(~/.zshrc ~/.zprofile ~/.p10k.zsh ~/.config/zsh ~/.config/nano ~/.config/fastfetch ~/.oh-my-zsh)
+  # Daftar file/folder yang ingin dibackup
+  files=(~/.zshrc ~/.zprofile ~/.p10k.zsh ~/.config ~/.oh-my-zsh ~/.nanorc)
+
+  # Daftar folder yang akan di-exclude (tidak ikut dibackup)
+  exclude_list=(
+    "$HOME/.config/Code"
+    "$HOME/.config/discord"
+    "$HOME/.config/BraveSoftware"
+    "$HOME/.config/google-chrome"
+    "$HOME/.config/Slack"
+    "$HOME/.config/venv"
+  )
+
+  # Salin file/folder ke direktori tujuan
   for f in "${files[@]}"; do
-    [ -e "$f" ] && cp -r "$f" "$DEST"
+    [ -e "$f" ] && rsync -a --exclude-from=<(printf "%s\n" "${exclude_list[@]}") "$f" "$DEST"
   done
 
+  # Kompres hasil backup
   tar -czf "$DEST.tar.gz" -C "$HOME" "$(basename "$DEST")"
   rm -rf "$DEST"
-  log "Backup berhasil: $DEST.tar.gz"
+
+  echo "✅ Backup berhasil: $DEST.tar.gz"
 }
 
 # =============================================================================
@@ -124,8 +139,9 @@ install_fastfetch() {
 copy_configs() {
   log "📂 Menyalin konfigurasi (mode copy)"
 
-  mkdir -p "$HOME/.config"/{zsh,nano,fastfetch,iterm2,script}
+  mkdir -p "$HOME/.config"/{nano,fastfetch,iterm2,script}
   mkdir -p "$HOME/.config/fastfetch/logo"
+  mkdir -p "$HOME/.config/zsh/functions"
 
   if [[ "$OS_TYPE" == "macos" ]]; then
     cp -f ~/.dotfiles/Zsh/macos-zshrc.zsh ~/.zshrc
@@ -140,7 +156,7 @@ copy_configs() {
 
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
   cp -rf ~/.config/nano/Config/nanorc ~/.nanorc
-  cp -rf ~/.dotfiles/Zsh/Alias/Functions ~/.config/zsh/functions
+  cp -rf ~/.dotfiles/Zsh/Alias/Functions/* ~/.config/zsh/functions
   cp -rf ~/.dotfiles/Script/* ~/.config/script
   chmod +x ~/.config/script/* 2>/dev/null || true
 
@@ -175,7 +191,7 @@ symlink_configs() {
   ln -sf ~/.dotfiles/Zsh/zprofile.zsh ~/.zprofile
   ln -sf ~/.dotfiles/Zsh/Alias/alias.zsh ~/.config/zsh/alias.zsh
   
-  cp -rf ~/.dotfiles/Zsh/Alias/Functions ~/.config/zsh/functions
+  cp -rf ~/.dotfiles/Zsh/Alias/Functions/* ~/.config/zsh/functions
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
   cp -rf ~/.config/nano/Config/nanorc ~/.nanorc
 

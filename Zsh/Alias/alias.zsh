@@ -84,7 +84,7 @@ fi
 
 # Aliases Global
 # =========================
-alias cloudflare="~/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan dan mengapus banned ip di cloudflare
+alias cfm="~/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan dan mengapus banned ip di cloudflare
 alias sshcpid="~/.config/script/sshcpid.sh" ## menyalin SSH public key dengan script bash
 alias static-route="~/.config/script/static_route.sh"
 alias reload="source ~/.zshrc" ## Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc

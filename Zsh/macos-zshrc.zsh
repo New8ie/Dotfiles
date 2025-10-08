@@ -119,11 +119,6 @@ else
 fi
 
 # ==============================================================================
-#                             Custom Alias File
-# ==============================================================================
-[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
-
-# ==============================================================================
 #                                Integrasi Zoxide
 # ==============================================================================
 if command -v zoxide &> /dev/null; then
@@ -188,3 +183,4 @@ if [ -f /usr/share/bash-completion/completions/service ]; then
   source /usr/share/bash-completion/completions/service
 fi
 # ==============================================================================  
+

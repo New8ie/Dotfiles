@@ -59,6 +59,8 @@ fi
 export ZSH="$HOME/.oh-my-zsh"
 export ZSH_DISABLE_COMPFIX=true
 POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
+fpath+=${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-completions/src
+
 
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(
@@ -68,6 +70,7 @@ plugins=(
   web-search
   zsh-you-should-use
   zsh-bat
+    zsh-completions
 )
 
 source "$ZSH/oh-my-zsh.sh"
@@ -153,10 +156,8 @@ fpath=(/Users/fachmi/.docker/completions $fpath)
 # ==============================================================================
 #                             Custom Alias File
 # ==============================================================================
-[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
-# Load custom alias untuk venv
-[[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
 
+[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
 
 # ==============================================================================  
 # Load zsh completion system

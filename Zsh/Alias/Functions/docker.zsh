@@ -1,14 +1,17 @@
 # ======================================
 # Docker Utility Functions & Aliases
 # ======================================
-# Dibuat oleh Bro Fachmi (versi dengan logging & help)
-# ======================================
+
 
 DOCKER_LOG="$HOME/.config/zsh/logs/docker.log"
 mkdir -p "$(dirname "$DOCKER_LOG")"
 
+# === Color Codes ===
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 # ======================================
-# Fungsi bantu logging
+# Logging helper function
 # ======================================
 docker_log() {
   local DATE=$(date +"%d-%m-%Y %H:%M:%S")
@@ -16,25 +19,27 @@ docker_log() {
 }
 
 # ======================================
-# Cek Docker aktif
+# Check if Docker is running
 # ======================================
 check_docker() {
+  # Check if docker command exists
   if ! command -v docker &>/dev/null; then
-    echo "❌ Docker tidak ditemukan di sistem."
-    docker_log "❌ Docker tidak ditemukan."
+    echo "❌ Docker not found on the system."
+    docker_log "❌ Docker not found."
     return 1
   fi
 
+  # Check if the docker daemon is running
   if ! pgrep -x "dockerd" &>/dev/null; then
-    echo "⚠️  Service Docker belum berjalan."
-    docker_log "⚠️  Service Docker belum berjalan."
+    echo "⚠️  Docker service is not running."
+    docker_log "⚠️  Docker service is not running."
     return 1
   fi
   return 0
 }
 
 # ======================================
-# Fungsi & Alias Docker
+# Docker Functions & Aliases
 # ======================================
 
 alias dk-ps='check_docker && docker ps'
@@ -45,88 +50,87 @@ alias dk-disk='check_docker && docker system df'
 alias dk-info='check_docker && docker info'
 alias dk-service-log='sudo journalctl -u docker -f'
 
-# Menampilkan log container
+# View container logs
 dk-log() {
   if [ -z "$1" ]; then
-    echo "⚠️  Gunakan: dk-log <nama_container>"
+    echo "⚠️  Usage: dk-log <container_name>"
     return 1
   fi
   check_docker || return 1
-  docker_log "Menampilkan log container: $1"
+  docker_log "Viewing container logs: $1"
   docker logs -f "$1"
 }
 
-# Masuk shell container
+# Enter container shell
 dk-sh() {
   if [ -z "$1" ]; then
-    echo "⚠️  Gunakan: dk-sh <nama_container>"
+    echo "⚠️  Usage: dk-sh <container_name>"
     return 1
   fi
   check_docker || return 1
-  docker_log "Masuk shell container: $1"
+  docker_log "Entering container shell: $1"
+  # Try /bin/bash, fall back to /bin/sh
   docker exec -it "$1" /bin/bash 2>/dev/null || docker exec -it "$1" /bin/sh
 }
 
-# Restart container
+# Restart a container
 dk-restart() {
   if [ -z "$1" ]; then
-    echo "⚠️  Gunakan: dk-restart <nama_container>"
+    echo "⚠️  Usage: dk-restart <container_name>"
     return 1
   fi
   check_docker || return 1
-  docker_log "Restart container: $1"
+  docker_log "Restarting container: $1"
   docker restart "$1"
 }
 
-# Stop semua container
+# Stop all containers
 dk-stop-all() {
   check_docker || return 1
-  docker_log "Stop semua container."
+  docker_log "Stopping all containers."
   docker stop $(docker ps -q)
 }
 
-# Remove semua container berhenti
+# Remove all stopped containers
 dk-rm-stopped() {
   check_docker || return 1
-  docker_log "Hapus container berhenti."
+  docker_log "Removing stopped containers."
   docker container prune -f
 }
 
 # ======================================
-# Bantuan Penggunaan (Help)
+# Usage Help
 # ======================================
 dk-help() {
-  echo "📘 Docker Utility Help"
-  echo "---------------------------------------------"
-  echo "🔧 Fungsi & Alias Tersedia:"
+  # All help text colored green
+  echo -e "${GREEN}📘 Docker Utility Help${NC}"
+  echo -e "${GREEN}---------------------------------------------${NC}"
+  echo -e "${GREEN}🔧 Available Functions & Aliases:${NC}"
   echo ""
-  echo "  dk-ps            → Menampilkan container aktif"
-  echo "  dk-psa           → Menampilkan semua container (termasuk berhenti)"
-  echo "  dk-images        → Menampilkan daftar image"
-  echo "  dk-prune         → Bersihkan semua resource tidak terpakai"
-  echo "  dk-disk          → Menampilkan penggunaan disk Docker"
-  echo "  dk-info          → Menampilkan info sistem Docker"
-  echo "  dk-service-log   → Melihat log service Docker daemon"
+  echo -e "${GREEN}  dk-ps            → Show running containers${NC}"
+  echo -e "${GREEN}  dk-psa           → Show all containers (including stopped)${NC}"
+  echo -e "${GREEN}  dk-images        → Show list of images${NC}"
+  echo -e "${GREEN}  dk-prune         → Clean up unused resources${NC}"
+  echo -e "${GREEN}  dk-disk          → Show Docker disk usage${NC}"
+  echo -e "${GREEN}  dk-info          → Show Docker system info${NC}"
+  echo -e "${GREEN}  dk-service-log   → View Docker daemon service logs${NC}"
   echo ""
-  echo "  dk-log <container>    → Melihat log container tertentu"
-  echo "  dk-sh <container>     → Masuk ke shell container"
-  echo "  dk-restart <container>→ Restart container tertentu"
-  echo "  dk-stop-all           → Hentikan semua container aktif"
-  echo "  dk-rm-stopped         → Hapus container yang sudah berhenti"
+  echo -e "${GREEN}  dk-log <container>     → View logs of a specific container${NC}"
+  echo -e "${GREEN}  dk-sh <container>      → Enter a container's shell${NC}"
+  echo -e "${GREEN}  dk-restart <container> → Restart a specific container${NC}"
+  echo -e "${GREEN}  dk-stop-all            → Stop all running containers${NC}"
+  echo -e "${GREEN}  dk-rm-stopped          → Remove stopped containers${NC}"
   echo ""
-  echo "---------------------------------------------"
-  echo "🧰 Log file: $DOCKER_LOG"
-  echo "🕒 Format log: [dd-mm-yyyy HH:MM:SS]"
-  echo "---------------------------------------------"
-  echo "Contoh penggunaan:"
-  echo "  dk-ps"
-  echo "  dk-sh nginx"
-  echo "  dk-log nextcloud"
-  echo "  dk-prune"
-  echo "---------------------------------------------"
+  echo -e "${GREEN}---------------------------------------------${NC}"
+  echo -e "${GREEN}🧰 Log file: $DOCKER_LOG${NC}"
+  echo -e "${GREEN}🕒 Log format: [dd-mm-yyyy HH:MM:SS]${NC}"
+  echo -e "${GREEN}---------------------------------------------${NC}"
+  echo -e "${GREEN}Usage examples:${NC}"
+  echo -e "${GREEN}  dk-ps${NC}"
+  echo -e "${GREEN}  dk-sh nginx${NC}"
+  echo -e "${GREEN}  dk-log nextcloud${NC}"
+  echo -e "${GREEN}  dk-prune${NC}"
+  echo -e "${GREEN}---------------------------------------------${NC}"
 }
 
-# ======================================
-# Pesan konfirmasi saat fungsi dimuat
-# ======================================
-echo "✅ Docker function & alias loaded. Gunakan 'dk-help' untuk bantuan."
+echo -e "\033[0;32m✅ Docker function loaded.\033[0m"
