@@ -5,7 +5,7 @@
 # Dibuat oleh Bro Fachmi
 # =================================================================
 
-ENV_FILE="$HOME/.env/telegram"
+ENV_FILE="/root/.env/telegram"
 
 # Load environment jika tersedia
 if [ -f "$ENV_FILE" ]; then
