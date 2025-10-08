@@ -56,7 +56,7 @@ install_packages() {
   case "$OS_TYPE" in
     linux)
       sudo apt update
-      packages=(zsh git curl fzf grc gnupg lolcat pv bat nano coreutils w3m fd-find zoxide net-tools iproute2)
+      packages=(zsh git curl fzf grc gnupg lolcat pv bat rsync nano coreutils w3m fd-find zoxide net-tools iproute2)
       sudo ln -s $(which fdfind) /usr/local/bin/fd
       for pkg in "${packages[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
@@ -80,7 +80,7 @@ install_packages() {
     ;;
     redhat)
       sudo yum install -y epel-release
-      sudo yum install -y zsh git curl fzf nano grc gnupg2 lolcat pv bat coreutils w3m zoxide fd-find net-tools iproute2
+      sudo yum install -y zsh git curl fzf nano grc gnupg2 lolcat pv bat coreutils w3m zoxide fd-find net-tools iproute2 rsync
       ;;
     macos)
       if ! command -v brew &>/dev/null; then
@@ -103,13 +103,13 @@ install_packages() {
         done
       fi
       brew update
-      brew install zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide eza nano yazi fd ffmpeg sevenzip jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
+      brew install zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide eza nano yazi fd ffmpeg sevenzip rsync jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
       ;;
     arch)
-      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide fd net-tools iproute2
+      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide fd net-tools iproute2 rsync
       ;;
     fedora)
-      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv nano bat coreutils w3m fd-find zoxide net-tools iproute2
+      sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv nano bat coreutils w3m fd-find zoxide net-tools iproute2 rsync
       ;;
   esac
   set -e

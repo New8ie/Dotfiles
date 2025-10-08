@@ -132,17 +132,42 @@ install_fastfetch() {
   esac
 }
 
-
 # =============================================================================
 # Copy Configs
 # =============================================================================
 copy_configs() {
   log "📂 Menyalin konfigurasi (mode copy)"
-
-  mkdir -p "$HOME/.config"/{nano,fastfetch,iterm2,script}
+  
+  # ---------------------------------------------------------------------------
+  # Persiapan folder
+  # ---------------------------------------------------------------------------
+  mkdir -p "$HOME/.config"/{nano,fastfetch,iterm2,script,zsh/functions}
   mkdir -p "$HOME/.config/fastfetch/logo"
-  mkdir -p "$HOME/.config/zsh/functions"
 
+  # ---------------------------------------------------------------------------
+  # Daftar file yang akan di-replace
+  # ---------------------------------------------------------------------------
+  files_to_replace=(
+    "$HOME/.zshrc"
+    "$HOME/.zprofile"
+    "$HOME/.p10k.zsh"
+    "$HOME/.nanorc"
+  )
+
+  # Hapus file atau symlink lama sebelum copy
+  for f in "${files_to_replace[@]}"; do
+    if [ -L "$f" ]; then
+      log "🧹 Menghapus symlink lama: $f"
+      rm -f "$f"
+    elif [ -e "$f" ]; then
+      log "🧹 Menghapus file lama: $f"
+      rm -f "$f"
+    fi
+  done
+
+  # ---------------------------------------------------------------------------
+  # Salin konfigurasi utama Zsh
+  # ---------------------------------------------------------------------------
   if [[ "$OS_TYPE" == "macos" ]]; then
     cp -f ~/.dotfiles/Zsh/macos-zshrc.zsh ~/.zshrc
   else
@@ -152,63 +177,109 @@ copy_configs() {
   cp -f ~/.dotfiles/OhMyZsh/p10k.zsh ~/.p10k.zsh
   cp -f ~/.dotfiles/Zsh/zprofile.zsh ~/.zprofile
   cp -f ~/.dotfiles/Zsh/Alias/alias.zsh ~/.config/zsh/alias.zsh
-  
 
+  # ---------------------------------------------------------------------------
+  # Nano
+  # ---------------------------------------------------------------------------
+  log "🧹 Membersihkan konfigurasi nano lama"
+  rm -rf ~/.config/nano 2>/dev/null || true
+  mkdir -p ~/.config/nano
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
-  cp -rf ~/.config/nano/Config/nanorc ~/.nanorc
+  cp -f ~/.config/nano/Config/nanorc ~/.nanorc
+
+  # ---------------------------------------------------------------------------
+  # Functions & Script
+  # ---------------------------------------------------------------------------
+  log "🧹 Membersihkan konfigurasi zsh functions & script lama"
+  rm -rf ~/.config/zsh/functions ~/.config/script 2>/dev/null || true
+  mkdir -p ~/.config/zsh/functions ~/.config/script
   cp -rf ~/.dotfiles/Zsh/Alias/Functions/* ~/.config/zsh/functions
   cp -rf ~/.dotfiles/Script/* ~/.config/script
   chmod +x ~/.config/script/* 2>/dev/null || true
 
+  # ---------------------------------------------------------------------------
+  # Fastfetch
+  # ---------------------------------------------------------------------------
+  log "🧹 Membersihkan konfigurasi fastfetch lama"
+  rm -rf ~/.config/fastfetch 2>/dev/null || true
+  mkdir -p ~/.config/fastfetch/logo
   cp -f ~/.dotfiles/Fastfetch/config.jsonc ~/.config/fastfetch/config.jsonc
   cp -f ~/.dotfiles/Fastfetch/motd-fastfetch.sh ~/.config/fastfetch/motd-fastfetch.sh
   chmod +x ~/.config/fastfetch/motd-fastfetch.sh
   cp -f ~/.dotfiles/Fastfetch/logo/*-logo.png ~/.config/fastfetch/logo/ 2>/dev/null || true
 
-  cp -rf ~/.dotfiles/Iterm2/bin "$HOME/.config/iterm2/bin" 2>/dev/null || true
-  cp -f  ~/.dotfiles/Iterm2/iterm2_shell_integration.zsh "$HOME/.config/iterm2/iterm2_shell_integration.zsh" 2>/dev/null || true
+  # ---------------------------------------------------------------------------
+  # iTerm2 (khusus macOS, tapi tetap aman di Linux)
+  # ---------------------------------------------------------------------------
+  log "🧹 Membersihkan konfigurasi iTerm2 lama"
+  rm -rf ~/.config/iterm2 2>/dev/null || true
+  mkdir -p "$HOME/.config/iterm2/bin"
+  cp -rf ~/.dotfiles/Iterm2/bin/* "$HOME/.config/iterm2/bin" 2>/dev/null || true
+  cp -f ~/.dotfiles/Iterm2/iterm2_shell_integration.zsh "$HOME/.config/iterm2/iterm2_shell_integration.zsh" 2>/dev/null || true
   chmod +x ~/.config/iterm2/bin/* 2>/dev/null || true
 
-  log "✅ Konfigurasi berhasil dicopy"
+  # ---------------------------------------------------------------------------
+  # Selesai
+  # ---------------------------------------------------------------------------
+  log "✅ Semua konfigurasi berhasil dicopy dan file lama/symlink telah direplace"
 }
 
 # =============================================================================
 # Symlink Configs
 # =============================================================================
 symlink_configs() {
-  log "🔗 Membuat symlink konfigurasi (mode symlink)"
+  log "🔗 Membuat symlink konfigurasi (mode symlink dengan replace aman)"
 
   mkdir -p "$HOME/.config"/{zsh,nano,fastfetch,iterm2,script}
-  mkdir -p "$HOME/.config/fastfetch/logo"
+  mkdir -p "$HOME/.config/fastfetch/logo" "$HOME/.config/zsh/functions"
 
+  safe_link() {
+    local src="$1"
+    local dest="$2"
+    # Jika sudah ada file atau symlink lama, hapus dulu
+    [ -e "$dest" ] || [ -L "$dest" ] && rm -rf "$dest"
+    ln -s "$src" "$dest"
+  }
+
+  # ==== ZSH ====
   if [[ "$OS_TYPE" == "macos" ]]; then
-    ln -sf ~/.dotfiles/Zsh/macos-zshrc.zsh ~/.zshrc
+    safe_link ~/.dotfiles/Zsh/macos-zshrc.zsh ~/.zshrc
   else
-    ln -sf ~/.dotfiles/Zsh/linux-zshrc.zsh ~/.zshrc
+    safe_link ~/.dotfiles/Zsh/linux-zshrc.zsh ~/.zshrc
   fi
 
-  ln -sf ~/.dotfiles/OhMyZsh/p10k.zsh ~/.p10k.zsh
-  ln -sf ~/.dotfiles/Zsh/zprofile.zsh ~/.zprofile
-  ln -sf ~/.dotfiles/Zsh/Alias/alias.zsh ~/.config/zsh/alias.zsh
-  
-  cp -rf ~/.dotfiles/Zsh/Alias/Functions/* ~/.config/zsh/functions
-  cp -rf ~/.dotfiles/Nano/* ~/.config/nano
-  cp -rf ~/.config/nano/Config/nanorc ~/.nanorc
+  safe_link ~/.dotfiles/OhMyZsh/p10k.zsh ~/.p10k.zsh
+  safe_link ~/.dotfiles/Zsh/zprofile.zsh ~/.zprofile
+  safe_link ~/.dotfiles/Zsh/Alias/alias.zsh ~/.config/zsh/alias.zsh
 
-  ln -sfn ~/.dotfiles/Script ~/.config/script
+  # ==== Zsh Functions ====
+  cp -rf ~/.dotfiles/Zsh/Alias/Functions/* ~/.config/zsh/functions
+
+  # ==== Nano ====
+  cp -rf ~/.dotfiles/Nano/* ~/.config/nano
+  cp -f ~/.config/nano/Config/nanorc ~/.nanorc
+
+  # ==== Script ====
+  [ -L ~/.config/script ] && rm -rf ~/.config/script
+  [ -d ~/.config/script ] && rm -rf ~/.config/script
+  safe_link ~/.dotfiles/Script ~/.config/script
   chmod +x ~/.config/script/* 2>/dev/null || true
 
-  ln -sf ~/.dotfiles/Fastfetch/config.jsonc ~/.config/fastfetch/config.jsonc
-  ln -sf ~/.dotfiles/Fastfetch/motd-fastfetch.sh ~/.config/fastfetch/motd-fastfetch.sh
+  # ==== Fastfetch ====
+  safe_link ~/.dotfiles/Fastfetch/config.jsonc ~/.config/fastfetch/config.jsonc
+  safe_link ~/.dotfiles/Fastfetch/motd-fastfetch.sh ~/.config/fastfetch/motd-fastfetch.sh
   chmod +x ~/.config/fastfetch/motd-fastfetch.sh
   cp -f ~/.dotfiles/Fastfetch/logo/*-logo.png ~/.config/fastfetch/logo/ 2>/dev/null || true
 
+  # ==== iTerm2 ====
+  mkdir -p "$HOME/.config/iterm2/bin"
   cp -rf ~/.dotfiles/Iterm2/bin/* "$HOME/.config/iterm2/bin" 2>/dev/null || true
-  ln -sf ~/.dotfiles/Iterm2/iterm2_shell_integration.zsh ~/.config/iterm2/iterm2_shell_integration.zsh
+  safe_link ~/.dotfiles/Iterm2/iterm2_shell_integration.zsh ~/.config/iterm2/iterm2_shell_integration.zsh
   chmod +x ~/.config/iterm2/bin/* 2>/dev/null || true
 
-  log "✅ Symlink konfigurasi berhasil dibuat"
+  log "✅ Symlink konfigurasi berhasil dibuat dan file lama sudah direplace"
 }
+
 
 # =============================================================================
 # Config Menu
