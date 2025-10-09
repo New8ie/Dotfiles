@@ -177,7 +177,7 @@ copy_configs() {
   cp -f ~/.dotfiles/OhMyZsh/p10k.zsh ~/.p10k.zsh
   cp -f ~/.dotfiles/Zsh/zprofile.zsh ~/.zprofile
   cp -f ~/.dotfiles/Zsh/Alias/alias.zsh ~/.config/zsh/alias.zsh
-
+  cp -f ~/.dotfiles/Zsh/function-manager.zsh ~/.config/zsh/function-manager.zsh
   # ---------------------------------------------------------------------------
   # Nano
   # ---------------------------------------------------------------------------
@@ -254,7 +254,7 @@ symlink_configs() {
 
   # ==== Zsh Functions ====
   cp -rf ~/.dotfiles/Zsh/Alias/Functions/* ~/.config/zsh/functions
-
+  cp -f ~/.dotfiles/Zsh/function-manager.zsh ~/.config/zsh/function-manager.zsh
   # ==== Nano ====
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
   cp -f ~/.config/nano/Config/nanorc ~/.nanorc

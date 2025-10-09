@@ -156,7 +156,7 @@ fpath=(/Users/fachmi/.docker/completions $fpath)
 # ==============================================================================
 #                             Custom Alias File
 # ==============================================================================
-
+source ~/.config/zsh/function-manager.zsh
 [[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
 
 # ==============================================================================  
