@@ -156,9 +156,13 @@ fpath=(/Users/fachmi/.docker/completions $fpath)
 # ==============================================================================
 #                             Custom Alias File
 # ==============================================================================
-source ~/.config/zsh/function-manager.zsh
+
 [[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
 
+# Load custom Zsh Function Manager
+if [[ -f "$HOME/.config/zsh/manager/init.zsh" ]]; then
+  source "$HOME/.config/zsh/manager/init.zsh"
+fi
 # ==============================================================================  
 # Load zsh completion system
 autoload -U +X compinit && compinit

@@ -171,9 +171,11 @@ fpath=(/Users/fachmi/.docker/completions $fpath)
 [[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
 # Load custom alias untuk venv
 [[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
-# Load custom function
-source ~/.config/zsh/function-manager.zsh
 
+# Load custom Zsh Function Manager
+if [[ -f "$HOME/.config/zsh/manager/init.zsh" ]]; then
+  source "$HOME/.config/zsh/manager/init.zsh"
+fi
 # ==============================================================================  
 # Load zsh completion system
 autoload -U +X compinit && compinit
