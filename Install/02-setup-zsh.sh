@@ -194,8 +194,8 @@ copy_configs() {
   log "🧹 Membersihkan konfigurasi zsh functions & script lama"
   rm -rf ~/.config/zsh/functions ~/.config/script ~/.config/zsh/manager 2>/dev/null || true
   mkdir -p ~/.config/zsh/functions ~/.config/script ~/.config/zsh/manager
-  cp -rf ~/.dotfiles/Zsh/Alias/Functions/* ~/.config/zsh/functions
-  cp -rf ~/.dotfiles/Zsh/Alias/Manager/* ~/.config/zsh/manager
+  cp -rf ~/.dotfiles/Zsh/Functions/* ~/.config/zsh/functions
+  cp -rf ~/.dotfiles/Zsh/Manager/* ~/.config/zsh/manager
   cp -rf ~/.dotfiles/Script/* ~/.config/script
   chmod +x ~/.config/script/* 2>/dev/null || true
 
