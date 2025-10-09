@@ -173,8 +173,8 @@ fpath=(/Users/fachmi/.docker/completions $fpath)
 [[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
 
 # Load custom Zsh Function Manager
-if [[ -f "$HOME/.config/zsh/manager/init.zsh" ]]; then
-  source "$HOME/.config/zsh/manager/init.zsh"
+if [[ -f "$HOME/.config/zsh/function-manager.zsh" ]]; then
+  source "$HOME/.config/zsh/function-manager.zsh"
 fi
 # ==============================================================================  
 # Load zsh completion system

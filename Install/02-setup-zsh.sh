@@ -141,7 +141,7 @@ copy_configs() {
   # ---------------------------------------------------------------------------
   # Persiapan folder
   # ---------------------------------------------------------------------------
-  mkdir -p "$HOME/.config"/{nano,fastfetch,iterm2,script,zsh/functions,zsh/manager}
+  mkdir -p "$HOME/.config"/{nano,fastfetch,iterm2,script,zsh/functions}
   mkdir -p "$HOME/.config/fastfetch/logo"
 
   # ---------------------------------------------------------------------------
@@ -192,10 +192,9 @@ copy_configs() {
   # Functions & Script
   # ---------------------------------------------------------------------------
   log "🧹 Membersihkan konfigurasi zsh functions & script lama"
-  rm -rf ~/.config/zsh/functions ~/.config/script ~/.config/zsh/manager 2>/dev/null || true
-  mkdir -p ~/.config/zsh/functions ~/.config/script ~/.config/zsh/manager
+  rm -rf ~/.config/zsh/functions ~/.config/script 2>/dev/null || true
+  mkdir -p ~/.config/zsh/functions ~/.config/script 
   cp -rf ~/.dotfiles/Zsh/Functions/* ~/.config/zsh/functions
-  cp -rf ~/.dotfiles/Zsh/Manager/* ~/.config/zsh/manager
   cp -rf ~/.dotfiles/Script/* ~/.config/script
   chmod +x ~/.config/script/* 2>/dev/null || true
 
@@ -233,7 +232,7 @@ symlink_configs() {
   log "🔗 Membuat symlink konfigurasi (mode symlink dengan replace aman)"
 
   mkdir -p "$HOME/.config"/{zsh,nano,fastfetch,iterm2,script}
-  mkdir -p "$HOME/.config/fastfetch/logo" "$HOME/.config/zsh/functions" "$HOME/.config/zsh/manager"
+  mkdir -p "$HOME/.config/fastfetch/logo" "$HOME/.config/zsh/functions"
 
   safe_link() {
     local src="$1"
@@ -256,7 +255,6 @@ symlink_configs() {
 
   # ==== Zsh Functions ====
   cp -rf ~/.dotfiles/Zsh/Functions/* ~/.config/zsh/functions
-  cp -rf ~/.dotfiles/Zsh/Manager/* ~/.config/zsh/manager
   cp -f ~/.dotfiles/Zsh/function-manager.zsh ~/.config/zsh/function-manager.zsh
   # ==== Nano ====
   cp -rf ~/.dotfiles/Nano/* ~/.config/nano
