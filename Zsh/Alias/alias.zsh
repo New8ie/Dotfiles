@@ -209,17 +209,3 @@ alias ollrm="ollama rm"
 alias olllog="ollama logs"
 alias ollserve="ollama serve"
 
-
-# ======================================
-# Auto load semua fungsi di ~/.config/zsh/functions
-# ======================================
-
-FUNC_DIR="$HOME/.config/zsh/functions"
-
-if [ -d "$FUNC_DIR" ]; then
-  for f in "$FUNC_DIR"/*.zsh; do
-    [ -r "$f" ] && source "$f"
-  done
-else
-  echo "⚠️ Direktori fungsi tidak ditemukan: $FUNC_DIR"
-fi
