@@ -59,22 +59,28 @@ fi
 export ZSH="$HOME/.oh-my-zsh"
 export ZSH_DISABLE_COMPFIX=true
 POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
-fpath+=${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-completions/src
 
+# Tambahkan fpath zsh-completions
+fpath+=(${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-completions/src)
+
+# Docker CLI completions (harus sebelum compinit)
+fpath=(/Users/fachmi/.docker/completions $fpath)
 
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(
   git
+  zsh-completions
   zsh-autosuggestions
-  zsh-syntax-highlighting
-  web-search
   zsh-you-should-use
   zsh-bat
-    zsh-completions
+  web-search
+  fzf-tab
+  zsh-syntax-highlighting
 )
 
 source "$ZSH/oh-my-zsh.sh"
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+[[ -f ~/.oh-my-zsh/custom/plugins/fzf-tab/fzf-tab.plugin.zsh ]] && source ~/.oh-my-zsh/custom/plugins/fzf-tab/fzf-tab.plugin.zsh
 
 # ==============================================================================
 #                            Deteksi Sistem Operasi
@@ -158,10 +164,8 @@ fpath=(/Users/fachmi/.docker/completions $fpath)
 # ==============================================================================
 
 [[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
+[[ -f "$HOME/.config/zsh/function-manager.zsh" ]] && source "$HOME/.config/zsh/function-manager.zsh"
 
-if [[ -f "$HOME/.config/zsh/function-manager.zsh" ]]; then
-  source "$HOME/.config/zsh/function-manager.zsh"
-fi
 # ==============================================================================  
 # Load zsh completion system
 autoload -U +X compinit && compinit
