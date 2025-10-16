@@ -16,7 +16,7 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias capc="screencapture -c" ## menangkap layar ke clipboard
   alias capic="screencapture -i -c" ## menangkap layar secara interaktif ke clipboard
   alias capiwc="screencapture -i -w -c" ## menangkap layar interaktif dengan window
-  alias ipconfig="~/.local/bin/mylocalip.sh" ## menampilkan IP lokal dengan script bash
+  alias ipconfig="~/.config/script/mylocalip.sh" ## menampilkan IP lokal dengan script bash
   alias mute="osascript -e 'set volume output muted true'" ## menonaktifkan suara
   alias unmute="osascript -e 'set volume output muted false'" ## mengaktifkan suara kembali
   alias restartfinder="killall Finder" ## me-restart Finder
@@ -209,3 +209,12 @@ alias ollrm="ollama rm"
 alias olllog="ollama logs"
 alias ollserve="ollama serve"
 
+FUNC_DIR="$HOME/.config/zsh/functions"
+
+if [ -d "$FUNC_DIR" ]; then
+  for f in "$FUNC_DIR"/*.zsh; do
+    [ -r "$f" ] && source "$f"
+  done
+else
+  echo "⚠️ Direktori fungsi tidak ditemukan: $FUNC_DIR"
+fi

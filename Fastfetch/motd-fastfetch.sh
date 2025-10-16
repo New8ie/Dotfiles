@@ -57,7 +57,7 @@ printf "\033[%dC" "$horizontal_offset"
 
 # === TAMPILKAN LOGO HANYA JIKA iTerm2 ===
 if [[ -f "$image_path" ]]; then
-  if [[ "$TERM" == "iTerm.app" ]] && command -v imgcat &>/dev/null; then
+  if [[ "$TERM" == "xterm-256color" ]] && command -v imgcat &>/dev/null; then
     imgcat "$image_path"
   else
     echo "[Logo hanya ditampilkan di iTerm2 + imgcat]" >&2

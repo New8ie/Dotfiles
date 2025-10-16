@@ -52,7 +52,7 @@ alias nc-status='occ status'
 
 # Check Nextcloud system integrity
 alias nc-check='occ integrity:check-core'
-
+alias nc-clearlog='sudo truncate -s 0 /var/log/nextcloud/nextcloud.log'
 # Clean file cache and repair database
 alias nc-maintenance='occ maintenance:repair && occ db:add-missing-indices'
 
@@ -84,6 +84,7 @@ nc-help() {
   echo -e "${GREEN}  nc-maintenance         → Clean cache & repair DB${NC}"
   echo -e "${GREEN}  nc-update              → Run the Nextcloud upgrade process${NC}"
   echo -e "${GREEN}  nc-log                 → View Nextcloud logs in realtime${NC}"
+  echo -e "${GREEN}  nc-clearlog            → Clean all logs${NC}"
   echo -e "${GREEN}  nc-users               → Display a list of users${NC}"
   echo -e "${GREEN}  nc-on / nc-off         → Enable / disable maintenance mode${NC}"
   echo ""
@@ -97,6 +98,7 @@ nc-help() {
   echo -e "${GREEN}   nc-maintenance${NC}"
   echo -e "${GREEN}   nc-update${NC}"
   echo -e "${GREEN}   nc-log${NC}"
+  echo -e "${GREEN}   nc-clearlog${NC}"
   echo ""
   echo -e "${GREEN}---------------------------------------------${NC}"
   echo -e "${GREEN}⚙️  Current Nextcloud directory:${NC}"
