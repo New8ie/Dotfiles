@@ -215,6 +215,4 @@ if [ -d "$FUNC_DIR" ]; then
   for f in "$FUNC_DIR"/*.zsh; do
     [ -r "$f" ] && source "$f"
   done
-else
-  echo "⚠️ Direktori fungsi tidak ditemukan: $FUNC_DIR"
 fi

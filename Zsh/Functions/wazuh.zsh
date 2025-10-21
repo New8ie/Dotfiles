@@ -140,4 +140,3 @@ wazuh-help() {
   echo -e "${GREEN}---------------------------------------------${NC}"
 }
 
-echo -e "${GREEN}✅ Wazuh function loaded.${NC}"
