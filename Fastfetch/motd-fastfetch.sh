@@ -1,25 +1,19 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 # ~/.config/fastfetch/motd-fastfetch.sh
+# Clean MOTD for Zsh + Fastfetch + iTerm2
 
-# === PATH TAMBAHAN ===
+# === PATH ===
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/.config/iterm2/bin:$PATH"
 
-# === DETEKSI OS & DISTRO ===
+# === DETEKSI OS ===
 os_name="$(uname -s)"
 distro="$(grep -E '^ID=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"')"
-arch="$(uname -m)"
 is_rpi=false
+grep -qi 'Raspberry Pi' /proc/cpuinfo 2>/dev/null && is_rpi=true
 
-# Deteksi Raspberry Pi
-if grep -qi 'Raspberry Pi' /proc/cpuinfo 2>/dev/null; then
-  is_rpi=true
-fi
-
-# === PILIH LOGO SESUAI OS/DISTRO ===
+# === LOGO SESUAI OS ===
 case "$os_name" in
-  Darwin)
-    logo_name="macos-logo.png"
-    ;;
+  Darwin) logo_name="macos-logo.png" ;;
   Linux)
     if [ "$is_rpi" = true ]; then
       logo_name="raspberrypi-logo.png"
@@ -31,45 +25,35 @@ case "$os_name" in
       logo_name="linux-generic-logo.png"
     fi
     ;;
-  *)
-    logo_name="unknown-logo.png"
-    ;;
+  *) logo_name="unknown-logo.png" ;;
 esac
 
-# === LOKASI LOGO ===
 image_path="$HOME/.config/fastfetch/logo/$logo_name"
 
-# === CETAK FASTFETCH TANPA LOGO ===
-fastfetch_output=$(fastfetch --logo none)
+# === FASTFETCH TANPA LOGO ===
+fastfetch_output=$(fastfetch --disable-logging 2>/dev/null || fastfetch)
 output_lines=$(echo "$fastfetch_output" | wc -l)
-IFS=$'\n' read -rd '' -a output_array <<<"$fastfetch_output"
+output_array=("${(@f)fastfetch_output}")
 
+echo
 for line in "${output_array[@]}"; do
   echo -e "$line"
 done | lolcat
 
-# === POSISI LOGO DI KANAN ===
+# === TAMPILKAN LOGO DI KANAN (iTerm2) ===
 vertical_offset=$((output_lines - 2))
 horizontal_offset=80
-
 printf "\033[%dA" "$vertical_offset"
 printf "\033[%dC" "$horizontal_offset"
-
-# === TAMPILKAN LOGO HANYA JIKA iTerm2 ===
-if [[ -f "$image_path" ]]; then
-  if [[ "$TERM" == "xterm-256color" ]] && command -v imgcat &>/dev/null; then
-    imgcat "$image_path"
-  else
-    echo "[Logo hanya ditampilkan di iTerm2 + imgcat]" >&2
-  fi
-else
-  echo "[Logo '$logo_name' tidak ditemukan di $image_path]" >&2
+if [[ -f "$image_path" && "$TERM" == "xterm-256color" ]] && command -v imgcat &>/dev/null; then
+  imgcat "$image_path"
 fi
+printf "\033[%dB" "$vertical_offset"
+# === PEMBATAS ===
+echo "─────────────────────────────────────────────" | lolcat
+# === TANGGAL & UPTIME ===
+echo -e "📅  $(date '+%a, %d %b %Y %H:%M:%S %Z')" | lolcat
 
-# === INFORMASI TAMBAHAN ===
-echo -e "📅  $(date)" | lolcat
-
-# Uptime
 if [[ "$os_name" == "Darwin" ]]; then
   boot_time=$(sysctl -n kern.boottime | awk -F'[=,]' '{print $2}' | tr -d ' ')
   now=$(date +%s)
@@ -77,24 +61,41 @@ if [[ "$os_name" == "Darwin" ]]; then
   days=$((up / 86400))
   hours=$(((up % 86400) / 3600))
   mins=$(((up % 3600) / 60))
-  echo -e "🕒  Uptime: ${days}d ${hours}h ${mins}m" | lolcat
+  echo -e "🕒  Uptime : ${days}d ${hours}h ${mins}m" | lolcat
 else
   uptime -p | sed 's/^/🕒  /' | lolcat
 fi
 
-# IP Address
-echo -e "📡  IP Address :" | lolcat
-if [[ "$os_name" == "Darwin" ]]; then
-  for iface in en0 en1; do
-    ip=$(ipconfig getifaddr "$iface" 2>/dev/null)
-    [[ -n "$ip" ]] && echo "   $iface: $ip" | lolcat
-  done
-else
-  hostname -I | awk '{print "   "$0}' | lolcat
-fi
-
-# Last Login
+# === IP ADDRESS TANPA DOCKER ===
+echo -e "🌐  IP Address :" | lolcat
+ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | \
+grep -Ev '^(172\.|127\.|169\.254)' | \
+while read -r ip; do
+  echo -e "  • ${ip}" | lolcat
+done
+# === LAST LOGIN ===
 if command -v last >/dev/null; then
   last_login=$(last -n 1 "$USER" | head -n 1)
   echo -e "👤  Last Login : $last_login" | lolcat
 fi
+# === LOAD EXTERNAL FUNCTIONS ===
+functions_dir="$HOME/.config/zsh/functions"
+if [[ -d "$functions_dir" ]]; then
+  files=("$functions_dir"/*.zsh)
+  if [[ ${#files[@]} -eq 0 || ! -e "${files[1]}" ]]; then
+    echo "⚙️  External functions empty" | lolcat
+  else
+    echo "🔧  Loaded Functions :" | lolcat
+    count=0
+    for func in "${files[@]}"; do
+      if [[ -f "$func" && -r "$func" ]]; then
+        func_name="${func:t:r}"   # basename tanpa ekstensi (zsh style)
+        source "$func"
+        echo "   • $func_name loaded" | lolcat
+        ((count++))
+      fi
+    done
+  fi
+fi
+echo "─────────────────────────────────────────────" | lolcat
+echo ""
