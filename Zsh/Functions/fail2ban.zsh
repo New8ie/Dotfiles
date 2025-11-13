@@ -133,4 +133,3 @@ f2b-help() {
   echo -e "${GREEN}---------------------------------------------${NC}"
 }
 
-echo -e "${GREEN}✅ Fail2Ban function alias loaded.${NC}"

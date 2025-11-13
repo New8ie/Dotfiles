@@ -107,4 +107,3 @@ nc-help() {
 }
 
 
-echo -e "${GREEN}✅ Nextcloud function loaded.${NC}"

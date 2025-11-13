@@ -133,4 +133,3 @@ dk-help() {
   echo -e "${GREEN}---------------------------------------------${NC}"
 }
 
-echo -e "\033[0;32m✅ Docker function loaded.\033[0m"
