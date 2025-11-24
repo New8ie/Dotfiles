@@ -168,13 +168,10 @@ if [[ -o interactive && -z "$__FASTFETCH_RUN" && -x "$FASTFETCH_SCRIPT" ]]; then
   "$FASTFETCH_SCRIPT"
 fi
 
-
 # ==============================================================================
 #                             Custom Alias File
 # ==============================================================================
 [[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
-
-[[ -f "$HOME/.config/zsh/function-manager.zsh" ]] && source "$HOME/.config/zsh/function-manager.zsh"
 
 # ==============================================================================
 #                       Zsh Completion System (Smart Init)

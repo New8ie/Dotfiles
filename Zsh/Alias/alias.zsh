@@ -28,7 +28,11 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias wifi-off="networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/{getline; print \$NF}' | xargs -I{} networksetup -setairportpower {} off" ## menonaktifkan Wi-Fi secara otomatis di antarmuka yang benar
   alias openhere="open ." ## membuka folder saat ini di Finder
   alias cleanup="rm -rf ~/Library/Caches/* && sudo purge" ## membersihkan file sementara dan cache
-  
+  # === Keyboard KeyRepeat Control ===
+  alias keyrepeat-fast='defaults write NSGlobalDomain KeyRepeat -int 1 && defaults write NSGlobalDomain InitialKeyRepeat -int 10 && killall Dock && echo "✅ KeyRepeat diatur ke cepat (1)"'
+  alias keyrepeat-normal='defaults write NSGlobalDomain KeyRepeat -int 2 && defaults write NSGlobalDomain InitialKeyRepeat -int 15 && killall Dock && echo "✅ KeyRepeat diatur ke normal (2)"'
+  alias keyrepeat-slow='defaults write NSGlobalDomain KeyRepeat -int 10 && defaults write NSGlobalDomain InitialKeyRepeat -int 25 && killall Dock && echo "✅ KeyRepeat diatur ke lambat (10)"'
+  alias keyrepeat-default='defaults delete NSGlobalDomain KeyRepeat && defaults delete NSGlobalDomain InitialKeyRepeat && killall Dock && echo "♻️ KeyRepeat dikembalikan ke default sistem"'
   
   # Aliases untuk macOS sama dengan linux
 
@@ -209,12 +213,12 @@ alias ollrm="ollama rm"
 alias olllog="ollama logs"
 alias ollserve="ollama serve"
 
-
-
 FUNC_DIR="$HOME/.config/zsh/functions"
 
 if [ -d "$FUNC_DIR" ]; then
   for f in "$FUNC_DIR"/*.zsh; do
     [ -r "$f" ] && source "$f"
   done
+else
+  echo "⚠️ Direktori fungsi tidak ditemukan: $FUNC_DIR"
 fi
