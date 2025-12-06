@@ -15,9 +15,12 @@ Dotfiles/
 │   ├── 01-install-deps.sh          # Instalasi dependensi sistem
 │   ├── 02-setup-zsh.sh             # Pengaturan Zsh dan Oh My Zsh
 │   └── 03-install-fail2ban.sh      # Pengaturan Fail2Ban dengan notifikasi Telegram dan Cloudflare
+│   ├── 04-zsh-root.sh              # Pengaturan Zsh dan Oh My Zsh untuk root
+│   ├── 05-harden-ssh.sh            # Pengaturan Hardening ssh
 ├── .vscode/                        # Konfigurasi VSCode
 ├── Fail2Ban/                       # Konfigurasi Fail2Ban
 ├── Fastfetch/                      # Konfigurasi Fastfetch
+├── Grc/                            # Konfigurasi GRC Custom Style
 ├── Iterm2/                         # Konfigurasi iTerm2
 ├── Kitty/                          # Konfigurasi Kitty
 ├── Nano/                           # Konfigurasi Nano

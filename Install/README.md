@@ -8,8 +8,10 @@ Automasi instalasi tool CLI modern, Zsh, dan dotfiles pribadi untuk Linux dan ma
 📁 Dotfiles/
 ├── Install/
 │   ├── 01-install-deps.sh     # Install dependensi CLI & clone dotfiles
-│   └── 02-setup-zsh.sh        # Setup Zsh, plugin, konfigurasi, dan theme
-│   └── 03-install-fail2ban.sh  
+│   ├── 02-setup-zsh.sh        # Setup Zsh, plugin, konfigurasi, dan theme
+│   ├── 03-install-fail2ban.sh 
+│   ├── 04-zsh-root.sh 
+│   └── 05-hardening-ssh.sh 
 ```
 
 ---
