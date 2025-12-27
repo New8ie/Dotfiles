@@ -103,10 +103,10 @@ install_packages() {
         done
       fi
       brew update
-      brew install zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide eza nano yazi fd ffmpeg sevenzip rsync jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
+      brew install zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide eza nano fd-find ffmpeg sevenzip rsync jq poppler fd ripgrep resvg imagemagick font-symbols-only-nerd-font
       ;;
     arch)
-      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide fd net-tools iproute2 rsync
+      sudo pacman -Sy --noconfirm zsh git curl fzf grc gnupg nano lolcat pv bat coreutils w3m zoxide fd-find net-tools iproute2 rsync
       ;;
     fedora)
       sudo dnf install -y zsh git curl fzf grc gnupg lolcat pv nano bat coreutils w3m fd-find zoxide net-tools iproute2 rsync sudo
