@@ -26,6 +26,19 @@ detect_os() {
   log "Terdeteksi OS: $OS_TYPE"
 }
 
+detect_arch() {
+  ARCH=$(uname -m)
+  case "$ARCH" in
+    x86_64)   ARCH_TYPE="amd64" ;;
+    aarch64)  ARCH_TYPE="arm64" ;;
+    armv7l)   ARCH_TYPE="armhf" ;;
+    *)
+      err "Arsitektur tidak didukung: $ARCH"
+      ;;
+  esac
+  log "Terdeteksi Arsitektur: $ARCH_TYPE"
+}
+
 # =============================================================================
 # Backup Dotfiles
 # =============================================================================
@@ -105,24 +118,33 @@ install_plugins() {
 install_fastfetch() {
   case "$OS_TYPE" in
     debian|ubuntu)
-      log "Install Fastfetch via dpkg/apt..."
-      wget -O /tmp/fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-amd64.deb \
-        || err "Gagal download fastfetch"
+      log "Install Fastfetch untuk $OS_TYPE ($ARCH_TYPE)..."
+
+      case "$ARCH_TYPE" in
+        amd64)
+          PKG_URL="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-amd64.deb"
+          ;;
+        arm64)
+          PKG_URL="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-aarch64.deb"
+          ;;
+        armhf)
+          PKG_URL="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-armhf.deb"
+          ;;
+        *)
+          err "Arsitektur tidak didukung untuk fastfetch"
+          ;;
+      esac
+
+      wget -O /tmp/fastfetch.deb "$PKG_URL" || err "Gagal download fastfetch"
       sudo apt install -y /tmp/fastfetch.deb || err "Gagal install fastfetch"
       rm -f /tmp/fastfetch.deb
       ;;
+      
     arch)
       sudo pacman -S --noconfirm fastfetch
       ;;
     redhat|fedora)
       sudo dnf install -y fastfetch || err "Gagal install fastfetch"
-      ;;
-    centos)
-      if command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y fastfetch || err "Gagal install fastfetch"
-      else
-        sudo yum install -y fastfetch || err "Gagal install fastfetch"
-      fi
       ;;
     macos)
       brew install fastfetch
@@ -132,7 +154,6 @@ install_fastfetch() {
       ;;
   esac
 }
-
 # =============================================================================
 # Copy Configs
 # =============================================================================
@@ -334,6 +355,7 @@ verify_fastfetch() {
 # =============================================================================
 main() {
   detect_os
+  detect_arch
   backup_dotfiles
   setup_ohmyzsh
   install_plugins
