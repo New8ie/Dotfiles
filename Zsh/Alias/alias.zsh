@@ -10,7 +10,6 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias cpwd='pwd | tr -d "\n" | pbcopy' ## menyalin path direktori saat ini
   alias caff="caffeinate -ism" ## mencegah Mac masuk ke mode tidur
   alias cl="fc -e -|pbcopy" ## menyalin output perintah terakhir
-  alias cleanDS="find . -type f -name '*.DS_Store' -ls -delete" ## menghapus file .DS_Store
   alias showHidden='defaults write com.apple.finder AppleShowAllFiles TRUE' ## menampilkan file tersembunyi
   alias hideHidden='defaults write com.apple.finder AppleShowAllFiles FALSE' ## menyembunyikan file tersembunyi
   alias capc="screencapture -c" ## menangkap layar ke clipboard
@@ -93,6 +92,7 @@ alias sshcpid="~/.config/script/sshcpid.sh" ## menyalin SSH public key dengan sc
 alias static-route="~/.config/script/static_route.sh"
 alias reload="source ~/.zshrc" ## Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
 alias clearall='clear && history -c' ## Menghapus isi direktori dan menghapus riwayat perintah
+alias cleanDS="find . -type f -name '*.DS_Store' -ls -delete" ## menghapus file .DS_Store
 alias lss='ls -lhG' ## Menampilkan isi direktori dengan ukuran file dalam format yang lebacakan
 alias clr="clear"
 alias quit="exit"
