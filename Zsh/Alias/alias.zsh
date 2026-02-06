@@ -206,6 +206,7 @@ alias ntest="npm test"
 # ======================================
 # Ollama
 # ======================================
+
 alias ollist="ollama list"
 alias ollrun="ollama run"
 alias ollpull="ollama pull"
@@ -222,3 +223,105 @@ if [ -d "$FUNC_DIR" ]; then
 else
   echo "⚠️ Direktori fungsi tidak ditemukan: $FUNC_DIR"
 fi
+
+# ======================================
+# openssl
+# ======================================
+# 5. Fingerprint SHA256
+alias crtfp='openssl x509 -noout -fingerprint -sha256 -in'
+
+
+# 6. Subject Alternative Name
+alias crtsan='openssl x509 -noout -ext subjectAltName -in'
+
+
+# 7. Validasi cert vs private key
+crtmatch() {
+if [[ $# -ne 2 ]]; then
+echo "Usage: crtmatch <cert.crt> <private.key>"
+return 1
+fi
+
+
+openssl x509 -noout -modulus -in "$1" | openssl md5
+openssl rsa -noout -modulus -in "$2" | openssl md5
+}
+
+
+# 8. Scan semua cert di folder
+crtcheckdir() {
+for f in *.crt *.pem; do
+[[ -f "$f" ]] || continue
+echo "===== $f ====="
+openssl x509 -noout -subject -enddate -in "$f"
+echo
+done
+}
+
+
+# 9. Cek certificate remote HTTPS
+crtremote() {
+if [[ -z "$1" ]]; then
+echo "Usage: crtremote <hostname>"
+return 1
+fi
+
+
+echo | openssl s_client -connect "$1:443" -servername "$1" 2>/dev/null \
+| openssl x509 -noout -subject -issuer -startdate -enddate
+}
+
+
+# 10. All-in-one summary
+crtall() {
+if [[ -z "$1" ]]; then
+echo "Usage: crtall <file.crt>"
+return 1
+fi
+
+
+echo "Subject :"
+openssl x509 -noout -subject -in "$1"
+
+
+echo "
+Issuer :"
+openssl x509 -noout -issuer -in "$1"
+
+
+echo "
+Validity :"
+openssl x509 -noout -startdate -enddate -in "$1"
+
+
+echo "
+SAN :"
+openssl x509 -noout -ext subjectAltName -in "$1" 2>/dev/null
+
+
+echo "
+Fingerprint (SHA256) :"
+openssl x509 -noout -fingerprint -sha256 -in "$1"
+}
+
+
+# 11. Help / bantuan
+crthelp() {
+cat << 'EOF'
+Zsh Certificate Toolkit - Help
+
+
+cekcrt <file.crt> : cek expired date
+crtinfo <file.crt> : subject, issuer, expired
+crtinfofull <file.crt> : info lengkap
+crtleft <file.crt> : sisa hari
+crtfp <file.crt> : fingerprint SHA256
+crtsan <file.crt> : SAN
+crtmatch <crt> <key> : validasi cert vs key
+crtcheckdir : scan cert di folder
+crtremote <host> : cek cert HTTPS remote
+crtall <file.crt> : ringkasan lengkap
+crthelp : tampilkan help
+EOF
+}
+# ===============================
