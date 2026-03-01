@@ -42,6 +42,7 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias killapp="pkill -f" ## menutup aplikasi secara paksa
   alias sysinfo="top -o cpu" ## menampilkan proses dengan penggunaan CPU tertinggi
 
+
   # Brew
   alias update="brew update && brew upgrade"
   alias inst="brew install"
@@ -59,7 +60,6 @@ elif [[ "$PLATFORM" == "Linux" ]]; then
   alias sysinfo="top -o %CPU"
   alias runningapps="ps aux | grep -v grep | grep -i"
   alias killapp="pkill -f"
-  alias du="du -sh ./*/" # menampilkan ukuran file dan folder
 
   if [[ "$DISTRO" == "Debian" ]]; then
     alias update="sudo apt update && sudo apt upgrade -y"
