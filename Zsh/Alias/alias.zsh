@@ -93,6 +93,7 @@ alias static-route="~/.config/script/static_route.sh"
 alias reload="source ~/.zshrc" ## Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
 alias clearall='clear && history -c' ## Menghapus isi direktori dan menghapus riwayat perintah
 alias cleanDS="find . -type f -name '*.DS_Store' -ls -delete" ## menghapus file .DS_Store
+alias cleanDot='find . -maxdepth 1 -type f -name "_*" -print -exec rm {} \;'  ## menghapus file ._*
 alias lss='ls -lhG' ## Menampilkan isi direktori dengan ukuran file dalam format yang lebacakan
 alias clr="clear"
 alias quit="exit"
