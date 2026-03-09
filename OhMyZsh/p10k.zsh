@@ -1,124 +1,3 @@
-#
-# Author: Thomas Bendler <code@thbe.org>
-# Date:   Sun Jan 12 17:54:00 CET 2020
-#
-# Based on romkatv/powerlevel10k/config/p10k-lean.zsh, checksum 551.
-# For more information see https://github.com/romkatv/powerlevel10k
-#
-# Apply configiguration changes without restarting zsh.
-# Edit ~/.p10k.zsh and type `source ~/.p10k.zsh`.
-#
-# Temporarily change options
-'builtin' 'local' '-a' 'p10k_config_opts'
-[[ ! -o 'aliases'         ]] || p10k_config_opts+=('aliases')
-[[ ! -o 'sh_glob'         ]] || p10k_config_opts+=('sh_glob')
-[[ ! -o 'no_brace_expand' ]] || p10k_config_opts+=('no_brace_expand')
-'builtin' 'setopt' 'no_aliases' 'no_sh_glob' 'brace_expand'
-
-() {
-  emulate -L zsh
-  setopt no_unset extended_glob
-  unset -m 'POWERLEVEL9K_*'
-  autoload -Uz is-at-least && is-at-least 5.1 || return
-  zmodload zsh/langinfo
-  if [[ ${langinfo[CODESET]:-} != (utf|UTF)(-|)8 ]]; then
-    local LC_ALL=${${(@M)$(locale -a):#*.(utf|UTF)(-|)8}[1]:-en_US.UTF-8}
-  fi
-
-:...skipping...
-
-#
-# Author: Thomas Bendler <code@thbe.org>
-# Date:   Sun Jan 12 17:54:00 CET 2020
-#
-# Based on romkatv/powerlevel10k/config/p10k-lean.zsh, checksum 551.
-# For more information see https://github.com/romkatv/powerlevel10k
-#
-# Apply configiguration changes without restarting zsh.
-# Edit ~/.p10k.zsh and type `source ~/.p10k.zsh`.
-#
-# Temporarily change options
-'builtin' 'local' '-a' 'p10k_config_opts'
-[[ ! -o 'aliases'         ]] || p10k_config_opts+=('aliases')
-[[ ! -o 'sh_glob'         ]] || p10k_config_opts+=('sh_glob')
-[[ ! -o 'no_brace_expand' ]] || p10k_config_opts+=('no_brace_expand')
-'builtin' 'setopt' 'no_aliases' 'no_sh_glob' 'brace_expand'
-
-() {
-  emulate -L zsh
-  setopt no_unset extended_glob
-  unset -m 'POWERLEVEL9K_*'
-  autoload -Uz is-at-least && is-at-least 5.1 || return
-  zmodload zsh/langinfo
-  if [[ ${langinfo[CODESET]:-} != (utf|UTF)(-|)8 ]]; then
-    local LC_ALL=${${(@M)$(locale -a):#*.(utf|UTF)(-|)8}[1]:-en_US.UTF-8}
-  fi
-
-  # The list of segments shown on the left
-  typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
-      # =========================[ Line #1 ]=========================
-      os_icon                 # os identifier
-      context                 # user@hostname
-      dir                     # current directory
-      vcs                     # git status
-:...skipping...
-
-#
-# Author: Thomas Bendler <code@thbe.org>
-# Date:   Sun Jan 12 17:54:00 CET 2020
-#
-# Based on romkatv/powerlevel10k/config/p10k-lean.zsh, checksum 551.
-# For more information see https://github.com/romkatv/powerlevel10k
-#
-# Apply configiguration changes without restarting zsh.
-# Edit ~/.p10k.zsh and type `source ~/.p10k.zsh`.
-#
-# Temporarily change options
-'builtin' 'local' '-a' 'p10k_config_opts'
-[[ ! -o 'aliases'         ]] || p10k_config_opts+=('aliases')
-[[ ! -o 'sh_glob'         ]] || p10k_config_opts+=('sh_glob')
-[[ ! -o 'no_brace_expand' ]] || p10k_config_opts+=('no_brace_expand')
-'builtin' 'setopt' 'no_aliases' 'no_sh_glob' 'brace_expand'
-
-() {
-  emulate -L zsh
-  setopt no_unset extended_glob
-  unset -m 'POWERLEVEL9K_*'
-  autoload -Uz is-at-least && is-at-least 5.1 || return
-  zmodload zsh/langinfo
-  if [[ ${langinfo[CODESET]:-} != (utf|UTF)(-|)8 ]]; then
-    local LC_ALL=${${(@M)$(locale -a):#*.(utf|UTF)(-|)8}[1]:-en_US.UTF-8}
-  fi
-
-  # The list of segments shown on the left
-  typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
-      # =========================[ Line #1 ]=========================
-      os_icon                 # os identifier
-      context                 # user@hostname
-      dir                     # current directory
-      vcs                     # git status
-      # =========================[ Line #2 ]=========================
-      newline
-      prompt_char             # prompt symbol
-  )
-
-  # The list of segments shown on the right
-  typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
-      # =========================[ Line #1 ]=========================
-       status                  # exit code of the last command
-      # command_execution_time  # duration of the last command
-      # background_jobs         # presence of background jobs
-      # direnv                  # direnv status (https://direnv.net/)
-       virtualenv            # python virtual environment (https://docs.python.org/3/library/venv.html)
-      # anaconda              # conda environment (https://conda.io/)
-      # pyenv                 # python environment (https://github.com/pyenv/pyenv)
-      # goenv                 # go environment (https://github.com/syndbg/goenv)
-       nodenv                # node.js version from nodenv (https://github.com/nodenv/nodenv)
-      # nvm                   # node.js version from nvm (https://github.com/nvm-sh/nvm)
-      # nodeenv               # node.js environment (https://github.com/ekalinin/nodeenv)
-      # node_version          # node.js version
-      # go_version            # go version (https://golang.org)
-:
 
 #
 # Author: Thomas Bendler <code@thbe.org>
@@ -185,13 +64,11 @@
       # plenv                 # perl version from plenv (https://github.com/tokuhirom/plenv)
       # kubecontext           # current kubernetes context (https://kubernetes.io/)
       # terraform             # terraform workspace (https://www.terraform.io)
-        aws                   # aws profile (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profil
-es.html)
+        aws                   # aws profile (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html)
         aws_eb_env            # aws elastic beanstalk environment (https://aws.amazon.com/elasticbeanstalk/)
       # azure                 # azure account name (https://docs.microsoft.com/en-us/cli/azure)
       # gcloud                # google cloud cli acccount and project (https://cloud.google.com/)
-      # google_app_cred       # google application credentials (https://cloud.google.com/docs/authentication/produ
-ction)
+      # google_app_cred       # google application credentials (https://cloud.google.com/docs/authentication/production)
       # nordvpn               # nordvpn connection status, linux only (https://nordvpn.com/)
       # ranger                # ranger shell (https://github.com/ranger/ranger)
       # nnn                   # nnn shell (https://github.com/jarun/nnn)
@@ -208,7 +85,7 @@ ction)
       # =========================[ Line #2 ]=========================
       newline
 #       vpn_ip                  # virtual private network indicator
-#       ip                      # ip address and bandwidth usage for a specified network interfaces
+#       ip                      # ip address and bandwidth usage for a specified network interfaces 
 #       cpu_arch              # CPU architecture
 #       public_ip             # public IP address
 #       proxy                 # system-wide http/https/ftp proxy
@@ -496,8 +373,7 @@ ction)
     # ?42 if have untracked files. It's really a question mark, your font isn't broken.
     # See POWERLEVEL9K_VCS_UNTRACKED_ICON above if you want to use a different icon.
     # Remove the next line if you don't want to see untracked files at all.
-    (( VCS_STATUS_NUM_UNTRACKED  )) && res+=" ${untracked}${POWERLEVEL9K_VCS_UNTRACKED_ICON}${VCS_STATUS_NUM_UNTRA
-CKED}"
+    (( VCS_STATUS_NUM_UNTRACKED  )) && res+=" ${untracked}${POWERLEVEL9K_VCS_UNTRACKED_ICON}${VCS_STATUS_NUM_UNTRACKED}"
 
     typeset -g my_git_format=$res
   }
@@ -704,7 +580,7 @@ CKED}"
 
   # Custom icon.
   # typeset -g POWERLEVEL9K_CONTEXT_VISUAL_IDENTIFIER_EXPANSION='⭐'
-  # Custom prefix.
+  # Custom prefix. 
   # typeset -g POWERLEVEL9K_CONTEXT_PREFIX='%fwith '
 
   ###[ virtualenv: python virtual environment (https://docs.python.org/3/library/venv.html) ]###
@@ -714,7 +590,7 @@ CKED}"
   typeset -g POWERLEVEL9K_VIRTUALENV_SHOW_WITH_PYENV=false
 
 
-  # Gunakan Nerd Font Python icon '<U+E73C>' sebagai simbol utama
+  # Gunakan Nerd Font Python icon '' sebagai simbol utama
   typeset -g POWERLEVEL9K_VIRTUALENV_CONTENT_EXPANSION='${VIRTUAL_ENV:t}'
   typeset -g POWERLEVEL9K_VIRTUALENV_VISUAL_IDENTIFIER_EXPANSION='🐍'
   typeset -g POWERLEVEL9K_PYENV_VIRTUALENV_SHOW_PYENV_VIRTUALENV=false
@@ -761,7 +637,7 @@ CKED}"
   # Nvm color.
   typeset -g POWERLEVEL9K_NVM_FOREGROUND=70
   # Custom icon.
-  # typeset -g POWERLEVEL9K_NVM_VISUAL_IDENTIFIER_EXPANSION='<U+E718>'
+  # typeset -g POWERLEVEL9K_NVM_VISUAL_IDENTIFIER_EXPANSION=''
 
   ############[ nodeenv: node.js environment (https://github.com/ekalinin/nodeenv) ]############
   # Nodeenv color.
@@ -990,7 +866,7 @@ CKED}"
       # '*prod*'  PROD    # These values are examples that are unlikely
       # '*test*'  TEST    # to match your needs. Customize them as needed.
       '*'       DEFAULT)
-  typeset -g POWERLEVEL9K_AWS_DEFAULT_VISUAL_IDENTIFIER_EXPANSION='<U+F270>'
+  typeset -g POWERLEVEL9K_AWS_DEFAULT_VISUAL_IDENTIFIER_EXPANSION=''
 
   #[ aws_eb_env: aws elastic beanstalk environment (https://aws.amazon.com/elasticbeanstalk/) ]#
   # AWS Elastic Beanstalk environment color.
@@ -1087,7 +963,7 @@ CKED}"
   # Custom icon.
   # typeset -g POWERLEVEL9K_PUBLIC_IP_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
-
+  
   ########################[ vpn_ip: virtual private network indicator ]#########################
   # VPN IP color.
   typeset -g POWERLEVEL9K_VPN_IP_FOREGROUND=11
@@ -1119,9 +995,8 @@ CKED}"
   #   P9K_IP_TX_BYTES_DELTA | number of bytes sent since last prompt
   #   P9K_IP_RX_RATE        | receive rate (since last prompt)
   #   P9K_IP_TX_RATE        | send rate (since last prompt)
-  typeset -g POWERLEVEL9K_IP_CONTENT_EXPANSION='$P9K_IP_IP${P9K_IP_RX_RATE:+ %70F⇣$P9K_IP_RX_RATE}${P9K_IP_TX_RATE
-:+ %215F⇡$P9K_IP_TX_RATE}'
-  typeset -g POWERLEVEL9K_IP_CONTENT_EXPANSION='$P9K_IP_IP $P9K_IP_INTERFACE'
+  typeset -g POWERLEVEL9K_IP_CONTENT_EXPANSION='$P9K_IP_IP${P9K_IP_RX_RATE:+ %70F⇣$P9K_IP_RX_RATE}${P9K_IP_TX_RATE:+ %215F⇡$P9K_IP_TX_RATE}'
+  typeset -g POWERLEVEL9K_IP_CONTENT_EXPANSION='$P9K_IP_IP $P9K_IP_INTERFACE' 
  # Show information for the first network interface whose name matches this regular expression.
   # Run `ifconfig` or `ip -4 a show` to see the names of all network interfaces.
   typeset -g POWERLEVEL9K_IP_INTERFACE='[ew].*'
@@ -1271,3 +1146,4 @@ function prompt_battery_custom() {
 
   p10k segment -f $color -t "$icon ${percent}%"
 }
+
