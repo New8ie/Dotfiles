@@ -5,8 +5,7 @@
 # =========================
 if [[ "$PLATFORM" == "macOS" ]]; then
   
-  alias rsdock="defaults write com.apple.dock ResetLaunchPad -bool true && killall Dock" ## reset Launchpad di Mac
-  alias flushdns="sudo killall -HUP mDNSResponder" ## flush DNS cache
+  alias dock-rs="defaults write com.apple.dock ResetLaunchPad -bool true && killall Dock" ## reset Launchpad di Mac
   alias cpwd='pwd | tr -d "\n" | pbcopy' ## menyalin path direktori saat ini
   alias caff="caffeinate -ism" ## mencegah Mac masuk ke mode tidur
   alias cl="fc -e -|pbcopy" ## menyalin output perintah terakhir
@@ -15,7 +14,6 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias capc="screencapture -c" ## menangkap layar ke clipboard
   alias capic="screencapture -i -c" ## menangkap layar secara interaktif ke clipboard
   alias capiwc="screencapture -i -w -c" ## menangkap layar interaktif dengan window
-  alias ipconfig="~/.config/script/mylocalip.sh" ## menampilkan IP lokal dengan script bash
   alias mute="osascript -e 'set volume output muted true'" ## menonaktifkan suara
   alias unmute="osascript -e 'set volume output muted false'" ## mengaktifkan suara kembali
   alias restartfinder="killall Finder" ## me-restart Finder
@@ -26,7 +24,8 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias wifi-on="networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/{getline; print \$NF}' | xargs -I{} networksetup -setairportpower {} on" ## mengaktifkan Wi-Fi secara otomatis di antarmuka yang benar
   alias wifi-off="networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/{getline; print \$NF}' | xargs -I{} networksetup -setairportpower {} off" ## menonaktifkan Wi-Fi secara otomatis di antarmuka yang benar
   alias openhere="open ." ## membuka folder saat ini di Finder
-  alias cleanup="rm -rf ~/Library/Caches/* && sudo purge" ## membersihkan file sementara dan cache
+  alias cleanCache="rm -rf ~/Library/Caches/* && sudo purge" ## membersihkan file sementara dan cache
+
   # === Keyboard KeyRepeat Control ===
   alias keyrepeat-fast='defaults write NSGlobalDomain KeyRepeat -int 1 && defaults write NSGlobalDomain InitialKeyRepeat -int 10 && killall Dock && echo "✅ KeyRepeat diatur ke cepat (1)"'
   alias keyrepeat-normal='defaults write NSGlobalDomain KeyRepeat -int 2 && defaults write NSGlobalDomain InitialKeyRepeat -int 15 && killall Dock && echo "✅ KeyRepeat diatur ke normal (2)"'
@@ -34,20 +33,20 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias keyrepeat-default='defaults delete NSGlobalDomain KeyRepeat && defaults delete NSGlobalDomain InitialKeyRepeat && killall Dock && echo "♻️ KeyRepeat dikembalikan ke default sistem"'
   
   # Aliases untuk macOS sama dengan linux
-
+  alias cpuinfo="system_profiler SPHardwareDataType | grep Cores"
+  alias gpuinfo="system_profiler SPDisplaysDataType Graphics/Displays:"
+  alias sysinfo="top -o cpu" ## menampilkan proses dengan penggunaan CPU tertinggi
   alias listservices="launchctl list" ## menampilkan daftar layanan yang berjalan di macOS
   alias runningapps="ps aux | grep -v grep | grep -i" ## melihat proses aplikasi yang berjalan
   alias showroute="netstat -nr -f inet" ## untuk melihat routing table
   alias listport="sudo lsof -i -P -n | grep LISTEN" ## melihat port yang sedang listening
-  alias killapp="pkill -f" ## menutup aplikasi secara paksa
-  alias sysinfo="top -o cpu" ## menampilkan proses dengan penggunaan CPU tertinggi
-
-
+  alias flushdns="sudo killall -HUP mDNSResponder" ## flush DNS cache
+  
   # Brew
-  alias update="brew update && brew upgrade"
-  alias inst="brew install"
-  alias remove="brew uninstall"
-  alias cleanup="brew cleanup"  # overwrite alias cleanup di atas untuk konsistensi
+  alias get-update="brew update && brew upgrade"
+  alias get-install="brew install"
+  alias get-remove="brew uninstall"
+  alias get-clean="brew cleanup"  # overwrite alias cleanup di atas untuk konsistensi
 
 # =========================
 # ALIAS UNTUK LINUX
@@ -59,28 +58,30 @@ elif [[ "$PLATFORM" == "Linux" ]]; then
   alias listport="ss -tlupn"
   alias sysinfo="top -o %CPU"
   alias runningapps="ps aux | grep -v grep | grep -i"
-  alias killapp="pkill -f"
+  alias cpuinfo="lscpu | egrep 'CPU\(s\)|Core|Thread|Socket'"
+  alias cpwd='pwd | tr -d "\n" | xclip -selection clipboard'
+
 
   if [[ "$DISTRO" == "Debian" ]]; then
-    alias update="sudo apt update && sudo apt upgrade -y"
-    alias inst="sudo apt install -y"
-    alias remove="sudo apt remove -y"
-    alias cleanup="sudo apt autoremove -y && sudo apt autoclean -y"
+    alias get-update="sudo apt update && sudo apt upgrade -y"
+    alias get-install="sudo apt install -y"
+    alias get-remove="sudo apt remove -y"
+    alias get-clean="sudo apt autoremove -y && sudo apt autoclean -y"
     alias flushdns="sudo systemd-resolve --flush-caches"
     
 
   elif [[ "$DISTRO" == "Arch" ]]; then
-    alias update="sudo pacman -Syu"
-    alias inst="sudo pacman -S"
-    alias remove="sudo pacman -Rns"
-    alias cleanup="sudo pacman -Sc"
+    alias get-update="sudo pacman -Syu"
+    alias get-install="sudo pacman -S"
+    alias get-remove="sudo pacman -Rns"
+    alias get-clean="sudo pacman -Sc"
     alias flushdns="sudo systemctl restart systemd-resolved"
 
   elif [[ "$DISTRO" == "RedHat" ]]; then
-    alias update="sudo dnf update -y"
-    alias inst="sudo dnf install -y"
-    alias remove="sudo dnf remove -y"
-    alias cleanup="sudo dnf autoremove -y && sudo dnf clean all"
+    alias get-update="sudo dnf update -y"
+    alias get-install="sudo dnf install -y"
+    alias get-remove="sudo dnf remove -y"
+    alias get-cleanup="sudo dnf autoremove -y && sudo dnf clean all"
     alias flushdns="sudo systemctl restart NetworkManager"
   fi
 fi
@@ -90,9 +91,10 @@ fi
 alias cfm="~/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan dan mengapus banned ip di cloudflare
 alias sshcpid="~/.config/script/sshcpid.sh" ## menyalin SSH public key dengan script bash
 alias static-route="~/.config/script/static_route.sh"
+alias ipconfig="~/.config/script/mylocalip.sh" ## menampilkan IP lokal dengan script bash
 alias reload="source ~/.zshrc" ## Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
 alias clearall='clear && history -c' ## Menghapus isi direktori dan menghapus riwayat perintah
-alias cleanDS="find . -type f -name '*.DS_Store' -ls -delete" ## menghapus file .DS_Store
+alias killapp="pkill -f"
 alias lss='ls -lhG' ## Menampilkan isi direktori dengan ukuran file dalam format yang lebacakan
 alias clr="clear"
 alias quit="exit"
@@ -104,7 +106,7 @@ alias now='date +"%T"'
 alias today='date +"%A, %B %d, %Y"'
 alias pwdl="pwd -P" ## Memeriksa semua perintah yang tersedia dengan cara mengeksekusi script bash
 alias allcom='compgen -c' ## Memeriksa daftar semua alias yang ada
-alias showaliases="alias | less"
+alias showalias="alias | less"
 
 # ========================= Clean Dot Macos Files =========================
 
@@ -114,7 +116,7 @@ cleanDotMacFiles() {
         rm "$file"
     done
 }
-
+alias cleanDS="find . -type f -name '*.DS_Store' -ls -delete" ## menghapus file .DS_Store
 
 
 # ========================= Konfigurasi bat (Pengganti cat) =========================
@@ -336,3 +338,5 @@ crthelp : tampilkan help
 EOF
 }
 # ===============================
+
+alias UpdateDotfiles='[ -d "$HOME/.dotfiles/.git" ] && git -C "$HOME/.dotfiles" pull || git clone https://github.com/New8ie/Dotfiles.git "$HOME/.dotfiles"'
