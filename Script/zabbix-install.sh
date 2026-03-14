@@ -9,7 +9,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-ZBX_SERVERS="192.168.49.2,192.168.64.3"
+ZBX_SERVERS="192.168.49.2,192.168.64.3,192.168.48.14"
 ZBX_PORT="10050"
 ZBX_HOSTNAME="$(hostname -f 2>/dev/null || hostname)"
 
