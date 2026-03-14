@@ -5,44 +5,74 @@ set -euo pipefail
 ZABBIX_VERSION="7.0"
 LOGFILE="/var/log/zabbix_agent_install.log"
 
+# ===== COLOR =====
+RED="\e[31m"
+GREEN="\e[32m"
+YELLOW="\e[33m"
+BLUE="\e[34m"
+CYAN="\e[36m"
+RESET="\e[0m"
+
+log_info() {
+    echo -e "${BLUE}[INFO]${RESET} $1"
+}
+
+log_ok() {
+    echo -e "${GREEN}[OK]${RESET} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${RESET} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${RESET} $1"
+}
+
+log_step() {
+    echo -e "\n${CYAN}▶ $1${RESET}"
+}
+
 exec > >(tee -a "$LOGFILE") 2>&1
 
+echo -e "${CYAN}"
 echo "======================================"
-echo " Zabbix Agent Installer"
+echo "        Zabbix Agent Installer"
 echo "======================================"
+echo -e "${RESET}"
 
 retry_or_stop() {
     while true; do
         read -p "Retry operation? (r=retry / s=stop): " ACTION
         case "$ACTION" in
             r|R) return 0 ;;
-            s|S) echo "Stopping script"; exit 1 ;;
-            *) echo "Invalid option";;
+            s|S) log_error "Stopping script"; exit 1 ;;
+            *) log_warn "Invalid option";;
         esac
     done
 }
 
-# Root check
+# root check
 if [[ $EUID -ne 0 ]]; then
-    echo "Please run as root"
+    log_error "Please run as root"
     exit 1
 fi
 
 read -p "Enter Zabbix Server IP/FQDN: " ZABBIX_SERVER
 
 if [[ -z "$ZABBIX_SERVER" ]]; then
-    echo "Server cannot be empty"
+    log_error "Server cannot be empty"
     exit 1
 fi
 
 ARCH=$(dpkg --print-architecture)
-echo "Architecture: $ARCH"
+log_info "Architecture: $ARCH"
 
 source /etc/os-release
 OS=$ID
 VERSION=$VERSION_ID
 
-echo "Detected OS: $OS $VERSION"
+log_info "Detected OS: $OS $VERSION"
 
 if [[ "$OS" == "ubuntu" ]]; then
     REPO_FILE="zabbix-release_${ZABBIX_VERSION}-1+ubuntu${VERSION}_all.deb"
@@ -53,21 +83,22 @@ elif [[ "$OS" == "debian" ]]; then
     REPO_URL="https://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian/pool/main/z/zabbix-release/${REPO_FILE}"
 
 else
-    echo "Unsupported OS"
+    log_error "Unsupported OS"
     exit 1
 fi
+
+log_step "Installing dependencies"
 
 apt update -qq
 apt install -y wget curl jq
 
-echo "Installing Zabbix repository"
+log_step "Installing Zabbix repository"
 
 wget -q "$REPO_URL"
 dpkg -i "$REPO_FILE"
 apt update -qq
 
-echo ""
-echo "Checking existing Zabbix agent..."
+log_step "Checking existing Zabbix agent"
 
 AGENT_INSTALLED="none"
 
@@ -83,8 +114,8 @@ fi
 
 if [[ "$AGENT_INSTALLED" == "none" ]]; then
 
-    echo "No Zabbix agent installed"
-    echo "Installing zabbix-agent2"
+    log_warn "No Zabbix agent installed"
+    log_info "Installing zabbix-agent2"
 
     apt install -y zabbix-agent2
     CONFIG_FILE="/etc/zabbix/zabbix_agent2.conf"
@@ -92,7 +123,7 @@ if [[ "$AGENT_INSTALLED" == "none" ]]; then
 
 else
 
-    echo "Existing agent detected: $AGENT_SERVICE"
+    log_warn "Existing agent detected: $AGENT_SERVICE"
 
     echo ""
     echo "Select action:"
@@ -105,23 +136,23 @@ else
     case $ACTION in
 
         1)
-            echo "Upgrading agent"
+            log_info "Upgrading agent"
             apt install -y zabbix-agent2
             CONFIG_FILE="/etc/zabbix/zabbix_agent2.conf"
             AGENT_SERVICE="zabbix-agent2"
         ;;
 
         2)
-            echo "Updating configuration only"
+            log_info "Updating configuration only"
         ;;
 
         3)
-            echo "Skipping installation"
+            log_warn "Skipping installation"
             exit 0
         ;;
 
         *)
-            echo "Invalid option"
+            log_error "Invalid option"
             exit 1
         ;;
 
@@ -132,12 +163,12 @@ fi
 if [[ -f "$CONFIG_FILE" ]]; then
     BACKUP="${CONFIG_FILE}.backup.$(date +%F-%H%M%S)"
     cp "$CONFIG_FILE" "$BACKUP"
-    echo "Backup config saved: $BACKUP"
+    log_ok "Backup config saved: $BACKUP"
 fi
 
 HOSTNAME=$(hostname)
 
-echo "Configuring agent"
+log_step "Configuring agent"
 
 sed -i "s/^Server=.*/Server=${ZABBIX_SERVER}/" "$CONFIG_FILE"
 sed -i "s/^ServerActive=.*/ServerActive=${ZABBIX_SERVER}/" "$CONFIG_FILE"
@@ -151,36 +182,33 @@ fi
 systemctl enable $AGENT_SERVICE
 systemctl restart $AGENT_SERVICE
 
-echo "Agent ready"
+log_ok "Agent service running"
 
 echo ""
 read -p "Register host to Zabbix via API? (y/n): " REGISTER
 
-if [[ "$REGISTER" != "y" ]]; then
-    echo "Skipping registration"
-    exit 0
-fi
+REGISTER_STATUS="Skipped"
+
+if [[ "$REGISTER" == "y" ]]; then
 
 read -p "Zabbix API URL: " API_URL
 read -p "Zabbix username: " API_USER
 read -s -p "Zabbix password: " API_PASS
 echo
 
-# API connectivity
 while true; do
 
-    echo "Checking API connectivity..."
+log_step "Checking API connectivity"
 
-    if curl -s --connect-timeout 5 "$API_URL" >/dev/null; then
-        break
-    else
-        echo "API not reachable"
-        retry_or_stop
-    fi
+if curl -s --connect-timeout 5 "$API_URL" >/dev/null; then
+    break
+else
+    log_error "API not reachable"
+    retry_or_stop
+fi
 
 done
 
-# API login
 while true; do
 
 AUTH_TOKEN=$(curl -s -X POST "$API_URL" \
@@ -196,7 +224,7 @@ AUTH_TOKEN=$(curl -s -X POST "$API_URL" \
 }" | jq -r '.result')
 
 if [[ "$AUTH_TOKEN" == "null" || -z "$AUTH_TOKEN" ]]; then
-    echo "API login failed"
+    log_error "API login failed"
     retry_or_stop
 else
     break
@@ -204,11 +232,9 @@ fi
 
 done
 
-echo "API login success"
+log_ok "API login success"
 
 IP=$(hostname -I | awk '{print $1}')
-
-echo "Checking if host already exists"
 
 HOST_EXIST=$(curl -s -X POST "$API_URL" \
 -H "Content-Type: application/json" \
@@ -221,11 +247,9 @@ HOST_EXIST=$(curl -s -X POST "$API_URL" \
 }" | jq '.result | length')
 
 if [[ "$HOST_EXIST" -gt 0 ]]; then
-    echo "Host already exists in Zabbix"
-    exit 0
-fi
-
-echo "Creating host"
+    log_warn "Host already exists in Zabbix"
+    REGISTER_STATUS="Already exists"
+else
 
 RESPONSE=$(curl -s -X POST "$API_URL" \
 -H "Content-Type: application/json" \
@@ -254,18 +278,27 @@ RESPONSE=$(curl -s -X POST "$API_URL" \
 ERROR=$(echo "$RESPONSE" | jq -r '.error')
 
 if [[ "$ERROR" != "null" ]]; then
-    echo "Host creation failed"
+    log_error "Host creation failed"
     echo "$RESPONSE" | jq
-    exit 1
+    REGISTER_STATUS="Failed"
+else
+    log_ok "Host successfully registered"
+    REGISTER_STATUS="Success"
 fi
 
-echo "Host successfully registered"
+fi
+fi
 
 echo ""
-echo "======================================"
-echo "Installation completed"
-echo "Hostname : $HOSTNAME"
-echo "IP       : $IP"
-echo "Server   : $ZABBIX_SERVER"
-echo "Log file : $LOGFILE"
-echo "======================================"
+echo -e "${CYAN}======================================"
+echo "          INSTALLATION SUMMARY"
+echo "======================================${RESET}"
+
+echo -e "Hostname        : ${GREEN}$HOSTNAME${RESET}"
+echo -e "IP Address      : ${GREEN}$(hostname -I | awk '{print $1}')${RESET}"
+echo -e "Zabbix Server   : ${GREEN}$ZABBIX_SERVER${RESET}"
+echo -e "Agent Service   : ${GREEN}$AGENT_SERVICE${RESET}"
+echo -e "Registration    : ${GREEN}$REGISTER_STATUS${RESET}"
+echo -e "Log File        : ${GREEN}$LOGFILE${RESET}"
+
+echo -e "${CYAN}======================================${RESET}"
