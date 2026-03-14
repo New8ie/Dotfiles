@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-ZABBIX_VERSION="7.0"
+ZABBIX_VERSION="7.4"
 LOGFILE="/var/log/zabbix_agent_install.log"
 
 # ===== COLOR =====
@@ -89,14 +89,14 @@ fi
 
 log_step "Installing dependencies"
 
-apt update -qq
-apt install -y wget curl jq
+apt-get update -qq
+apt-get install -y wget curl jq
 
 log_step "Installing Zabbix repository"
 
 wget -q "$REPO_URL"
 dpkg -i "$REPO_FILE"
-apt update -qq
+apt-get update -qq
 
 log_step "Checking existing Zabbix agent"
 
