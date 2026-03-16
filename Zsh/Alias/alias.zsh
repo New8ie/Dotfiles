@@ -1,5 +1,3 @@
-# ~/.config/zsh/alias.zsh
-
 # =========================
 # ALIAS UNTUK macOS
 # =========================
@@ -118,6 +116,137 @@ cleanDotMacFiles() {
 }
 alias cleanDS="find . -type f -name '*.DS_Store' -ls -delete" ## menghapus file .DS_Store
 
+# ========================= Netapps =========================
+
+netapps() {
+
+GREEN="\033[32m"
+YELLOW="\033[33m"
+BLUE="\033[34m"
+MAGENTA="\033[35m"
+CYAN="\033[36m"
+WHITE="\033[97m"
+RESET="\033[0m"
+
+printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" \
+APP PID PORT PROTO ADDRESS SERVICE
+
+get_service() {
+port="$1"
+proto="$2"
+
+grep -E "^[^#].*[[:space:]]$port/$proto" /etc/services 2>/dev/null \
+| awk '{print $1}' | head -n1
+}
+
+# ================= macOS =================
+if [[ "$OSTYPE" == "darwin"* ]]; then
+
+sudo lsof -nP -iTCP -sTCP:LISTEN -iUDP -Fpcn 2>/dev/null | awk '
+
+/^p/ {pid=substr($0,2)}
+/^c/ {
+app=substr($0,2)
+gsub(/\\x20/," ",app)
+}
+/^n/ {
+
+addr=substr($0,2)
+
+split(addr,a,":")
+port=a[length(a)]
+
+sub(":"port,"",addr)
+
+proto="tcp"
+if (addr ~ /->/) proto="udp"
+
+print app "|" pid "|" port "|" proto "|" addr
+
+}
+
+' | sort -u | while IFS="|" read -r app pid port proto addr
+do
+
+service=$(get_service "$port" "$proto")
+
+printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" \
+"$app" "$pid" "$port" "$proto" "$addr" "${service:--}"
+
+done | sort -k3 -n
+
+
+# ================= Linux =================
+else
+
+ss -tlupnH | awk '
+{
+proto=$1
+local=$5
+proc=$7
+
+gsub("\\[","",local)
+gsub("\\]","",local)
+
+split(local,a,":")
+port=a[length(a)]
+
+addr=local
+sub(":"port,"",addr)
+
+app="-"
+pid="-"
+
+if (match(proc,/"[^"]+"/)) {
+    app=substr(proc,RSTART+1,RLENGTH-2)
+}
+
+if (match(proc,/pid=[0-9]+/)) {
+    pid=substr(proc,RSTART+4,RLENGTH-4)
+}
+
+print app "|" pid "|" port "|" proto "|" addr
+}
+' | sort -u | while IFS="|" read -r app pid port proto addr
+do
+
+service=$(get_service "$port" "$proto")
+
+printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" \
+"$app" "$pid" "$port" "$proto" "$addr" "${service:--}"
+
+done | sort -k3 -n
+
+fi
+}
+
+#========================= Konfigurasi bat (Pengganti cat) =========================
+
+if command -v bat &> /dev/null; then
+    alias cat="bat"
+    export BAT_THEME="Dracula"
+    export BAT_STYLE="snip"
+    alias cat-l="bat --style=numbers"
+elif command -v batcat &> /dev/null; then
+    alias cat="batcat"
+    export BAT_THEME="Dracula"
+    export BAT_STYLE="snip"
+    alias cat-l="batcat --style=numbers"
+else
+    alias cat="command cat"  ## Menggunakan perintah cat asli jika bat tidak tersedia
+fi
+
+
+# ========================= Konfigurasi eza (Pengganti ls) =========================
+if command -v eza &> /dev/null; then
+  alias ls="eza $eza_params --icons --group-directories-first"
+  alias ll="eza --icons --group-directories-first -AolhM"
+  alias lt="eza --icons -AiolbM --total-size --tree --level=2"
+  alias lg="eza --icons -lbGF --git"
+  alias la="eza -lbhHgUmuSao --total-size --group-directories-first --icons"
+else
+  alias ls="ls" ## kembali ke default ls jika eza tidak ditemukan
+fi
 
 # ========================= Konfigurasi bat (Pengganti cat) =========================
 
