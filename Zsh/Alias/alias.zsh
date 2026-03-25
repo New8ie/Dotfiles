@@ -152,36 +152,9 @@ netapps() {
 }
 #========================= Konfigurasi bat (Pengganti cat) =========================
 
-if command -v bat &> /dev/null; then
-  unalias cat 2>/dev/null
-
-  cat() {
-    if [[ -t 0 ]]; then
-      bat "$@"
-    else
-      command cat "$@"
-    fi
-  }
-
-  export BAT_THEME="Dracula"
-  export BAT_STYLE="snip"
-  alias cat-l="bat --style=numbers"
-
-elif command -v batcat &> /dev/null; then
-  unalias cat 2>/dev/null
-
-  cat() {
-    if [[ -t 0 ]]; then
-      batcat "$@"
-    else
-      command cat "$@"
-    fi
-  }
-
   export BAT_THEME="Dracula"
   export BAT_STYLE="snip"
   alias cat-l="batcat --style=numbers"
-fi
 
 # ========================= Konfigurasi eza (Pengganti ls) =========================
 if command -v eza &> /dev/null; then
