@@ -1,17 +1,19 @@
+# ~/.config/zsh/alias.zsh
+
 # =========================
 # ALIAS UNTUK macOS
 # =========================
 if [[ "$PLATFORM" == "macOS" ]]; then
   
-  alias dock-rs="defaults write com.apple.dock ResetLaunchPad -bool true && killall Dock" ## reset Launchpad di Mac
+  alias dock-reset="defaults write com.apple.dock ResetLaunchPad -bool true && killall Dock" ## reset Launchpad di Mac
   alias cpwd='pwd | tr -d "\n" | pbcopy' ## menyalin path direktori saat ini
   alias caff="caffeinate -ism" ## mencegah Mac masuk ke mode tidur
-  alias cl="fc -e -|pbcopy" ## menyalin output perintah terakhir
+  alias clip-last='fc -e -|pbcopy' ## menyalin output perintah terakhir
   alias showHidden='defaults write com.apple.finder AppleShowAllFiles TRUE' ## menampilkan file tersembunyi
   alias hideHidden='defaults write com.apple.finder AppleShowAllFiles FALSE' ## menyembunyikan file tersembunyi
-  alias capc="screencapture -c" ## menangkap layar ke clipboard
-  alias capic="screencapture -i -c" ## menangkap layar secara interaktif ke clipboard
-  alias capiwc="screencapture -i -w -c" ## menangkap layar interaktif dengan window
+  alias screen-copy='screencapture -c' ## menangkap layar ke clipboard
+  alias screen-interactive='screencapture -i -c' ## menangkap layar secara interaktif ke clipboard
+  alias screen-window='screencapture -i -w -c' ## menangkap layar interaktif dengan window
   alias mute="osascript -e 'set volume output muted true'" ## menonaktifkan suara
   alias unmute="osascript -e 'set volume output muted false'" ## mengaktifkan suara kembali
   alias restartfinder="killall Finder" ## me-restart Finder
@@ -41,55 +43,58 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias flushdns="sudo killall -HUP mDNSResponder" ## flush DNS cache
   
   # Brew
-  alias get-update="brew update && brew upgrade"
-  alias get-install="brew install"
-  alias get-remove="brew uninstall"
-  alias get-clean="brew cleanup"  # overwrite alias cleanup di atas untuk konsistensi
+  alias pkg-update='brew update && brew upgrade'
+  alias pkg-install='brew install'
+  alias pkg-remove='brew uninstall'
+  alias pkg-clean='brew cleanup'
+  alias pkg-search='brew search'
 
 # =========================
 # ALIAS UNTUK LINUX
 # =========================
 elif [[ "$PLATFORM" == "Linux" ]]; then
   # Aliases untuk Linux Sama dengan macOS 
-  alias showroute="ip route show"
-  alias myip="hostname -I | awk '{print \$1}'"
-  alias listport="ss -tlupn"
-  alias sysinfo="top -o %CPU"
-  alias runningapps="ps aux | grep -v grep | grep -i"
-  alias cpuinfo="lscpu | egrep 'CPU\(s\)|Core|Thread|Socket'"
+  alias showroute='ip route show'
+  alias myip='hostname -I | awk "{print \$1}"'
+  alias listport='ss -tlupn'
+  alias sysinfo='top -o %CPU'
+  alias runningapps='ps aux | grep -v grep | grep -i'
+  alias cpuinfo='lscpu | egrep "CPU\(s\)|Core|Thread|Socket"'
   alias cpwd='pwd | tr -d "\n" | xclip -selection clipboard'
 
-
   if [[ "$DISTRO" == "Debian" ]]; then
-    alias get-update="sudo apt update && sudo apt upgrade -y"
-    alias get-install="sudo apt install -y"
-    alias get-remove="sudo apt remove -y"
-    alias get-clean="sudo apt autoremove -y && sudo apt autoclean -y"
-    alias flushdns="sudo systemd-resolve --flush-caches"
-    
+    alias pkg-update='sudo apt update && sudo apt upgrade -y'
+    alias pkg-install='sudo apt install -y'
+    alias pkg-remove='sudo apt remove -y'
+    alias pkg-clean='sudo apt autoremove -y && sudo apt autoclean -y'
+    alias pkg-search='sudo apt search'
+
+    alias flushdns='sudo systemd-resolve --flush-caches'
 
   elif [[ "$DISTRO" == "Arch" ]]; then
-    alias get-update="sudo pacman -Syu"
-    alias get-install="sudo pacman -S"
-    alias get-remove="sudo pacman -Rns"
-    alias get-clean="sudo pacman -Sc"
-    alias flushdns="sudo systemctl restart systemd-resolved"
+    alias pkg-update='sudo pacman -Syu'
+    alias pkg-install='sudo pacman -S'
+    alias pkg-remove='sudo pacman -Rns'
+    alias pkg-clean='sudo pacman -Sc'
+    alias pkg-search='sudo pacman -Ss'
+    alias flushdns='sudo systemctl restart systemd-resolved'
 
   elif [[ "$DISTRO" == "RedHat" ]]; then
-    alias get-update="sudo dnf update -y"
-    alias get-install="sudo dnf install -y"
-    alias get-remove="sudo dnf remove -y"
-    alias get-cleanup="sudo dnf autoremove -y && sudo dnf clean all"
-    alias flushdns="sudo systemctl restart NetworkManager"
+    alias pkg-update='sudo dnf update -y'
+    alias pkg-install='sudo dnf install -y'
+    alias pkg-remove='sudo dnf remove -y'
+    alias pkg-clean='sudo dnf autoremove -y && sudo dnf clean all'
+    alias pkg-search='sudo dnf search'
+    alias flushdns='sudo systemctl restart NetworkManager'
   fi
 fi
 
 # Aliases Global
 # =========================
-alias cfm="~/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan dan mengapus banned ip di cloudflare
-alias sshcpid="~/.config/script/sshcpid.sh" ## menyalin SSH public key dengan script bash
-alias static-route="~/.config/script/static_route.sh"
-alias ipconfig="~/.config/script/mylocalip.sh" ## menampilkan IP lokal dengan script bash
+alias cfm="$HOME/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan dan mengapus banned ip di cloudflare
+alias sshcpid="$HOME/.config/script/sshcpid.sh" ## menyalin SSH public key dengan script bash
+alias static-route="$HOME/.config/script/static_route.sh"
+alias ipconfig="$HOME/.config/script/mylocalip.sh" ## menampilkan IP lokal dengan script bash
 alias reload="source ~/.zshrc" ## Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
 alias clearall='clear && history -c' ## Menghapus isi direktori dan menghapus riwayat perintah
 alias killapp="pkill -f"
@@ -116,126 +121,67 @@ cleanDotMacFiles() {
 }
 alias cleanDS="find . -type f -name '*.DS_Store' -ls -delete" ## menghapus file .DS_Store
 
+
 # ========================= Netapps =========================
-
 netapps() {
+  local GREEN="\033[32m" YELLOW="\033[33m" BLUE="\033[34m" MAGENTA="\033[35m" CYAN="\033[36m" WHITE="\033[97m" RESET="\033[0m"
 
-GREEN="\033[32m"
-YELLOW="\033[33m"
-BLUE="\033[34m"
-MAGENTA="\033[35m"
-CYAN="\033[36m"
-WHITE="\033[97m"
-RESET="\033[0m"
+  printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" \
+    APP PID PORT PROTO ADDRESS SERVICE
 
-printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" \
-APP PID PORT PROTO ADDRESS SERVICE
+  get_service() {
+    local port="$1" proto="$2"
+    grep -E "^[^#].*[[:space:]]$port/$proto" /etc/services 2>/dev/null | awk '{print $1}' | head -n1
+  }
 
-get_service() {
-port="$1"
-proto="$2"
-
-grep -E "^[^#].*[[:space:]]$port/$proto" /etc/services 2>/dev/null \
-| awk '{print $1}' | head -n1
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sudo lsof -nP -iTCP -sTCP:LISTEN -iUDP -Fpcn 2>/dev/null | awk '
+      /^p/ {pid=substr($0,2)}
+      /^c/ {app=substr($0,2); gsub(/\\x20/," ",app)}
+      /^n/ {addr=substr($0,2); split(addr,a,":"); port=a[length(a)]; sub(":"port,"",addr); proto="tcp"; if (addr ~ /->/) proto="udp"; print app "|" pid "|" port "|" proto "|" addr}
+    ' | sort -u | while IFS='|' read -r app pid port proto addr; do
+      service=$(get_service "$port" "$proto")
+      printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" "$app" "$pid" "$port" "$proto" "$addr" "${service:--}"
+    done | sort -k3 -n
+  else
+    ss -tlupnH | awk '{ proto=$1; local=$5; proc=$7; gsub("\\[","",local); gsub("\\]","",local); split(local,a,":"); port=a[length(a)]; addr=local; sub(":"port,"",addr); app="-"; pid="-"; if (match(proc,/"[^"]+"/)) { app=substr(proc,RSTART+1,RLENGTH-2)}; if (match(proc,/pid=[0-9]+/)) { pid=substr(proc,RSTART+4,RLENGTH-4)}; print app "|" pid "|" port "|" proto "|" addr }' | sort -u | while IFS='|' read -r app pid port proto addr; do
+      service=$(get_service "$port" "$proto")
+      printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" "$app" "$pid" "$port" "$proto" "$addr" "${service:--}"
+    done | sort -k3 -n
+  fi
 }
-
-# ================= macOS =================
-if [[ "$OSTYPE" == "darwin"* ]]; then
-
-sudo lsof -nP -iTCP -sTCP:LISTEN -iUDP -Fpcn 2>/dev/null | awk '
-
-/^p/ {pid=substr($0,2)}
-/^c/ {
-app=substr($0,2)
-gsub(/\\x20/," ",app)
-}
-/^n/ {
-
-addr=substr($0,2)
-
-split(addr,a,":")
-port=a[length(a)]
-
-sub(":"port,"",addr)
-
-proto="tcp"
-if (addr ~ /->/) proto="udp"
-
-print app "|" pid "|" port "|" proto "|" addr
-
-}
-
-' | sort -u | while IFS="|" read -r app pid port proto addr
-do
-
-service=$(get_service "$port" "$proto")
-
-printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" \
-"$app" "$pid" "$port" "$proto" "$addr" "${service:--}"
-
-done | sort -k3 -n
-
-
-# ================= Linux =================
-else
-
-ss -tlupnH | awk '
-{
-proto=$1
-local=$5
-proc=$7
-
-gsub("\\[","",local)
-gsub("\\]","",local)
-
-split(local,a,":")
-port=a[length(a)]
-
-addr=local
-sub(":"port,"",addr)
-
-app="-"
-pid="-"
-
-if (match(proc,/"[^"]+"/)) {
-    app=substr(proc,RSTART+1,RLENGTH-2)
-}
-
-if (match(proc,/pid=[0-9]+/)) {
-    pid=substr(proc,RSTART+4,RLENGTH-4)
-}
-
-print app "|" pid "|" port "|" proto "|" addr
-}
-' | sort -u | while IFS="|" read -r app pid port proto addr
-do
-
-service=$(get_service "$port" "$proto")
-
-printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" \
-"$app" "$pid" "$port" "$proto" "$addr" "${service:--}"
-
-done | sort -k3 -n
-
-fi
-}
-
 #========================= Konfigurasi bat (Pengganti cat) =========================
 
 if command -v bat &> /dev/null; then
-    alias cat="bat"
-    export BAT_THEME="Dracula"
-    export BAT_STYLE="snip"
-    alias cat-l="bat --style=numbers"
-elif command -v batcat &> /dev/null; then
-    alias cat="batcat"
-    export BAT_THEME="Dracula"
-    export BAT_STYLE="snip"
-    alias cat-l="batcat --style=numbers"
-else
-    alias cat="command cat"  ## Menggunakan perintah cat asli jika bat tidak tersedia
-fi
+  unalias cat 2>/dev/null
 
+  cat() {
+    if [[ -t 0 ]]; then
+      bat "$@"
+    else
+      command cat "$@"
+    fi
+  }
+
+  export BAT_THEME="Dracula"
+  export BAT_STYLE="snip"
+  alias cat-l="bat --style=numbers"
+
+elif command -v batcat &> /dev/null; then
+  unalias cat 2>/dev/null
+
+  cat() {
+    if [[ -t 0 ]]; then
+      batcat "$@"
+    else
+      command cat "$@"
+    fi
+  }
+
+  export BAT_THEME="Dracula"
+  export BAT_STYLE="snip"
+  alias cat-l="batcat --style=numbers"
+fi
 
 # ========================= Konfigurasi eza (Pengganti ls) =========================
 if command -v eza &> /dev/null; then
@@ -248,40 +194,17 @@ else
   alias ls="ls" ## kembali ke default ls jika eza tidak ditemukan
 fi
 
-# ========================= Konfigurasi bat (Pengganti cat) =========================
-
-if command -v bat &> /dev/null; then
-    alias cat="bat"
-    export BAT_THEME="Dracula"
-    export BAT_STYLE="snip"
-    alias cat-l="bat --style=numbers"
-elif command -v batcat &> /dev/null; then
-    alias cat="batcat"
-    export BAT_THEME="Dracula"
-    export BAT_STYLE="snip"
-    alias cat-l="batcat --style=numbers"
-else
-    alias cat="command cat"  ## Menggunakan perintah cat asli jika bat tidak tersedia
-fi
-
-
-# ========================= Konfigurasi eza (Pengganti ls) =========================
-if command -v eza &> /dev/null; then
-  alias ls="eza $eza_params --icons --group-directories-first"
-  alias ll="eza --icons --group-directories-first -AolhM"
-  alias lt="eza --icons -AiolbM --total-size --tree --level=2"
-  alias lg="eza --icons -lbGF --git"
-  alias la="eza -lbhHgUmuSao --total-size --group-directories-first --icons"
-else
-  alias ls="ls" ## kembali ke default ls jika eza tidak ditemukan
+# ================================= Grc Curl ======================================
+if command -v grc >/dev/null 2>&1; then
+  curl() {
+    grc --pty command curl "$@"
+  }
 fi
 
 # =========================
 # KONFIGURASI FZF (Fuzzy Finder)
 # =========================
 if command -v fzf &>/dev/null; then
-
-  # Jika 'fd' tersedia, gunakan sebagai backend pencarian (lebih cepat dari find)
   if command -v fd &>/dev/null; then
     export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
     export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
@@ -292,24 +215,14 @@ if command -v fzf &>/dev/null; then
     export FZF_ALT_C_COMMAND='find . -type d'
   fi
 
-  # Opsi tampilan fzf
   export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border --preview "bat --style=numbers --color=always --line-range :500 {} 2>/dev/null || cat {}"'
-  # --height=40%      → fzf hanya menempati 40% tinggi terminal
-  # --layout=reverse  → hasil pencarian muncul dari bawah ke atas
-  # --border          → tampilkan border di sekeliling fzf
-  # --preview         → tampilkan isi file secara real-time dengan 'bat' atau fallback ke 'cat'
-
-  # =========================
-  # ALIAS FZF 
-  # =========================
-
-alias fzf-history='history | fzf' # 🔍 Pencarian riwayat perintah sebelumnya dengan fzf
-alias fcd='cd "$(fd --type d | fzf)"' # 📁 Pindah ke direktori hasil pencarian dengan fzf (menggunakan fd)
-alias frun='fzf --preview "bat --style=numbers --color=always {} 2>/dev/null || cat {}" | xargs -r $SHELL' # 🚀 Menjalankan file hasil pencarian langsung di shell
-alias fkill="ps aux | fzf --preview 'echo {}' | awk '{print \$2}' | xargs kill -9" # ❌ Memilih dan mematikan proses (dengan preview proses)
-alias fe='fzf --preview "bat --style=numbers --color=always --line-range :100 {}" | xargs -r $EDITOR' # ✍️  Memilih file via fzf dan membukanya di editor (nvim/vim/code tergantung $EDITOR)
-
+  alias fzf-history='history | fzf'
+  alias fcd='cd "$(fd --type d | fzf)"'
+  alias frun='fzf --preview "bat --style=numbers --color=always {} 2>/dev/null || cat {}" | xargs -r $SHELL'
+  alias fkill="ps aux | fzf --preview 'echo {}' | awk '{print \$2}' | xargs kill -9"
+  alias fe='fzf --preview "bat --style=numbers --color=always --line-range :100 {}" | xargs -r $EDITOR'
 fi
+
 
 # Deteksi zoxide
 if command -v zoxide &>/dev/null; then
@@ -319,9 +232,6 @@ if command -v zoxide &>/dev/null; then
   alias zz='zoxide query -l | fzf --preview "ls -la {}"' # preview isi dir
 fi
 
-alias zf='zoxide query -l | fzf'
-alias zj='cd "$(zoxide query -l | fzf)"' ## Pindah ke direktori yang dipilih dengan fzf
-alias zz='zoxide query -l | fzf --preview "ls -la {}"' ## Preview isi direktori dengan fzf
 
 # ======================================
 # Aliases untuk penggunaan astro
@@ -356,8 +266,11 @@ alias ollrm="ollama rm"
 alias olllog="ollama logs"
 alias ollserve="ollama serve"
 
-FUNC_DIR="$HOME/.config/zsh/functions"
+## ------------------
+## Source user function directory 
+## ------------------
 
+FUNC_DIR="$HOME/.config/zsh/functions"
 if [ -d "$FUNC_DIR" ]; then
   for f in "$FUNC_DIR"/*.zsh; do
     [ -r "$f" ] && source "$f"

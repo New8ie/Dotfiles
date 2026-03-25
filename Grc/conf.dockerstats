@@ -1,0 +1,31 @@
+# HEADER
+regexp=(CONTAINER ID|NAME|CPU %|MEM USAGE / LIMIT|MEM %|NET I/O|BLOCK I/O|PIDS)
+colours=bold yellow
+======
+# CONTAINER ID
+regexp=^[a-f0-9]{12}
+colours=bold green
+======
+# CONTAINER NAME
+regexp=^[a-f0-9]{12}\s+([a-zA-Z0-9._-]+)
+colours=default,cyan
+======
+# CPU %
+regexp=[0-9]+\.[0-9]+%
+colours=magenta
+======
+# MEMORY VALUES
+regexp=[0-9\.]+(MiB|GiB|KiB)
+colours=cyan
+======
+# NETWORK I/O
+regexp=[0-9\.]+(kB|MB|GB)
+colours=blue
+======
+# BLOCK I/O
+regexp=[0-9\.]+(B|kB|MB|GB)
+colours=green
+======
+# PIDS
+regexp=\s+[0-9]+$
+colours=bold white
