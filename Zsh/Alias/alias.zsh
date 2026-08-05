@@ -170,7 +170,7 @@ fi
 # ================================= Grc Curl ======================================
 if command -v grc >/dev/null 2>&1; then
   curl() {
-    grc --pty command curl "$@"
+    grc --pty /usr/bin/curl "$@"
   }
 fi
 
