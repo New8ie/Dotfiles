@@ -95,6 +95,7 @@ alias cfm="$HOME/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan
 alias sshcpid="$HOME/.config/script/sshcpid.sh" ## menyalin SSH public key dengan script bash
 alias static-route="$HOME/.config/script/static_route.sh"
 alias ipconfig="$HOME/.config/script/mylocalip.sh" ## menampilkan IP lokal dengan script bash
+alias ipconfig="$HOME/.config/script/netinfo.sh" ## menampilkan IP PUBLC,DNS,GATEWAY dengan script bash
 alias reload="source ~/.zshrc" ## Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
 alias clearall='clear && history -c' ## Menghapus isi direktori dan menghapus riwayat perintah
 alias killapp="pkill -f"
