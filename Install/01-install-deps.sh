@@ -237,4 +237,50 @@ install_packages() {
 
   # Install glow
   install_glow
+    set -e
 }
+
+clone_dotfiles() {
+  log "Clone repo dotfiles..."
+  if [ ! -d "$HOME/.dotfiles" ]; then
+    git clone https://github.com/New8ie/Dotfiles.git "$HOME/.dotfiles"
+    log "Repo Dotfiles berhasil diklon."
+  else
+    log "Repo .dotfiles sudah ada."
+  fi
+}
+main() {
+  detect_os
+  install_packages
+  clone_dotfiles
+
+  log "Sampai ke akhir script, masuk ke tahap setup Zsh."
+
+  while true; do
+    echo
+    echo "=========================================="
+    echo "Langkah selanjutnya: setup Zsh"
+    echo "=========================================="
+    echo "Pilih opsi berikut:"
+    echo "  [1] Lanjut jalankan ~/.dotfiles/Install/02-setup-zsh.sh"
+    echo "  [2] Keluar"
+    echo "------------------------------------------"
+    read -rp "Masukkan pilihan [1/2]: " pilihan
+    case "$pilihan" in
+      1)
+        chmod +x ~/.dotfiles/Install/02-setup-zsh.sh
+        bash ~/.dotfiles/Install/02-setup-zsh.sh
+        break
+        ;;
+      2)
+        log "Script selesai. Keluar."
+        break
+        ;;
+      *)
+        warn "Pilihan tidak valid. Silakan pilih lagi."
+        ;;
+    esac
+  done
+}
+
+main
