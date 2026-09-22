@@ -1,10 +1,28 @@
 #!/bin/sh
 
-echo "╭─ Network Information ─────────────────────────"
+# Use colors interactively, but keep redirected output readable.
+if [ -t 1 ]; then
+    RESET='\033[0m'
+    BOLD='\033[1m'
+    CYAN='\033[36m'
+    BLUE='\033[34m'
+    GREEN='\033[32m'
+    YELLOW='\033[33m'
+else
+    RESET=''
+    BOLD=''
+    CYAN=''
+    BLUE=''
+    GREEN=''
+    YELLOW=''
+fi
+
+printf '%b\n' "${CYAN}${BOLD}╭─ Network Information ─────────────────────────╮${RESET}"
 
 OS="$(uname -s)"
 
-echo "│ Hostname    : $(hostname)"
+printf '%b\n' "${CYAN}│${RESET} ${BLUE}Host${RESET}       : ${BOLD}$(hostname)${RESET}"
+printf '%b\n' "${CYAN}├─ Public Network ──────────────────────────────┤${RESET}"
 
 # =========================
 # Public IPv4
@@ -15,7 +33,12 @@ if [ -z "$PUBLIC_IP" ]; then
     PUBLIC_IP="N/A"
 fi
 
-echo "│ Public IPv4 : $PUBLIC_IP"
+if [ "$PUBLIC_IP" = "N/A" ]; then
+    PUBLIC_COLOR="$YELLOW"
+else
+    PUBLIC_COLOR="$GREEN"
+fi
+printf '%b\n' "${CYAN}│${RESET} ${BLUE}Public IPv4${RESET} : ${PUBLIC_COLOR}${BOLD}$PUBLIC_IP${RESET}"
 
 # =========================
 # macOS
@@ -26,15 +49,18 @@ if [ "$OS" = "Darwin" ]; then
     INTERFACE="$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')"
     LOCAL_IP="$(ipconfig getifaddr "$INTERFACE" 2>/dev/null)"
 
-    echo "│ Local IPv4  : ${LOCAL_IP:-N/A}"
-    echo "│ Gateway     : ${GATEWAY:-N/A}"
-    echo "│ Interface   : ${INTERFACE:-N/A}"
+    printf '%b\n' "${CYAN}├─ Local Network ───────────────────────────────┤${RESET}"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}Local IPv4${RESET}  : ${GREEN}${LOCAL_IP:-N/A}${RESET}"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}Gateway${RESET}     : ${GREEN}${GATEWAY:-N/A}${RESET}"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}Interface${RESET}   : ${GREEN}${INTERFACE:-N/A}${RESET}"
 
-    echo "│ DNS         :"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}DNS${RESET}         :"
     scutil --dns 2>/dev/null |
         awk '/nameserver\[[0-9]+\]/{print $3}' |
         sort -u |
-        sed 's/^/│               /'
+        while IFS= read -r dns; do
+            [ -n "$dns" ] && printf '%b\n' "${CYAN}│${RESET}               ${GREEN}$dns${RESET}"
+        done
 
 # =========================
 # Linux
@@ -48,26 +74,28 @@ elif [ "$OS" = "Linux" ]; then
         cut -d/ -f1 |
         head -n1)"
 
-    echo "│ Local IPv4  : ${LOCAL_IP:-N/A}"
-    echo "│ Gateway     : ${GATEWAY:-N/A}"
-    echo "│ Interface   : ${INTERFACE:-N/A}"
+    printf '%b\n' "${CYAN}├─ Local Network ───────────────────────────────┤${RESET}"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}Local IPv4${RESET}  : ${GREEN}${LOCAL_IP:-N/A}${RESET}"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}Gateway${RESET}     : ${GREEN}${GATEWAY:-N/A}${RESET}"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}Interface${RESET}   : ${GREEN}${INTERFACE:-N/A}${RESET}"
 
-    echo "│ DNS         :"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}DNS${RESET}         :"
 
-    if command -v resolvectl >/dev/null 2>&1; then
-        resolvectl dns 2>/dev/null |
-            awk '{for(i=3;i<=NF;i++) print $i}' |
-            sort -u |
-            sed 's/^/│               /'
-    else
-        awk '/^nameserver/{print $2}' /etc/resolv.conf 2>/dev/null |
-            sort -u |
-            sed 's/^/│               /'
-    fi
+    {
+        if command -v resolvectl >/dev/null 2>&1; then
+            resolvectl dns 2>/dev/null |
+                awk '{for(i=3;i<=NF;i++) print $i}'
+        else
+            awk '/^nameserver/{print $2}' /etc/resolv.conf 2>/dev/null
+        fi
+    } | sort -u |
+        while IFS= read -r dns; do
+            [ -n "$dns" ] && printf '%b\n' "${CYAN}│${RESET}               ${GREEN}$dns${RESET}"
+        done
 
 else
-    echo "│ OS          : $OS"
-    echo "│ Unsupported operating system"
+    printf '%b\n' "${CYAN}│${RESET} ${BLUE}OS${RESET}          : ${YELLOW}$OS${RESET}"
+    printf '%b\n' "${CYAN}│${RESET} ${YELLOW}Unsupported operating system${RESET}"
 fi
 
-echo "╰──────────────────────────────────────────────"
+printf '%b\n' "${CYAN}╰──────────────────────────────────────────────╯${RESET}"
