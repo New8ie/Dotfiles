@@ -43,33 +43,45 @@ detect_arch() {
 # Backup Dotfiles
 # =============================================================================
 backup_dotfiles() {
-  TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-  DEST="$HOME/dotfiles-backup-$TIMESTAMP"
-  mkdir -p "$DEST"
+  local timestamp backup_file f
+  local -a files archive_paths
+  timestamp=$(date +%Y%m%d-%H%M%S)
+  backup_file="$HOME/dotfiles-backup-$timestamp.tar.gz"
 
   # Daftar file/folder yang ingin dibackup
-  files=(~/.zshrc ~/.zprofile ~/.p10k.zsh ~/.config ~/.oh-my-zsh ~/.nanorc)
+  files=(
+    "$HOME/.zshrc"
+    "$HOME/.zprofile"
+    "$HOME/.p10k.zsh"
+    "$HOME/.config/script"
+    "$HOME/.config/zsh"
+    "$HOME/.config/nano"
+    "$HOME/.config/fastfetch"
+    "$HOME/.config/iterm2"
+    "$HOME/.config/glow"
+    "$HOME/.config/tmux"
+    "$HOME/.config/homebrew"
+    "$HOME/.oh-my-zsh"
+    "$HOME/.nanorc"
+    )
 
-  # Daftar folder yang akan di-exclude (tidak ikut dibackup)
-  exclude_list=(
-    "$HOME/.config/Code"
-    "$HOME/.config/discord"
-    "$HOME/.config/BraveSoftware"
-    "$HOME/.config/google-chrome"
-    "$HOME/.config/Slack"
-    "$HOME/.config/venv"
-  )
-
-  # Salin file/folder ke direktori tujuan
+  # Hanya arsipkan item yang ada, tanpa membuat direktori backup sementara.
+  archive_paths=()
   for f in "${files[@]}"; do
-    [ -e "$f" ] && rsync -a --exclude-from=<(printf "%s\n" "${exclude_list[@]}") "$f" "$DEST"
+    if [ -e "$f" ]; then
+      archive_paths+=("${f#"$HOME"/}")
+    else
+      warn "Lewati, tidak ditemukan: $f"
+    fi
   done
 
-  # Kompres hasil backup
-  tar -czf "$DEST.tar.gz" -C "$HOME" "$(basename "$DEST")"
-  rm -rf "$DEST"
+  if [ "${#archive_paths[@]}" -eq 0 ]; then
+    err "Tidak ada file atau folder yang dapat dibackup."
+  fi
 
-  echo "✅ Backup berhasil: $DEST.tar.gz"
+  log "Memulai backup ke $backup_file"
+  tar -czvf "$backup_file" -C "$HOME" "${archive_paths[@]}"
+  log "Backup berhasil: $backup_file"
 }
 
 # =============================================================================
