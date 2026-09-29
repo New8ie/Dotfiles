@@ -4,15 +4,28 @@ set -euo pipefail
 # =============================================================================
 # Logging Helpers
 # =============================================================================
-log()  { echo -e "\033[1;32m[INFO]\033[0m $*"; }
-warn() { echo -e "\033[1;33m[WARN]\033[0m $*"; }
-err()  { echo -e "\033[1;31m[ERROR]\033[0m $*"; exit 1; }
+
+log() {
+  printf '\033[1;32m[INFO]\033[0m %s\n' "$*"
+}
+
+warn() {
+  printf '\033[1;33m[WARN]\033[0m %s\n' "$*"
+}
+
+err() {
+  printf '\033[1;31m[ERROR]\033[0m %s\n' "$*" >&2
+  exit 1
+}
 
 # =============================================================================
 # Detect OS
 # =============================================================================
+
 detect_os() {
+
   if [[ "$OSTYPE" == linux-gnu* ]]; then
+
     if [[ -f /etc/debian_version ]]; then
       OS_TYPE="debian"
 
@@ -42,6 +55,7 @@ detect_os() {
 
 detect_arch() {
 
+  local ARCH
   ARCH=$(uname -m)
 
   case "$ARCH" in
@@ -72,7 +86,7 @@ detect_arch() {
 
 check_dependencies() {
 
-  local missing=()
+  local -a missing=()
 
   command -v git >/dev/null 2>&1 || missing+=("git")
   command -v curl >/dev/null 2>&1 || missing+=("curl")
@@ -83,6 +97,7 @@ check_dependencies() {
   fi
 
   if [[ "${#missing[@]}" -gt 0 ]]; then
+
     warn "Dependency berikut belum tersedia:"
     printf '  - %s\n' "${missing[@]}"
 
@@ -90,23 +105,28 @@ check_dependencies() {
 
       macos)
         warn "Install dependency dengan Homebrew:"
-        echo "brew install ${missing[*]}"
+        echo "  brew install ${missing[*]}"
         ;;
 
       debian)
         warn "Install dependency dengan:"
-        echo "sudo apt update"
-        echo "sudo apt install -y ${missing[*]}"
+        echo "  sudo apt update"
+        echo "  sudo apt install -y ${missing[*]}"
         ;;
 
       redhat)
         warn "Install dependency dengan:"
-        echo "sudo dnf install -y ${missing[*]}"
+        echo "  sudo dnf install -y ${missing[*]}"
         ;;
 
       arch)
         warn "Install dependency dengan:"
-        echo "sudo pacman -S --noconfirm ${missing[*]}"
+        echo "  sudo pacman -S --noconfirm ${missing[*]}"
+        ;;
+
+      *)
+        warn "Silakan install dependency secara manual:"
+        printf '  - %s\n' "${missing[@]}"
         ;;
     esac
 
@@ -119,12 +139,14 @@ check_dependencies() {
 # =============================================================================
 # Backup Dotfiles
 # =============================================================================
+
 backup_dotfiles() {
-  local timestamp backup_file f
+  local timestamp backup_file tmp_backup f
   local -a files archive_paths
 
-  timestamp=$(date +%Y%m%d-%H%M%S)
+  timestamp=$(date '+%Y-%m-%d-%H-%M-%S')
   backup_file="$HOME/dotfiles-backup-$timestamp.tar.gz"
+  tmp_backup="${backup_file}.tmp"
 
   files=(
     "$HOME/.zshrc"
@@ -143,6 +165,9 @@ backup_dotfiles() {
   )
 
   archive_paths=()
+
+  # Hanya masukkan file/folder yang benar-benar tersedia.
+  # Termasuk dangling symlink karena -L mendeteksinya.
   for f in "${files[@]}"; do
     if [[ -e "$f" || -L "$f" ]]; then
       archive_paths+=("${f#"$HOME"/}")
@@ -155,23 +180,52 @@ backup_dotfiles() {
     err "Tidak ada file atau folder yang dapat dibackup."
   fi
 
-  log "Memulai backup ke: $backup_file"
+  log "Memulai backup ke:"
+  echo "  $backup_file"
 
-  tar -czvf "$backup_file" -C "$HOME" "${archive_paths[@]}"
-  log "Backup berhasil: $backup_file"
+  # Hapus temporary archive lama jika ada.
+  rm -f "$tmp_backup"
+
+  # Buat archive sementara.
+  # Jika tar gagal, archive sementara tidak dianggap sebagai backup valid.
+  if tar -czvf "$tmp_backup" \
+    -C "$HOME" \
+    "${archive_paths[@]}"; then
+
+    # Pastikan temporary archive benar-benar ada dan tidak kosong.
+    if [[ ! -s "$tmp_backup" ]]; then
+      rm -f "$tmp_backup"
+      err "Backup gagal: archive yang dihasilkan kosong."
+    fi
+
+    # Commit backup secara atomic.
+    mv -f "$tmp_backup" "$backup_file"
+
+    log "Backup berhasil: $backup_file"
+
+  else
+    local tar_rc=$?
+
+    rm -f "$tmp_backup"
+
+    err "Backup gagal (tar exit code: $tar_rc). Tidak ada backup parsial yang dipertahankan."
+  fi
 }
-
 # =============================================================================
 # Setup Oh My Zsh
 # =============================================================================
-setup_ohmyzsh() { if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+
+setup_ohmyzsh() {
+
+  if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
 
     log "Menginstall Oh-My-Zsh..."
 
     RUNZSH=no \
     CHSH=no \
     KEEP_ZSHRC=yes \
-      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+      sh -c "$(curl -fsSL \
+        https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
     log "Oh-My-Zsh berhasil diinstall."
 
@@ -192,8 +246,10 @@ clone_plugin() {
   local dest="$2"
 
   if [[ -d "$dest" ]]; then
+
     log "Plugin $(basename "$dest") sudah ada, skip."
     return
+
   fi
 
   git clone "$repo" "$dest"
@@ -278,15 +334,17 @@ install_fastfetch() {
           ;;
       esac
 
+      TMP_FASTFETCH="/tmp/fastfetch.deb"
+
       wget \
-        -O /tmp/fastfetch.deb \
+        -O "$TMP_FASTFETCH" \
         "$PKG_URL" \
         || err "Gagal download Fastfetch."
 
-      sudo apt install -y /tmp/fastfetch.deb \
+      sudo apt install -y "$TMP_FASTFETCH" \
         || err "Gagal install Fastfetch."
 
-      rm -f /tmp/fastfetch.deb
+      rm -f "$TMP_FASTFETCH"
       ;;
 
     arch)
@@ -313,11 +371,14 @@ install_fastfetch() {
       fi
 
       if brew list fastfetch >/dev/null 2>&1; then
+
         log "Fastfetch sudah terinstall via Homebrew, skip."
 
       else
+
         brew install fastfetch \
           || err "Gagal install Fastfetch."
+
       fi
       ;;
 
@@ -333,9 +394,58 @@ install_fastfetch() {
 # =============================================================================
 
 copy_configs() {
+
   log "📂 Menyalin konfigurasi (mode copy)"
 
-  local f
+  # ---------------------------------------------------------------------------
+  # Validasi source sebelum melakukan operasi destructive
+  # ---------------------------------------------------------------------------
+
+  local zshrc_source
+
+  if [[ "$OS_TYPE" == "macos" ]]; then
+    zshrc_source="$HOME/.dotfiles/Zsh/macos-zshrc.zsh"
+  else
+    zshrc_source="$HOME/.dotfiles/Zsh/linux-zshrc.zsh"
+  fi
+
+  local -a required_sources=(
+    "$zshrc_source"
+    "$HOME/.dotfiles/OhMyZsh/p10k.zsh"
+    "$HOME/.dotfiles/Zsh/zprofile.zsh"
+    "$HOME/.dotfiles/Zsh/Alias/alias.zsh"
+    "$HOME/.dotfiles/Zsh/function-manager.zsh"
+    "$HOME/.dotfiles/Nano"
+    "$HOME/.dotfiles/Zsh/Functions"
+    "$HOME/.dotfiles/Script"
+    "$HOME/.dotfiles/Fastfetch/config.jsonc"
+    "$HOME/.dotfiles/Fastfetch/motd-fastfetch.sh"
+  )
+
+  local source
+
+  for source in "${required_sources[@]}"; do
+
+    if [[ ! -e "$source" ]]; then
+      err "Source konfigurasi tidak ditemukan: $source"
+    fi
+
+  done
+
+  # ---------------------------------------------------------------------------
+  # Persiapan folder
+  # ---------------------------------------------------------------------------
+
+  mkdir -p "$HOME/.config/zsh/functions"
+  mkdir -p "$HOME/.config/nano"
+  mkdir -p "$HOME/.config/fastfetch/logo"
+  mkdir -p "$HOME/.config/iterm2"
+  mkdir -p "$HOME/.config/script"
+
+  # ---------------------------------------------------------------------------
+  # Daftar file yang akan di-replace
+  # ---------------------------------------------------------------------------
+
   local -a files_to_replace=(
     "$HOME/.zshrc"
     "$HOME/.zprofile"
@@ -344,59 +454,166 @@ copy_configs() {
     "$HOME/.config/zsh/alias.zsh"
   )
 
+  local f
+
+  # Hapus file atau symlink lama sebelum copy
   for f in "${files_to_replace[@]}"; do
-    if [[ -e "$f" || -L "$f" ]]; then
-      log "Menghapus file lama: $f"
+
+    if [[ -L "$f" ]]; then
+
+      log "🧹 Menghapus symlink lama: $f"
       rm -f "$f"
+
+    elif [[ -e "$f" ]]; then
+
+      log "🧹 Menghapus file lama: $f"
+      rm -f "$f"
+
     fi
+
   done
 
-  mkdir -p "$HOME/.config/zsh"
-  if [[ "$OS_TYPE" == "macos" ]]; then
-    cp -f "$HOME/.dotfiles/Zsh/macos-zshrc.zsh" "$HOME/.zshrc"
-  else
-    cp -f "$HOME/.dotfiles/Zsh/linux-zshrc.zsh" "$HOME/.zshrc"
-  fi
-  cp -f "$HOME/.dotfiles/OhMyZsh/p10k.zsh" "$HOME/.p10k.zsh"
-  cp -f "$HOME/.dotfiles/Zsh/zprofile.zsh" "$HOME/.zprofile"
-  cp -f "$HOME/.dotfiles/Zsh/Alias/alias.zsh" "$HOME/.config/zsh/alias.zsh"
-  cp -f "$HOME/.dotfiles/Zsh/function-manager.zsh" "$HOME/.config/zsh/function-manager.zsh"
+  # ---------------------------------------------------------------------------
+  # Salin konfigurasi utama Zsh
+  # ---------------------------------------------------------------------------
 
-  log "Membersihkan konfigurasi nano lama"
+  cp -f \
+    "$zshrc_source" \
+    "$HOME/.zshrc"
+
+  cp -f \
+    "$HOME/.dotfiles/OhMyZsh/p10k.zsh" \
+    "$HOME/.p10k.zsh"
+
+  cp -f \
+    "$HOME/.dotfiles/Zsh/zprofile.zsh" \
+    "$HOME/.zprofile"
+
+  cp -f \
+    "$HOME/.dotfiles/Zsh/Alias/alias.zsh" \
+    "$HOME/.config/zsh/alias.zsh"
+
+  cp -f \
+    "$HOME/.dotfiles/Zsh/function-manager.zsh" \
+    "$HOME/.config/zsh/function-manager.zsh"
+
+  # ---------------------------------------------------------------------------
+  # Nano
+  # ---------------------------------------------------------------------------
+
+  log "🧹 Membersihkan konfigurasi nano lama"
+
   rm -rf "$HOME/.config/nano"
+
   mkdir -p "$HOME/.config/nano"
-  cp -rf "$HOME/.dotfiles/Nano/." "$HOME/.config/nano/"
-  cp -f "$HOME/.config/nano/Config/nanorc" "$HOME/.nanorc"
 
-  log "Membersihkan konfigurasi zsh functions & script lama"
-  rm -rf "$HOME/.config/zsh/functions" "$HOME/.config/script"
-  mkdir -p "$HOME/.config/zsh/functions" "$HOME/.config/script"
-  cp -rf "$HOME/.dotfiles/Zsh/Functions/." "$HOME/.config/zsh/functions/"
-  cp -rf "$HOME/.dotfiles/Script/." "$HOME/.config/script/"
-  find "$HOME/.config/script" -type f -exec chmod +x {} \; 2>/dev/null || true
+  cp -rf \
+    "$HOME/.dotfiles/Nano/." \
+    "$HOME/.config/nano/"
 
-  log "Membersihkan konfigurasi Fastfetch lama"
+  if [[ -f "$HOME/.config/nano/Config/nanorc" ]]; then
+
+    cp -f \
+      "$HOME/.config/nano/Config/nanorc" \
+      "$HOME/.nanorc"
+
+  else
+
+    warn "nanorc tidak ditemukan setelah copy."
+
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Functions & Script
+  # ---------------------------------------------------------------------------
+
+  log "🧹 Membersihkan konfigurasi zsh functions & script lama"
+
+  rm -rf \
+    "$HOME/.config/zsh/functions" \
+    "$HOME/.config/script"
+
+  mkdir -p \
+    "$HOME/.config/zsh/functions" \
+    "$HOME/.config/script"
+
+  cp -rf \
+    "$HOME/.dotfiles/Zsh/Functions/." \
+    "$HOME/.config/zsh/functions/"
+
+  cp -rf \
+    "$HOME/.dotfiles/Script/." \
+    "$HOME/.config/script/"
+
+  find "$HOME/.config/script" \
+    -type f \
+    -exec chmod +x {} \; \
+    2>/dev/null || true
+
+  # ---------------------------------------------------------------------------
+  # Fastfetch
+  # ---------------------------------------------------------------------------
+
+  log "🧹 Membersihkan konfigurasi Fastfetch lama"
+
   rm -rf "$HOME/.config/fastfetch"
+
   mkdir -p "$HOME/.config/fastfetch/logo"
-  cp -f "$HOME/.dotfiles/Fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
-  cp -f "$HOME/.dotfiles/Fastfetch/motd-fastfetch.sh" "$HOME/.config/fastfetch/motd-fastfetch.sh"
-  chmod +x "$HOME/.config/fastfetch/motd-fastfetch.sh"
-  if compgen -G "$HOME/.dotfiles/Fastfetch/logo/*-logo.png" >/dev/null 2>&1; then
-    cp -f "$HOME/.dotfiles/Fastfetch/logo/"*-logo.png "$HOME/.config/fastfetch/logo/"
+
+  cp -f \
+    "$HOME/.dotfiles/Fastfetch/config.jsonc" \
+    "$HOME/.config/fastfetch/config.jsonc"
+
+  cp -f \
+    "$HOME/.dotfiles/Fastfetch/motd-fastfetch.sh" \
+    "$HOME/.config/fastfetch/motd-fastfetch.sh"
+
+  chmod +x \
+    "$HOME/.config/fastfetch/motd-fastfetch.sh"
+
+  if compgen -G "$HOME/.dotfiles/Fastfetch/logo/*-logo.png" \
+    >/dev/null 2>&1; then
+
+    cp -f \
+      "$HOME/.dotfiles/Fastfetch/logo/"*-logo.png \
+      "$HOME/.config/fastfetch/logo/"
+
   fi
 
-  log "Membersihkan konfigurasi iTerm2 lama"
+  # ---------------------------------------------------------------------------
+  # iTerm2
+  # ---------------------------------------------------------------------------
+
+  log "🧹 Membersihkan konfigurasi iTerm2 lama"
+
   rm -rf "$HOME/.config/iterm2"
+
   mkdir -p "$HOME/.config/iterm2/bin"
+
   if [[ -d "$HOME/.dotfiles/Iterm2/bin" ]]; then
-    cp -rf "$HOME/.dotfiles/Iterm2/bin/." "$HOME/.config/iterm2/bin/"
+
+    cp -rf \
+      "$HOME/.dotfiles/Iterm2/bin/." \
+      "$HOME/.config/iterm2/bin/"
+
   fi
+
   if [[ -f "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" ]]; then
-    cp -f "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
+
+    cp -f \
+      "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" \
+      "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
+
   fi
+
   find "$HOME/.config/iterm2/bin" \
     -type f \
-    -exec chmod +x {} \; 2>/dev/null || true
+    -exec chmod +x {} \; \
+    2>/dev/null || true
+
+  # ---------------------------------------------------------------------------
+  # Selesai
+  # ---------------------------------------------------------------------------
 
   log "✅ Semua konfigurasi berhasil dicopy."
   log "File lama/symlink telah direplace."
@@ -409,6 +626,44 @@ copy_configs() {
 symlink_configs() {
 
   log "🔗 Membuat symlink konfigurasi (mode symlink dengan replace aman)"
+
+  # ---------------------------------------------------------------------------
+  # Validasi source sebelum melakukan operasi destructive
+  # ---------------------------------------------------------------------------
+
+  local zshrc_source
+
+  if [[ "$OS_TYPE" == "macos" ]]; then
+    zshrc_source="$HOME/.dotfiles/Zsh/macos-zshrc.zsh"
+  else
+    zshrc_source="$HOME/.dotfiles/Zsh/linux-zshrc.zsh"
+  fi
+
+  local -a required_sources=(
+    "$zshrc_source"
+    "$HOME/.dotfiles/OhMyZsh/p10k.zsh"
+    "$HOME/.dotfiles/Zsh/zprofile.zsh"
+    "$HOME/.dotfiles/Zsh/Alias/alias.zsh"
+    "$HOME/.dotfiles/Zsh/Functions"
+    "$HOME/.dotfiles/Nano"
+    "$HOME/.dotfiles/Script"
+    "$HOME/.dotfiles/Fastfetch/config.jsonc"
+    "$HOME/.dotfiles/Fastfetch/motd-fastfetch.sh"
+  )
+
+  local source
+
+  for source in "${required_sources[@]}"; do
+
+    if [[ ! -e "$source" ]]; then
+      err "Source konfigurasi tidak ditemukan: $source"
+    fi
+
+  done
+
+  # ---------------------------------------------------------------------------
+  # Persiapan folder
+  # ---------------------------------------------------------------------------
 
   mkdir -p "$HOME/.config/zsh"
   mkdir -p "$HOME/.config/nano"
@@ -424,11 +679,20 @@ symlink_configs() {
     local src="$1"
     local dest="$2"
 
+    if [[ ! -e "$src" && ! -L "$src" ]]; then
+
+      warn "Source tidak ditemukan, symlink dilewati:"
+      echo "  $src"
+      return 1
+
+    fi
+
     if [[ -e "$dest" || -L "$dest" ]]; then
 
       log "🧹 Menghapus target lama: $dest"
 
       rm -rf "$dest"
+
     fi
 
     ln -s "$src" "$dest"
@@ -494,9 +758,17 @@ symlink_configs() {
     "$HOME/.dotfiles/Nano/." \
     "$HOME/.config/nano/"
 
-  cp -f \
-    "$HOME/.config/nano/Config/nanorc" \
-    "$HOME/.nanorc"
+  if [[ -f "$HOME/.config/nano/Config/nanorc" ]]; then
+
+    cp -f \
+      "$HOME/.config/nano/Config/nanorc" \
+      "$HOME/.nanorc"
+
+  else
+
+    warn "nanorc tidak ditemukan setelah copy."
+
+  fi
 
   # ---------------------------------------------------------------------------
   # Script
@@ -510,7 +782,8 @@ symlink_configs() {
 
   find "$HOME/.config/script" \
     -type f \
-    -exec chmod +x {} \; 2>/dev/null || true
+    -exec chmod +x {} \; \
+    2>/dev/null || true
 
   # ---------------------------------------------------------------------------
   # Fastfetch
@@ -527,7 +800,8 @@ symlink_configs() {
   chmod +x \
     "$HOME/.config/fastfetch/motd-fastfetch.sh"
 
-  if compgen -G "$HOME/.dotfiles/Fastfetch/logo/*-logo.png" >/dev/null 2>&1; then
+  if compgen -G "$HOME/.dotfiles/Fastfetch/logo/*-logo.png" \
+    >/dev/null 2>&1; then
 
     cp -f \
       "$HOME/.dotfiles/Fastfetch/logo/"*-logo.png \
@@ -549,17 +823,25 @@ symlink_configs() {
 
   fi
 
-  safe_link \
-    "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" \
-    "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
+  if [[ -f "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" ]]; then
+
+    safe_link \
+      "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" \
+      "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
+
+  else
+
+    warn "iTerm2 shell integration tidak ditemukan, skip."
+
+  fi
 
   find "$HOME/.config/iterm2/bin" \
     -type f \
-    -exec chmod +x {} \; 2>/dev/null || true
+    -exec chmod +x {} \; \
+    2>/dev/null || true
 
   log "✅ Symlink konfigurasi berhasil dibuat."
   log "File lama sudah direplace."
-
 }
 
 # =============================================================================
@@ -567,46 +849,57 @@ symlink_configs() {
 # =============================================================================
 
 config_menu() {
+
+  local pilihan
+
   echo
   echo "=========================================="
   echo "  Pilih mode setup konfigurasi dotfiles"
   echo "=========================================="
   echo "  [1] Copy file (aman, standalone)"
   echo "  [2] Symlink (lebih fleksibel, sync dengan repo)"
-  echo "------------------------------------------"
+  echo " ------------------------------------------"
 
-  local pilihan
-  read -rp "Masukkan pilihan [1/2]: " pilihan
+  read -r -p "Masukkan pilihan [1/2]: " pilihan
 
   case "$pilihan" in
+
     1)
       copy_configs
       ;;
+
     2)
       symlink_configs
       ;;
+
     *)
       warn "Pilihan tidak valid, default: Copy"
       copy_configs
       ;;
+
   esac
 }
 
 # =============================================================================
 # Set Default Shell
 # =============================================================================
+
 set_shell() {
+
   local NEW
-  NEW=$(command -v zsh)
+
+  NEW=$(command -v zsh || true)
 
   if [[ -z "$NEW" ]]; then
+
     warn "zsh tidak ditemukan."
     return
+
   fi
 
   log "zsh ditemukan: $NEW"
 
-  if [[ "$SHELL" != "$NEW" ]]; then
+  if [[ "${SHELL:-}" != "$NEW" ]]; then
 
     log "Default shell saat ini: ${SHELL:-unknown}"
     log "Mengubah default shell menjadi: $NEW"
@@ -614,7 +907,8 @@ set_shell() {
     if sudo -n true >/dev/null 2>&1; then
 
       sudo chsh -s "$NEW" "$USER" \
-        && log "Default shell diubah ke zsh."
+        && log "Default shell diubah ke zsh." \
+        || warn "Gagal mengubah default shell."
 
     else
 
@@ -647,6 +941,7 @@ verify_fastfetch() {
   else
 
     err "Fastfetch tidak ditemukan setelah instalasi."
+
   fi
 }
 
@@ -669,11 +964,17 @@ verify_dotfiles() {
   log "Memeriksa konfigurasi utama..."
 
   for f in "${required_files[@]}"; do
+
     if [[ -e "$f" || -L "$f" ]]; then
+
       log "OK: $f"
+
     else
+
       warn "Tidak ditemukan: $f"
+
     fi
+
   done
 }
 
@@ -709,12 +1010,12 @@ main() {
   verify_dotfiles
 
   echo
-  log "=========================================="
+  log "=============================================================="
   log "Setup selesai!"
-  log "=========================================="
+  log "=============================================================="
   log "Restart terminal atau jalankan:"
   echo
-  echo "exec zsh"
+  echo "  exec zsh"
   echo
 }
 
@@ -727,20 +1028,33 @@ main
 while true; do
 
   echo
-  echo "=========================================="
-  echo "Langkah selanjutnya:"
-  echo "=========================================="
-  echo "[1] Install & konfigurasi Fail2ban"
-  echo "[2] Keluar"
-  echo "------------------------------------------"
+  echo "=============================================================="
+  echo " Langkah selanjutnya:"
+  echo "=============================================================="
+  echo " [1] Install & konfigurasi Fail2ban"
+  echo " [2] Keluar"
+  echo " ------------------------------------------"
 
-  read -rp "Masukkan pilihan [1/2]: " pilihan
+  read -r -p "Masukkan pilihan [1/2]: " pilihan
+
   case "$pilihan" in
+
     1)
+
+      # Fail2ban tidak diperlukan/didukung untuk alur dotfiles macOS.
+      if [[ "$OS_TYPE" == "macos" ]]; then
+
+        warn "Fail2ban dilewati karena OS terdeteksi sebagai macOS."
+        break
+
+      fi
+
       if [[ ! -f "$HOME/.dotfiles/Install/03-install-fail2ban.sh" ]]; then
+
         warn "Script Fail2ban tidak ditemukan:"
         echo "  $HOME/.dotfiles/Install/03-install-fail2ban.sh"
         break
+
       fi
 
       chmod +x \
@@ -751,13 +1065,18 @@ while true; do
 
       break
       ;;
+
     2)
+
       echo "✅ Setup selesai. Keluar."
       break
       ;;
+
     *)
+
       echo "⚠️  Pilihan tidak valid. Silakan pilih lagi."
       ;;
+
   esac
 
 done
