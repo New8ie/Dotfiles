@@ -1,8 +1,17 @@
-
 #!/usr/bin/env bash
 
 # =============================================================================
 # Dotfiles - Install Dependencies
+#
+# Usage:
+#   bash 01-install-dependencies.sh
+#   sudo bash 01-install-dependencies.sh
+#
+# Jika dijalankan dengan sudo:
+#   - System package      -> root
+#   - Homebrew            -> REAL_USER
+#   - Git clone dotfiles  -> REAL_USER
+#   - 02-setup-zsh.sh     -> REAL_USER
 # =============================================================================
 
 set -euo pipefail
@@ -12,7 +21,6 @@ set -euo pipefail
 # =============================================================================
 
 RESET='\033[0m'
-
 CYAN='\033[36m'
 GREEN='\033[32m'
 YELLOW='\033[33m'
@@ -31,6 +39,10 @@ trap 'rc=$?; err "Script berhenti pada line $LINENO dengan exit code $rc."' ERR
 OS_TYPE=""
 ARCH_TYPE=""
 SUDO=""
+REAL_USER=""
+REAL_HOME=""
+DOTFILES_DIR=""
+BREW_BIN=""
 
 # =============================================================================
 # Logging
@@ -110,9 +122,91 @@ err() {
 run_as_root() {
   if [[ "$(id -u)" -eq 0 ]]; then
     "$@"
-  else
-    "$SUDO" "$@"
+    return
   fi
+
+  if [[ -z "$SUDO" ]]; then
+    err "Sudo belum tersedia."
+    return 1
+  fi
+
+  "$SUDO" "$@"
+}
+
+# =============================================================================
+# Run Command as Real User
+#
+# Tujuan:
+#   Menjamin command user-level tidak berjalan sebagai root.
+#
+# Linux:
+#   root -> runuser
+#
+# macOS:
+#   root -> sudo -u REAL_USER -H
+#
+# User biasa:
+#   langsung menjalankan command.
+# =============================================================================
+
+run_as_user() {
+  if [[ -z "$REAL_USER" ]]; then
+    err "REAL_USER belum ditentukan."
+    return 1
+  fi
+
+  if [[ -z "$REAL_HOME" ]]; then
+    err "REAL_HOME belum ditentukan."
+    return 1
+  fi
+
+  if [[ "$REAL_USER" == "root" ]]; then
+    err "Operasi user-level tidak boleh dijalankan sebagai root."
+    return 1
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Script sudah berjalan sebagai user biasa
+  # ---------------------------------------------------------------------------
+
+  if [[ "$(id -u)" -ne 0 ]]; then
+    "$@"
+    return
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Linux
+  # ---------------------------------------------------------------------------
+
+  if [[ "$OS_TYPE" != "macos" ]] &&
+     command -v runuser >/dev/null 2>&1; then
+
+    runuser -u "$REAL_USER" -- env \
+      HOME="$REAL_HOME" \
+      USER="$REAL_USER" \
+      LOGNAME="$REAL_USER" \
+      "$@"
+
+    return
+  fi
+
+  # ---------------------------------------------------------------------------
+  # macOS / fallback
+  # ---------------------------------------------------------------------------
+
+  if command -v sudo >/dev/null 2>&1; then
+    sudo -u "$REAL_USER" -H -- env \
+      HOME="$REAL_HOME" \
+      USER="$REAL_USER" \
+      LOGNAME="$REAL_USER" \
+      "$@"
+
+    return
+  fi
+
+  err "Tidak dapat menjalankan command sebagai '$REAL_USER'."
+  err "sudo tidak ditemukan."
+  return 1
 }
 
 # =============================================================================
@@ -126,6 +220,99 @@ require_command() {
     err "Command '$cmd' tidak ditemukan."
     return 1
   fi
+}
+
+# =============================================================================
+# Detect Real User
+# =============================================================================
+
+detect_real_user() {
+  # ---------------------------------------------------------------------------
+  # Jika script dijalankan melalui sudo:
+  #
+  #   sudo bash script.sh
+  #
+  # SUDO_USER berisi user asli.
+  # ---------------------------------------------------------------------------
+
+  if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_USER="$SUDO_USER"
+
+  # ---------------------------------------------------------------------------
+  # Jika script dijalankan tanpa sudo.
+  # ---------------------------------------------------------------------------
+
+  elif [[ "$(id -u)" -ne 0 ]]; then
+    REAL_USER="$(id -un)"
+
+  # ---------------------------------------------------------------------------
+  # Root langsung tanpa SUDO_USER.
+  #
+  # Jangan menebak user karena dapat menyebabkan file dibuat pada account
+  # yang salah.
+  # ---------------------------------------------------------------------------
+
+  else
+    err "Tidak dapat menentukan user asli."
+    err "Jika menggunakan root, jalankan melalui sudo dari user biasa."
+    err "Contoh: sudo bash 01-install-dependencies.sh"
+    return 1
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Cari home directory user.
+  #
+  # Linux:
+  #   getent passwd
+  #
+  # macOS:
+  #   dscl
+  # ---------------------------------------------------------------------------
+
+  REAL_HOME=""
+
+  if command -v getent >/dev/null 2>&1; then
+    REAL_HOME="$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)"
+  fi
+
+  if [[ -z "$REAL_HOME" ]] &&
+     command -v dscl >/dev/null 2>&1; then
+
+    REAL_HOME="$(
+      dscl . -read "/Users/$REAL_USER" NFSHomeDirectory 2>/dev/null |
+        awk '{print $2}'
+    )"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Fallback hanya jika script bukan root.
+  # ---------------------------------------------------------------------------
+
+  if [[ -z "$REAL_HOME" ]] &&
+     [[ "$(id -u)" -ne 0 ]]; then
+
+    REAL_HOME="$HOME"
+  fi
+
+  if [[ -z "$REAL_HOME" ]]; then
+    err "Home directory user '$REAL_USER' tidak dapat ditemukan."
+    return 1
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Validasi home directory
+  # ---------------------------------------------------------------------------
+
+  if [[ ! -d "$REAL_HOME" ]]; then
+    err "Home directory tidak ditemukan: $REAL_HOME"
+    return 1
+  fi
+
+  DOTFILES_DIR="$REAL_HOME/.dotfiles"
+
+  log "Real user : $REAL_USER"
+  log "Real home : $REAL_HOME"
+  log "Dotfiles  : $DOTFILES_DIR"
 }
 
 # =============================================================================
@@ -145,36 +332,36 @@ detect_os() {
       ;;
 
     linux)
-      if [[ -r /etc/os-release ]]; then
-        # shellcheck disable=SC1091
-        source /etc/os-release
-
-        case "${ID:-}" in
-          debian|ubuntu|raspbian)
-            OS_TYPE="linux"
-            ;;
-
-          arch)
-            OS_TYPE="arch"
-            ;;
-
-          fedora)
-            OS_TYPE="fedora"
-            ;;
-
-          rhel|centos|rocky|almalinux)
-            OS_TYPE="redhat"
-            ;;
-
-          *)
-            err "Distribusi Linux '${ID:-unknown}' tidak didukung."
-            return 1
-            ;;
-        esac
-      else
+      if [[ ! -r /etc/os-release ]]; then
         err "File /etc/os-release tidak ditemukan."
         return 1
       fi
+
+      # shellcheck disable=SC1091
+      source /etc/os-release
+
+      case "${ID:-}" in
+        debian|ubuntu|raspbian)
+          OS_TYPE="linux"
+          ;;
+
+        arch)
+          OS_TYPE="arch"
+          ;;
+
+        fedora)
+          OS_TYPE="fedora"
+          ;;
+
+        rhel|centos|rocky|almalinux)
+          OS_TYPE="redhat"
+          ;;
+
+        *)
+          err "Distribusi Linux '${ID:-unknown}' tidak didukung."
+          return 1
+          ;;
+      esac
       ;;
 
     *)
@@ -234,6 +421,52 @@ detect_privilege() {
 }
 
 # =============================================================================
+# Detect Homebrew
+# =============================================================================
+
+detect_brew() {
+  BREW_BIN=""
+
+  # ---------------------------------------------------------------------------
+  # PATH user
+  # ---------------------------------------------------------------------------
+
+  if [[ -x "$REAL_HOME/.linuxbrew/bin/brew" ]]; then
+    BREW_BIN="$REAL_HOME/.linuxbrew/bin/brew"
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Apple Silicon
+  # ---------------------------------------------------------------------------
+
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    BREW_BIN="/opt/homebrew/bin/brew"
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Intel macOS
+  # ---------------------------------------------------------------------------
+
+  if [[ -x /usr/local/bin/brew ]]; then
+    BREW_BIN="/usr/local/bin/brew"
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # PATH aktif
+  # ---------------------------------------------------------------------------
+
+  if command -v brew >/dev/null 2>&1; then
+    BREW_BIN="$(command -v brew)"
+    return 0
+  fi
+
+  return 1
+}
+
+# =============================================================================
 # Install eza - Linux
 # =============================================================================
 
@@ -268,22 +501,12 @@ install_eza() {
   esac
 
   require_command curl
+  require_command tar
+  require_command grep
+  require_command cut
 
-  # ---------------------------------------------------------------------------
-  # Ambil versi terbaru dari GitHub API
-  #
-  # Tidak menggunakan:
-  #
-  # curl ... | grep ... | cut ...
-  #
-  # karena script menggunakan pipefail.
-  # ---------------------------------------------------------------------------
-
-  API_DIR="/tmp/eza-latest"
+  API_DIR="$(mktemp -d /tmp/eza-latest.XXXXXX)"
   API_FILE="$API_DIR/latest.json"
-
-  rm -rf "$API_DIR"
-  mkdir -p "$API_DIR"
 
   log "Mendeteksi versi eza terbaru..."
 
@@ -294,36 +517,26 @@ install_eza() {
       "https://api.github.com/repos/eza-community/eza/releases/latest"; then
 
     rm -rf "$API_DIR"
-    err "Gagal mengambil informasi release terbaru eza dari GitHub."
+    err "Gagal mengambil informasi release terbaru eza."
     return 1
   fi
 
   VERSION="$(grep -m1 '"tag_name":' "$API_FILE" | cut -d '"' -f4)"
 
+  rm -rf "$API_DIR"
+
   if [[ -z "$VERSION" ]]; then
-    rm -rf "$API_DIR"
-    err "Tidak dapat menentukan versi terbaru eza dari GitHub."
+    err "Tidak dapat menentukan versi terbaru eza."
     return 1
   fi
 
-  rm -rf "$API_DIR"
-
   log "Versi eza terbaru: $VERSION"
 
-  # ---------------------------------------------------------------------------
-  # Download eza
-  # ---------------------------------------------------------------------------
-
   TARBALL="eza_${ARCH_DEB}.tar.gz"
-
   URL="https://github.com/eza-community/eza/releases/download/${VERSION}/${TARBALL}"
+  TEMP_DIR="$(mktemp -d /tmp/eza.XXXXXX)"
 
-  TEMP_DIR="/tmp/eza-${VERSION}"
-
-  rm -rf "$TEMP_DIR"
-  mkdir -p "$TEMP_DIR"
-
-  log "Mengunduh eza $VERSION..."
+  log "Mengunduh eza..."
   log "URL: $URL"
 
   if ! curl -fL \
@@ -337,10 +550,6 @@ install_eza() {
     return 1
   fi
 
-  # ---------------------------------------------------------------------------
-  # Extract
-  # ---------------------------------------------------------------------------
-
   log "Mengekstrak eza..."
 
   if ! tar -xzf "$TEMP_DIR/$TARBALL" -C "$TEMP_DIR"; then
@@ -349,34 +558,196 @@ install_eza() {
     return 1
   fi
 
-  # ---------------------------------------------------------------------------
-  # Validate binary
-  # ---------------------------------------------------------------------------
-
   if [[ ! -f "$TEMP_DIR/eza" ]]; then
     rm -rf "$TEMP_DIR"
     err "Binary eza tidak ditemukan setelah ekstraksi."
     return 1
   fi
 
-  # ---------------------------------------------------------------------------
-  # Install binary
-  # ---------------------------------------------------------------------------
-
   run_as_root install -d /usr/local/bin
-
-  run_as_root install \
-    -m755 \
-    "$TEMP_DIR/eza" \
-    /usr/local/bin/eza
-
-  # ---------------------------------------------------------------------------
-  # Cleanup
-  # ---------------------------------------------------------------------------
+  run_as_root install -m755 "$TEMP_DIR/eza" /usr/local/bin/eza
 
   rm -rf "$TEMP_DIR"
 
   log "[OK] eza berhasil diinstall ke /usr/local/bin/eza."
+}
+
+# =============================================================================
+# Install Homebrew - macOS
+# =============================================================================
+
+install_homebrew_macos() {
+  if detect_brew; then
+    log "[SKIP] Homebrew sudah terinstall: $BREW_BIN"
+    return 0
+  fi
+
+  require_command curl
+  require_command mktemp
+
+  local TEMP_INSTALLER
+
+  TEMP_INSTALLER="$REAL_HOME/.homebrew-install-$$.sh"
+
+  log "Homebrew belum ditemukan."
+  log "Mengunduh installer Homebrew sebagai '$REAL_USER'..."
+
+  # ---------------------------------------------------------------------------
+  # Download installer sebagai REAL_USER.
+  #
+  # Jangan:
+  #
+  #   curl ... > /tmp/file
+  #
+  # sebagai root untuk kemudian menjalankannya sebagai user.
+  #
+  # Seluruh operasi Homebrew dilakukan sebagai user asli.
+  # ---------------------------------------------------------------------------
+
+  if ! run_as_user curl -fsSL \
+      --retry 3 \
+      --retry-delay 2 \
+      "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh" \
+      -o "$TEMP_INSTALLER"; then
+
+    rm -f "$TEMP_INSTALLER" 2>/dev/null || true
+
+    err "Gagal mengunduh installer Homebrew."
+    return 1
+  fi
+
+  run_as_user chmod 700 "$TEMP_INSTALLER"
+
+  log "Menjalankan installer Homebrew sebagai '$REAL_USER'..."
+
+  if ! run_as_user /bin/bash "$TEMP_INSTALLER"; then
+    run_as_user rm -f "$TEMP_INSTALLER" 2>/dev/null || true
+
+    err "Instalasi Homebrew gagal."
+    return 1
+  fi
+
+  run_as_user rm -f "$TEMP_INSTALLER" 2>/dev/null || true
+
+  # ---------------------------------------------------------------------------
+  # Homebrew installer mungkin baru saja membuat brew.
+  # ---------------------------------------------------------------------------
+
+  if ! detect_brew; then
+    err "Homebrew installer selesai tetapi brew tidak ditemukan."
+    err "Path yang diperiksa:"
+    err "  /opt/homebrew/bin/brew"
+    err "  /usr/local/bin/brew"
+    err "  $REAL_HOME/.linuxbrew/bin/brew"
+    return 1
+  fi
+
+  log "[OK] Homebrew ditemukan: $BREW_BIN"
+}
+
+# =============================================================================
+# Install macOS Packages
+# =============================================================================
+
+install_packages_macos() {
+  install_homebrew_macos
+
+  if [[ -z "$BREW_BIN" ]]; then
+    if ! detect_brew; then
+      warn "Homebrew tidak tersedia. Package macOS dilewati."
+      return 0
+    fi
+  fi
+
+  log "Homebrew: $BREW_BIN"
+  log "User Homebrew: $REAL_USER"
+
+  # ---------------------------------------------------------------------------
+  # Pastikan Homebrew dapat dijalankan sebagai REAL_USER.
+  # ---------------------------------------------------------------------------
+
+  if ! run_as_user "$BREW_BIN" --version >/dev/null 2>&1; then
+    err "Homebrew tidak dapat dijalankan sebagai '$REAL_USER'."
+    return 1
+  fi
+
+  log "Mengupdate metadata Homebrew..."
+
+  if ! run_as_user "$BREW_BIN" update; then
+    warn "Homebrew update gagal. Melanjutkan."
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Formula
+  #
+  # Install satu per satu agar satu package yang gagal tidak membatalkan
+  # seluruh instalasi.
+  # ---------------------------------------------------------------------------
+
+  local packages=(
+    zsh
+    git
+    curl
+    fzf
+    grc
+    gnupg
+    nano
+    lolcat
+    pv
+    bat
+    coreutils
+    w3m
+    zoxide
+    eza
+    fd
+    ffmpeg
+    sevenzip
+    rsync
+    jq
+    poppler
+    ripgrep
+    resvg
+    imagemagick
+  )
+
+  local package
+
+  for package in "${packages[@]}"; do
+    if run_as_user "$BREW_BIN" list --formula "$package" >/dev/null 2>&1; then
+      log "[SKIP] $package sudah terinstall."
+      continue
+    fi
+
+    log "Menginstall $package..."
+
+    if run_as_user "$BREW_BIN" install "$package"; then
+      log "[OK] $package berhasil diinstall."
+    else
+      warn "$package gagal diinstall. Melanjutkan."
+    fi
+  done
+
+  # ---------------------------------------------------------------------------
+  # Nerd Font
+  #
+  # font-symbols-only-nerd-font adalah cask.
+  # ---------------------------------------------------------------------------
+
+  local FONT_CASK="font-symbols-only-nerd-font"
+
+  if run_as_user "$BREW_BIN" list --cask "$FONT_CASK" >/dev/null 2>&1; then
+    log "[SKIP] $FONT_CASK sudah terinstall."
+  else
+    log "Menginstall $FONT_CASK..."
+
+    if run_as_user "$BREW_BIN" install --cask "$FONT_CASK"; then
+      log "[OK] $FONT_CASK berhasil diinstall."
+    else
+      warn "$FONT_CASK gagal diinstall. Melanjutkan."
+    fi
+  fi
+
+  log "[OK] Package macOS selesai diproses."
 }
 
 # =============================================================================
@@ -386,9 +757,9 @@ install_eza() {
 install_glow() {
   case "$OS_TYPE" in
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # Debian / Ubuntu / Raspbian
-    # -------------------------------------------------------------------------
+    # =========================================================================
 
     linux)
       require_command apt-get
@@ -397,25 +768,44 @@ install_glow() {
 
       local KEYRING="/etc/apt/keyrings/charm.gpg"
       local SOURCES="/etc/apt/sources.list.d/charm.list"
+      local TEMP_KEY
+
+      TEMP_KEY="$(mktemp /tmp/charm-gpg.XXXXXX)"
 
       log "Menyiapkan repository Charm untuk glow..."
 
-      run_as_root install -d -m0755 /etc/apt/keyrings
-
       if ! curl -fsSL \
-          https://repo.charm.sh/apt/gpg.key |
-          run_as_root gpg --dearmor --yes -o "$KEYRING"; then
+          "https://repo.charm.sh/apt/gpg.key" \
+          -o "$TEMP_KEY"; then
 
-        warn "Gagal menginstall GPG key repository Charm."
+        rm -f "$TEMP_KEY"
+        warn "Gagal mengunduh GPG key Charm. Glow dilewati."
         return 0
       fi
+
+      run_as_root install -d -m0755 /etc/apt/keyrings
+
+      if ! run_as_root gpg \
+          --dearmor \
+          --yes \
+          -o "$KEYRING" \
+          "$TEMP_KEY"; then
+
+        rm -f "$TEMP_KEY"
+        warn "Gagal menginstall GPG key Charm. Glow dilewati."
+        return 0
+      fi
+
+      rm -f "$TEMP_KEY"
 
       run_as_root chmod 0644 "$KEYRING"
 
       if ! run_as_root sh -c \
-          "echo 'deb [signed-by=$KEYRING] https://repo.charm.sh/apt/ * *' > '$SOURCES'"; then
+          "printf '%s\n' \
+          'deb [signed-by=$KEYRING] https://repo.charm.sh/apt/ * *' \
+          > '$SOURCES'"; then
 
-        warn "Gagal membuat repository Charm."
+        warn "Gagal membuat repository Charm. Glow dilewati."
         return 0
       fi
 
@@ -432,20 +822,24 @@ install_glow() {
       log "[OK] Glow berhasil diinstall."
       ;;
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # macOS
-    # -------------------------------------------------------------------------
+    # =========================================================================
 
     macos)
-      if ! command -v brew >/dev/null 2>&1; then
-        warn "Homebrew tidak ditemukan. Glow dilewati."
-        return 0
+      if [[ -z "$BREW_BIN" ]]; then
+        if ! detect_brew; then
+          warn "Homebrew tidak ditemukan. Glow dilewati."
+          return 0
+        fi
       fi
 
-      if brew list --formula glow >/dev/null 2>&1; then
+      if run_as_user "$BREW_BIN" list --formula glow >/dev/null 2>&1; then
         log "[SKIP] Glow sudah terinstall."
       else
-        if brew install glow; then
+        log "Menginstall glow..."
+
+        if run_as_user "$BREW_BIN" install glow; then
           log "[OK] Glow berhasil diinstall."
         else
           warn "Glow gagal diinstall. Melanjutkan."
@@ -453,9 +847,9 @@ install_glow() {
       fi
       ;;
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # Arch
-    # -------------------------------------------------------------------------
+    # =========================================================================
 
     arch)
       require_command pacman
@@ -467,9 +861,9 @@ install_glow() {
       fi
       ;;
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # Fedora
-    # -------------------------------------------------------------------------
+    # =========================================================================
 
     fedora)
       require_command dnf
@@ -481,9 +875,9 @@ install_glow() {
       fi
       ;;
 
-    # -------------------------------------------------------------------------
-    # RHEL / CentOS / Rocky / AlmaLinux
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # RedHat
+    # =========================================================================
 
     redhat)
       require_command yum
@@ -548,7 +942,6 @@ install_packages() {
         iproute2; then
 
         log "[OK] Package Linux berhasil diproses."
-
       else
         err "Gagal menginstall package Linux."
         return 1
@@ -556,21 +949,18 @@ install_packages() {
 
       # -----------------------------------------------------------------------
       # fd
-      # Debian menyediakan executable dengan nama fdfind.
-      # Path symlink dipertahankan.
       # -----------------------------------------------------------------------
 
       if [[ -x /usr/bin/fdfind ]]; then
-
         if [[ -L /usr/local/bin/fd || -e /usr/local/bin/fd ]]; then
           log "[SKIP] Symlink fd sudah tersedia."
         else
+          run_as_root install -d /usr/local/bin
           run_as_root ln -s /usr/bin/fdfind /usr/local/bin/fd
           log "[OK] Symlink fd -> fdfind berhasil dibuat."
         fi
-
       else
-        warn "[WARN] /usr/bin/fdfind tidak ditemukan."
+        warn "/usr/bin/fdfind tidak ditemukan."
       fi
 
       # -----------------------------------------------------------------------
@@ -583,7 +973,6 @@ install_packages() {
       else
         log "[SKIP] eza sudah terinstall."
       fi
-
       ;;
 
     # =========================================================================
@@ -596,7 +985,7 @@ install_packages() {
       log "Menginstall EPEL..."
 
       if ! run_as_root yum install -y epel-release; then
-        warn "[WARN] EPEL gagal diinstall. Melanjutkan."
+        warn "EPEL gagal diinstall. Melanjutkan."
       fi
 
       if run_as_root yum install -y \
@@ -620,12 +1009,10 @@ install_packages() {
         rsync; then
 
         log "[OK] Package RedHat berhasil diproses."
-
       else
         err "Gagal menginstall package RedHat."
         return 1
       fi
-
       ;;
 
     # =========================================================================
@@ -658,12 +1045,10 @@ install_packages() {
         rsync; then
 
         log "[OK] Package Fedora berhasil diproses."
-
       else
         err "Gagal menginstall package Fedora."
         return 1
       fi
-
       ;;
 
     # =========================================================================
@@ -697,12 +1082,10 @@ install_packages() {
         iproute2; then
 
         log "[OK] Package Arch berhasil diproses."
-
       else
         err "Gagal menginstall package Arch."
         return 1
       fi
-
       ;;
 
     # =========================================================================
@@ -710,96 +1093,11 @@ install_packages() {
     # =========================================================================
 
     macos)
-
-      # -----------------------------------------------------------------------
-      # Homebrew
-      # -----------------------------------------------------------------------
-
-      if ! command -v brew >/dev/null 2>&1; then
-
-        while true; do
-          echo
-          read -rp "Homebrew belum terinstall. Install Homebrew? (y/n): " jawab
-
-          case "$jawab" in
-            y|Y)
-              log "Menginstall Homebrew..."
-
-              /bin/bash -c \
-                "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-              # Cari brew setelah instalasi.
-              if command -v brew >/dev/null 2>&1; then
-                eval "$(brew shellenv)"
-
-              elif [[ -x /opt/homebrew/bin/brew ]]; then
-                eval "$(/opt/homebrew/bin/brew shellenv)"
-
-              elif [[ -x /usr/local/bin/brew ]]; then
-                eval "$(/usr/local/bin/brew shellenv)"
-
-              else
-                err "Homebrew berhasil dijalankan tetapi binary brew tidak ditemukan."
-                return 1
-              fi
-
-              break
-              ;;
-
-            n|N)
-              warn "Melewati instalasi paket Homebrew."
-              return 0
-              ;;
-
-            *)
-              warn "Input tidak valid. Pilih y atau n."
-              ;;
-          esac
-        done
-      fi
-
-      require_command brew
-
-      log "Menginstall package macOS..."
-
-      if brew install \
-        zsh \
-        git \
-        curl \
-        fzf \
-        grc \
-        gnupg \
-        nano \
-        lolcat \
-        pv \
-        bat \
-        coreutils \
-        w3m \
-        zoxide \
-        eza \
-        fd \
-        ffmpeg \
-        sevenzip \
-        rsync \
-        jq \
-        poppler \
-        ripgrep \
-        resvg \
-        imagemagick \
-        font-symbols-only-nerd-font \
-        xclip; then
-
-        log "[OK] Package macOS berhasil diproses."
-
-      else
-        err "Gagal menginstall package macOS."
-        return 1
-      fi
-
+      install_packages_macos
       ;;
 
     *)
-      err "OS '$OS_TYPE' tidak didukung untuk instalasi package."
+      err "OS '$OS_TYPE' tidak didukung."
       return 1
       ;;
   esac
@@ -816,7 +1114,9 @@ install_packages() {
 # =============================================================================
 
 clone_dotfiles() {
-  local DOTFILES_DIR="$HOME/.dotfiles"
+  # ---------------------------------------------------------------------------
+  # Jangan pernah clone ke /root/.dotfiles hanya karena script menggunakan sudo.
+  # ---------------------------------------------------------------------------
 
   if [[ -d "$DOTFILES_DIR" ]]; then
     log "[SKIP] $DOTFILES_DIR sudah ada."
@@ -825,18 +1125,79 @@ clone_dotfiles() {
 
   require_command git
 
-  log "Clone repository dotfiles..."
+  log "Clone repository dotfiles sebagai '$REAL_USER'..."
+  log "Destination: $DOTFILES_DIR"
 
-  if git clone \
-      https://github.com/New8ie/Dotfiles.git \
-      "$DOTFILES_DIR"; then
+  run_as_user git clone \
+    "https://github.com/New8ie/Dotfiles.git" \
+    "$DOTFILES_DIR"
 
-    log "[OK] Dotfiles berhasil di-clone ke $DOTFILES_DIR."
+  # ---------------------------------------------------------------------------
+  # Validasi directory berhasil dibuat.
+  # ---------------------------------------------------------------------------
 
-  else
-    err "Gagal clone repository dotfiles."
+  if [[ ! -d "$DOTFILES_DIR" ]]; then
+    err "Directory dotfiles tidak ditemukan setelah clone."
     return 1
   fi
+
+  # ---------------------------------------------------------------------------
+  # Jika root menjalankan script, pastikan repository baru tidak salah owner.
+  #
+  # Ini hanya dilakukan setelah clone baru.
+  # Repository yang sudah ada TIDAK disentuh.
+  # ---------------------------------------------------------------------------
+
+  if [[ "$(id -u)" -eq 0 ]]; then
+    run_as_root chown -R "$REAL_USER" "$DOTFILES_DIR"
+  fi
+
+  log "[OK] Dotfiles berhasil di-clone ke $DOTFILES_DIR."
+}
+
+# =============================================================================
+# Run 02 as Real User
+# =============================================================================
+
+run_zsh_setup() {
+  local ZSH_SETUP="$DOTFILES_DIR/Install/02-setup-zsh.sh"
+
+  # ---------------------------------------------------------------------------
+  # Validasi file
+  # ---------------------------------------------------------------------------
+
+  if [[ ! -f "$ZSH_SETUP" ]]; then
+    err "File tidak ditemukan:"
+    err "$ZSH_SETUP"
+    return 1
+  fi
+
+  if [[ "$REAL_USER" == "root" ]]; then
+    err "02-setup-zsh.sh tidak boleh dijalankan sebagai root."
+    return 1
+  fi
+
+  log "Menjalankan 02-setup-zsh.sh sebagai '$REAL_USER'..."
+
+  # ---------------------------------------------------------------------------
+  # chmod sebagai user asli
+  # ---------------------------------------------------------------------------
+
+  run_as_user chmod +x "$ZSH_SETUP"
+
+  # ---------------------------------------------------------------------------
+  # Jalankan 02 sebagai user asli.
+  #
+  # macOS:
+  #   sudo -u REAL_USER -H
+  #
+  # Linux root:
+  #   runuser
+  # ---------------------------------------------------------------------------
+
+  run_as_user bash "$ZSH_SETUP"
+
+  log "[OK] Setup ZSH selesai."
 }
 
 # =============================================================================
@@ -845,11 +1206,43 @@ clone_dotfiles() {
 
 main() {
   detect_os
+  detect_arch
   detect_privilege
+  detect_real_user
+
+  echo
+  log "============================================================================="
+  log " Environment"
+  log "============================================================================="
+  log "OS         : $OS_TYPE"
+  log "Architecture: $ARCH_TYPE"
+  log "Real user  : $REAL_USER"
+  log "Real home  : $REAL_HOME"
+  log "Dotfiles   : $DOTFILES_DIR"
+
+  if [[ "$(id -u)" -eq 0 ]]; then
+    log "Execution  : root + user-level delegation"
+  else
+    log "Execution  : user + sudo delegation"
+  fi
+
+  echo
+
+  # ---------------------------------------------------------------------------
+  # Install dependencies
+  # ---------------------------------------------------------------------------
+
   install_packages
+
+  # ---------------------------------------------------------------------------
+  # Clone dotfiles sebagai REAL_USER
+  # ---------------------------------------------------------------------------
+
   clone_dotfiles
 
-  local ZSH_SETUP="$HOME/.dotfiles/Install/02-setup-zsh.sh"
+  # ---------------------------------------------------------------------------
+  # Menu
+  # ---------------------------------------------------------------------------
 
   echo
   echo "============================================================================="
@@ -864,20 +1257,8 @@ main() {
     read -rp "Pilih [1/2]: " choice
 
     case "$choice" in
-
       1)
-        if [[ ! -f "$ZSH_SETUP" ]]; then
-          err "File tidak ditemukan: $ZSH_SETUP"
-          return 1
-        fi
-
-        chmod +x "$ZSH_SETUP"
-
-        log "Menjalankan 02-setup-zsh.sh..."
-
-        bash "$ZSH_SETUP"
-
-        log "[OK] Setup ZSH selesai."
+        run_zsh_setup
         break
         ;;
 
@@ -893,6 +1274,7 @@ main() {
   done
 
   echo
+
   log "============================================================================="
   log " Instalasi dependency selesai."
   log "============================================================================="
@@ -903,4 +1285,4 @@ main() {
 # =============================================================================
 
 main "$@"
-                      
+
