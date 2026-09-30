@@ -1,3 +1,4 @@
 {
-    "DockerRun.DisableDockerrc": true
+    "DockerRun.DisableDockerrc": true,
+    "idf.currentSetup": "/Users/fachmi/.espressif/v5.5.4/esp-idf"
 }
