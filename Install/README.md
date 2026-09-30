@@ -11,7 +11,7 @@ Automasi instalasi tool CLI modern, Zsh, dan dotfiles pribadi untuk Linux dan ma
 │   ├── 02-setup-zsh.sh        # Setup Zsh, plugin, konfigurasi, dan theme
 │   ├── 03-install-fail2ban.sh 
 │   ├── 04-zsh-root.sh 
-│   └── 05-hardening-ssh.sh 
+│   └── 05-harden-ssh.sh     # Hardening SSH melalui drop-in sshd
 ```
 
 ---
@@ -79,6 +79,20 @@ Script ini akan:
 - Install fail2ban
 - Mengonfigurasi Fail2Ban dengan notifikasi Telegram dan integrasi Cloudflare.
 - Copy script => telegram , jail , action => iptables, cloudflare & telegram dan filter => nextcloud, guacamole & immich
+
+### Hardening SSH
+
+Jalankan dengan akses root pada server Linux:
+
+```bash
+sudo bash ./05-harden-ssh.sh
+```
+
+Script ini membuat drop-in di `/etc/ssh/sshd_config.d/` tanpa mengganti
+`sshd_config`. Konfigurasi autentikasi password dan alamat listen yang sudah ada
+tidak diubah. Script memvalidasi konfigurasi efektif sebelum restart SSH dan
+mencoba rollback jika validasi atau restart gagal. Pertahankan sesi SSH yang
+sedang aktif dan uji koneksi baru sebelum menutupnya.
 
 ---
 

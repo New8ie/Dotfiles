@@ -1,333 +1,216 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
-# =============================================================================
-# Logging
-# =============================================================================
+set -Eeuo pipefail
 
 log() {
-    echo -e "\033[1;36m[INFO]\033[0m $*"
+    printf '\033[1;36m[INFO]\033[0m %s\n' "$*"
 }
 
 ok() {
-    echo -e "\033[1;32m[OK]\033[0m $*"
+    printf '\033[1;32m[OK]\033[0m %s\n' "$*"
 }
 
 warn() {
-    echo -e "\033[1;33m[WARN]\033[0m $*"
+    printf '\033[1;33m[WARN]\033[0m %s\n' "$*" >&2
 }
 
-err() {
-    echo -e "\033[1;31m[ERROR]\033[0m $*"
+die() {
+    printf '\033[1;31m[ERROR]\033[0m %s\n' "$*" >&2
     exit 1
 }
 
-# =============================================================================
-# Auto Elevate
-# =============================================================================
-
-if [[ $EUID -ne 0 ]]; then
-    echo -e "\033[1;33m[WARN]\033[0m Script membutuhkan akses root, mencoba sudo..."
-
-    if ! command -v sudo >/dev/null 2>&1; then
-        err "sudo tidak ditemukan. Jalankan script sebagai root atau install sudo."
-    fi
-
-    exec sudo -E bash "$0" "$@"
+if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+    die "Jalankan dengan root, misalnya: sudo bash $0"
 fi
 
-# =============================================================================
-# Validasi OS
-# =============================================================================
-
-OS_TYPE="$(uname -s)"
-
-if [[ "$OS_TYPE" != "Linux" ]]; then
-    err "Script ini hanya mendukung Linux. OS terdeteksi: $OS_TYPE"
+if [[ $(uname -s) != Linux ]]; then
+    die "Skrip ini hanya mendukung Linux."
 fi
 
-# =============================================================================
-# Validasi Command
-# =============================================================================
-
-REQUIRED_COMMANDS=(
-    sshd
-    systemctl
-    cp
-    chmod
-)
-
-for command_name in "${REQUIRED_COMMANDS[@]}"; do
+for command_name in sshd systemctl mktemp cp mv rm chmod date awk grep; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
-        err "Command '$command_name' tidak ditemukan."
+        die "Command '$command_name' tidak ditemukan."
     fi
 done
 
-# =============================================================================
-# Path Config
-# =============================================================================
-
 CONFIG="/etc/ssh/sshd_config"
-BACKUP="/etc/ssh/sshd_config.backup"
+DROPIN_DIR="/etc/ssh/sshd_config.d"
+DROPIN="$DROPIN_DIR/00-local-hardening.conf"
 
-# =============================================================================
-# Validasi SSH Config
-# =============================================================================
+[[ -f "$CONFIG" ]] || die "File konfigurasi SSH tidak ditemukan: $CONFIG"
+[[ -d "$DROPIN_DIR" ]] || die "Direktori drop-in tidak ditemukan: $DROPIN_DIR"
+[[ ! -L "$DROPIN" ]] || die "$DROPIN adalah symbolic link; tidak akan ditimpa."
 
-if [[ ! -f "$CONFIG" ]]; then
-    err "File konfigurasi SSH tidak ditemukan: $CONFIG"
+if grep -Fq '# SSHD HARDENED CONFIG (Auto-Managed)' "$CONFIG"; then
+    die "sshd_config tampaknya ditimpa versi skrip lama. Tinjau $CONFIG dan /etc/ssh/sshd_config.backup, lalu pulihkan konfigurasi asli sebelum menjalankan versi ini."
 fi
 
-# =============================================================================
-# Backup hanya sekali
-# =============================================================================
-
-if [[ ! -f "$BACKUP" ]]; then
-
-    log "Membuat backup SSH configuration..."
-
-    cp "$CONFIG" "$BACKUP"
-    chmod 600 "$BACKUP"
-
-    ok "Backup dibuat: $BACKUP"
-
-else
-
-    log "Backup lama ditemukan: $BACKUP"
-    log "Backup tidak ditimpa."
-
+if ! sshd -t -f "$CONFIG"; then
+    die "Konfigurasi SSH saat ini tidak valid; tidak ada perubahan yang dilakukan."
 fi
 
-# =============================================================================
-# Generate Config Baru
-# =============================================================================
+SERVICE=""
+FALLBACK_SERVICE=""
+for unit in ssh.service sshd.service; do
+    load_state="$(systemctl show -p LoadState --value "$unit" 2>/dev/null || true)"
+    if [[ "$load_state" == loaded ]]; then
+        if systemctl is-active --quiet "$unit"; then
+            SERVICE="$unit"
+            break
+        fi
+        if [[ -z "$FALLBACK_SERVICE" ]]; then
+            FALLBACK_SERVICE="$unit"
+        fi
+    fi
+done
 
-log "Menulis konfigurasi SSH hardened..."
+if [[ -z "$SERVICE" ]]; then
+    SERVICE="$FALLBACK_SERVICE"
+fi
+[[ -n "$SERVICE" ]] || die "Unit systemd ssh.service atau sshd.service tidak ditemukan."
 
-cat > "$CONFIG" <<'EOF'
-# =============================================================================
-# SSHD HARDENED CONFIG (Auto-Managed)
-# =============================================================================
+HAD_DROPIN=false
+CHANGES_APPLIED=false
+DROPIN_BACKUP=""
+TEMP_FILE=""
 
-Include /etc/ssh/sshd_config.d/*.conf
+if [[ -e "$DROPIN" ]]; then
+    if ! grep -Fq '# Managed by Install/05-harden-ssh.sh.' "$DROPIN"; then
+        die "$DROPIN sudah ada dan bukan milik skrip ini; tidak akan ditimpa."
+    fi
 
-# =============================================================================
-# Listen Interface
-# =============================================================================
+    HAD_DROPIN=true
+    DROPIN_BACKUP="$DROPIN_DIR/.00-local-hardening.conf.backup.$(date +%Y%m%d%H%M%S).$$"
+    cp -p "$DROPIN" "$DROPIN_BACKUP"
+    chmod 600 "$DROPIN_BACKUP"
+    log "Backup drop-in sebelumnya: $DROPIN_BACKUP"
+fi
 
-ListenAddress 0.0.0.0
+rollback() {
+    local rollback_file
 
-# =============================================================================
-# Host Keys
-# =============================================================================
+    warn "Memulihkan konfigurasi SSH sebelumnya..."
+    if [[ "$HAD_DROPIN" == true ]]; then
+        rollback_file="$(mktemp "$DROPIN_DIR/.rollback.XXXXXX")" || {
+            warn "Tidak dapat membuat file sementara untuk rollback."
+            return 1
+        }
+        if ! cp -p "$DROPIN_BACKUP" "$rollback_file" || ! mv -f "$rollback_file" "$DROPIN"; then
+            rm -f "$rollback_file"
+            warn "Pemulihan drop-in gagal. Backup tersedia di: $DROPIN_BACKUP"
+            return 1
+        fi
+    elif ! rm -f "$DROPIN"; then
+        warn "Tidak dapat menghapus drop-in baru: $DROPIN"
+        return 1
+    fi
 
-HostKey /etc/ssh/ssh_host_rsa_key
-HostKey /etc/ssh/ssh_host_ecdsa_key
-HostKey /etc/ssh/ssh_host_ed25519_key
+    if sshd -t -f "$CONFIG" &&
+        systemctl restart "$SERVICE" &&
+        systemctl is-active --quiet "$SERVICE"; then
+        ok "Konfigurasi sebelumnya dipulihkan dan $SERVICE berhasil direstart."
+        return 0
+    fi
 
-# =============================================================================
-# Login Rules
-# =============================================================================
+    warn "Konfigurasi dipulihkan, tetapi validasi atau restart $SERVICE gagal."
+    return 1
+}
+
+on_exit() {
+    local status=$?
+    trap - EXIT
+
+    if [[ -n "$TEMP_FILE" && -e "$TEMP_FILE" ]]; then
+        rm -f "$TEMP_FILE" || true
+    fi
+
+    if [[ $status -ne 0 && "$CHANGES_APPLIED" == true ]]; then
+        rollback || true
+    fi
+
+    exit "$status"
+}
+trap on_exit EXIT
+
+TEMP_FILE="$(mktemp "$DROPIN_DIR/.00-local-hardening.XXXXXX")"
+chmod 600 "$TEMP_FILE"
+cat > "$TEMP_FILE" <<'EOF'
+# Managed by Install/05-harden-ssh.sh.
+# Authentication and listen-address policies are intentionally left unchanged.
 
 PermitRootLogin no
 MaxAuthTries 5
 MaxSessions 3
-
-PubkeyAuthentication yes
 IgnoreRhosts yes
-IgnoreUserKnownHosts no
-
-PasswordAuthentication yes
 PermitEmptyPasswords no
-
-KbdInteractiveAuthentication no
-UsePAM yes
-
-PrintMotd no
-
-# =============================================================================
-# Banner
-# =============================================================================
-
-Banner none
-DebianBanner no
-
-# =============================================================================
-# Environment
-# =============================================================================
-
-AcceptEnv LANG LC_*
-
-# =============================================================================
-# SFTP
-# =============================================================================
-
-Subsystem sftp /usr/lib/openssh/sftp-server
-
-# =============================================================================
-# Hardening
-# =============================================================================
+ChallengeResponseAuthentication no
+UseDNS no
 
 AllowAgentForwarding no
 AllowTcpForwarding no
 X11Forwarding no
 PermitTunnel no
 
-VersionAddendum none
-PrintLastLog yes
-
 ClientAliveInterval 300
 ClientAliveCountMax 2
-
 MaxStartups 3:30:60
-
-UseDNS no
-
-# =============================================================================
-# Logging
-# =============================================================================
-
-SyslogFacility AUTH
 LogLevel VERBOSE
-
-# =============================================================================
-# Crypto Hardening
-# =============================================================================
-
-Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
-
-MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
-
-KexAlgorithms mlkem768x25519-sha256,sntrup761x25519-sha512,curve25519-sha256
-
-# =============================================================================
-# END
-# =============================================================================
 EOF
 
-chmod 644 "$CONFIG"
-
-ok "Konfigurasi SSH berhasil ditulis."
-
-# =============================================================================
-# Check Config
-# =============================================================================
+mv -f "$TEMP_FILE" "$DROPIN"
+TEMP_FILE=""
+CHANGES_APPLIED=true
+log "Drop-in hardening ditulis: $DROPIN"
 
 log "Memvalidasi konfigurasi SSH..."
+sshd -t -f "$CONFIG" || die "Konfigurasi SSH tidak valid."
 
-if sshd -t; then
+effective_config="$(sshd -T -f "$CONFIG")" || die "Tidak dapat membaca konfigurasi SSH efektif."
+effective_value() {
+    awk -v key="$1" '$1 == key { print $2; exit }' <<< "$effective_config"
+}
 
-    ok "Konfigurasi SSH valid."
+assert_value() {
+    local key="$1"
+    local expected="$2"
+    local actual
+    actual="$(effective_value "$key")"
+    [[ "$actual" == "$expected" ]] || die "Nilai efektif $key adalah '${actual:-tidak ditemukan}', seharusnya '$expected'. Drop-in mungkin tidak dimuat atau ditimpa konfigurasi lain."
+}
 
-else
+assert_maximum() {
+    local key="$1"
+    local maximum="$2"
+    local actual
+    actual="$(effective_value "$key")"
+    [[ "$actual" =~ ^[0-9]+$ ]] || die "Nilai efektif $key tidak valid: '${actual:-tidak ditemukan}'."
+    (( actual <= maximum )) || die "Nilai efektif $key ($actual) lebih longgar dari batas $maximum."
+}
 
-    warn "Konfigurasi SSH tidak valid."
-    warn "Melakukan rollback ke backup..."
+assert_value permitrootlogin no
+assert_value ignorerhosts yes
+assert_value permitemptypasswords no
+assert_value kbdinteractiveauthentication no
+assert_value allowagentforwarding no
+assert_value allowtcpforwarding no
+assert_value x11forwarding no
+assert_value permittunnel no
+assert_maximum maxauthtries 5
+assert_maximum maxsessions 3
 
-    cp "$BACKUP" "$CONFIG"
-    chmod 644 "$CONFIG"
+ok "Konfigurasi efektif memenuhi pemeriksaan hardening."
 
-    if sshd -t; then
-        ok "Rollback berhasil. Konfigurasi lama tetap aman."
-    else
-        err "Rollback gagal. Backup juga menghasilkan konfigurasi SSH yang tidak valid."
-    fi
+log "Me-restart $SERVICE..."
+systemctl restart "$SERVICE"
+systemctl is-active --quiet "$SERVICE" || die "$SERVICE tidak aktif setelah restart."
 
-    exit 1
-fi
+sshd -t -f "$CONFIG" || die "Validasi akhir konfigurasi SSH gagal."
 
-# =============================================================================
-# Restart SSH
-# =============================================================================
-
-log "Restart service SSH..."
-
-SSH_RESTARTED=false
-
-if systemctl restart ssh; then
-    SSH_RESTARTED=true
-    ok "Service SSH berhasil direstart."
-elif systemctl restart sshd; then
-    SSH_RESTARTED=true
-    ok "Service SSH berhasil direstart menggunakan sshd."
-fi
-
-if [[ "$SSH_RESTARTED" != true ]]; then
-
-    warn "Restart SSH gagal."
-    warn "Melakukan rollback konfigurasi..."
-
-    cp "$BACKUP" "$CONFIG"
-    chmod 644 "$CONFIG"
-
-    if sshd -t; then
-
-        ok "Rollback konfigurasi berhasil."
-
-        if systemctl restart ssh; then
-            ok "Service SSH berhasil direstart menggunakan konfigurasi backup."
-        elif systemctl restart sshd; then
-            ok "Service SSH berhasil direstart menggunakan konfigurasi backup."
-        else
-            err "Rollback berhasil tetapi service SSH tidak dapat direstart."
-        fi
-
-    else
-
-        err "Rollback menghasilkan konfigurasi SSH yang tidak valid."
-    fi
-
-    exit 1
-fi
-
-# =============================================================================
-# Verify SSH Service
-# =============================================================================
-
-log "Memverifikasi status service SSH..."
-
-if systemctl is-active --quiet ssh; then
-
-    ok "Service SSH aktif."
-
-elif systemctl is-active --quiet sshd; then
-
-    ok "Service SSHD aktif."
-
-else
-
-    warn "Service SSH tidak terdeteksi aktif."
-    systemctl status ssh --no-pager || true
-    systemctl status sshd --no-pager || true
-
-    err "Verifikasi service SSH gagal."
-fi
-
-# =============================================================================
-# Final Validation
-# =============================================================================
-
-log "Melakukan validasi akhir konfigurasi..."
-
-if sshd -t; then
-    ok "Validasi akhir konfigurasi SSH berhasil."
-else
-    err "Validasi akhir konfigurasi SSH gagal."
-fi
-
-# =============================================================================
-# Finish
-# =============================================================================
-
-echo
-echo "============================================================================="
+CHANGES_APPLIED=false
 ok "Hardening SSH berhasil diterapkan."
-echo "============================================================================="
-echo
-echo "Config : $CONFIG"
-echo "Backup : $BACKUP"
-echo
-echo "Backup hanya dibuat sekali dan tidak akan ditimpa oleh eksekusi berikutnya."
-echo
-
+printf '\nConfig : %s\nDrop-in: %s\nService: %s\n' "$CONFIG" "$DROPIN" "$SERVICE"
+if [[ "$HAD_DROPIN" == true ]]; then
+    printf 'Backup : %s\n' "$DROPIN_BACKUP"
+fi
+printf '\nPasswordAuthentication dan alamat listen tidak diubah oleh skrip ini.\n'
+printf 'Uji koneksi SSH baru sebelum menutup sesi yang sedang aktif.\n'
