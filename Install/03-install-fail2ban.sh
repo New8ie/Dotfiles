@@ -325,17 +325,13 @@ mkdir -p /etc/fail2ban/scripts
 
 log "Copy action telegram.conf..."
 
-cp -f 
-"$DOTFILES_DIR/Fail2Ban/Telegram.conf" 
-/etc/fail2ban/action.d/telegram.conf
+cp -f "$DOTFILES_DIR/Fail2Ban/Telegram.conf" /etc/fail2ban/action.d/telegram.conf
 
 log "[OK] telegram.conf terpasang."
 
 log "Copy script send_telegram_notif.sh..."
 
-cp -f 
-"$DOTFILES_DIR/Fail2Ban/send_telegram_notif.sh" 
-/etc/fail2ban/scripts/send_telegram_notif.sh
+cp -f "$DOTFILES_DIR/Fail2Ban/send_telegram_notif.sh" /etc/fail2ban/scripts/send_telegram_notif.sh
 
 chmod +x /etc/fail2ban/scripts/send_telegram_notif.sh
 
@@ -343,9 +339,8 @@ log "[OK] send_telegram_notif.sh terpasang."
 
 log "Copy action Cloudflare..."
 
-cp -f 
-"$DOTFILES_DIR/Fail2Ban/Cloudflare.conf" 
-/etc/fail2ban/action.d/cloudflare-logging.conf
+
+cp -f "$DOTFILES_DIR/Fail2Ban/Cloudflare.conf" /etc/fail2ban/action.d/cloudflare-logging.conf
 
 touch /var/log/fail2ban-cloudflare.log
 
@@ -356,9 +351,8 @@ log "[OK] Cloudflare action terpasang."
 
 log "Copy action iptables-custom..."
 
-cp -f 
-"$DOTFILES_DIR/Fail2Ban/Iptables.conf" 
-/etc/fail2ban/action.d/iptables-custom.conf
+
+cp -f "$DOTFILES_DIR/Fail2Ban/Iptables.conf" /etc/fail2ban/action.d/iptables-custom.conf
 
 touch /var/log/fail2ban-iptables.log
 
@@ -375,25 +369,19 @@ log "[OK] iptables-custom action terpasang."
 
 log "Copy Filter Guacamole..."
 
-cp -f 
-"$DOTFILES_DIR/Fail2Ban/Guacamole.conf" 
-/etc/fail2ban/filter.d/guacamole.conf
+cp -f "$DOTFILES_DIR/Fail2Ban/Guacamole.conf" /etc/fail2ban/filter.d/guacamole.conf
 
 log "[OK] Guacamole filter terpasang."
 
 log "Copy Filter Nextcloud..."
 
-cp -f 
-"$DOTFILES_DIR/Fail2Ban/Nextcloud.conf" 
-/etc/fail2ban/filter.d/nextcloud.conf
+cp -f "$DOTFILES_DIR/Fail2Ban/Nextcloud.conf" /etc/fail2ban/filter.d/nextcloud.conf
 
 log "[OK] Nextcloud filter terpasang."
 
 log "Copy Filter Immich..."
 
-cp -f 
-"$DOTFILES_DIR/Fail2Ban/Immich.conf" 
-/etc/fail2ban/filter.d/immich.conf
+cp -f "$DOTFILES_DIR/Fail2Ban/Immich.conf" /etc/fail2ban/filter.d/immich.conf
 
 log "[OK] Immich filter terpasang."
 
@@ -405,9 +393,7 @@ log "[OK] Immich filter terpasang."
 
 log "Copy jail.local..."
 
-cp -f 
-"$DOTFILES_DIR/Fail2Ban/Jail.conf" 
-/etc/fail2ban/jail.local
+cp -f "$DOTFILES_DIR/Fail2Ban/Jail.conf" /etc/fail2ban/jail.local
 
 log "[OK] jail.local terpasang."
 
@@ -486,16 +472,32 @@ fi
 
 log "Status Fail2Ban:"
 
-if command -v systemctl >/dev/null 2>&1; then
-systemctl status fail2ban --no-pager || true
-fi
+# =============================================================================
+# Verify Fail2Ban Client
+# =============================================================================
 
-echo
+log "Memverifikasi Fail2Ban..."
+
+FAIL2BAN_READY=false
+
+for attempt in {1..10}; do
+  if fail2ban-client ping >/dev/null 2>&1; then
+    FAIL2BAN_READY=true
+    break
+  fi
+
+  sleep 1
+done
+
+if [[ "$FAIL2BAN_READY" != true ]]; then
+  err "Fail2Ban service aktif tetapi fail2ban-client tidak dapat terhubung."
+fi
 
 if fail2ban-client status >/dev/null 2>&1; then
-log "[OK] Fail2Ban berhasil terinstal & dikonfigurasi."
-echo "   Cek status jail dengan: fail2ban-client status"
-echo "   Rubah Cloudflare Token (cftoken) & Cloudflare Userid (cfuser)."
+  log "[OK] Fail2Ban berhasil terinstal & dikonfigurasi."
+  echo "   Cek status jail dengan: fail2ban-client status"
+  echo "   Rubah Cloudflare Token (cftoken) & Cloudflare Userid (cfuser)."
 else
-err "Fail2Ban terpasang tetapi fail2ban-client status gagal."
+  err "Fail2Ban aktif tetapi status jail tidak dapat dibaca."
 fi
+

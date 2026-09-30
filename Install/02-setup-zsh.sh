@@ -6,6 +6,7 @@
 
 set -euo pipefail
 
+
 # =============================================================================
 # Color
 # =============================================================================
@@ -16,6 +17,20 @@ CYAN='\033[36m'
 GREEN='\033[32m'
 YELLOW='\033[33m'
 RED='\033[31m'
+
+# =============================================================================
+# Root Guard
+# =============================================================================
+
+if [[ $EUID -eq 0 ]]; then
+  printf '%b[ERROR]%b 02-setup-zsh.sh harus dijalankan sebagai user biasa.\n' \
+    "$RED" \
+    "$RESET"
+  printf '%b[ERROR]%b Jangan menjalankan script ini dengan sudo.\n' \
+    "$RED" \
+    "$RESET"
+  exit 1
+fi  
 
 # =============================================================================
 # Error Handler
@@ -29,6 +44,8 @@ trap 'rc=$?; err "Script berhenti pada line $LINENO dengan exit code $rc."' ERR
 
 OS_TYPE=""
 
+
+INSTALL_DIR="$HOME/.dotfiles/Install"
 # =============================================================================
 # Logging
 # =============================================================================
@@ -819,7 +836,6 @@ verify_fastfetch() {
     return 1
   fi
 }
-
 # =============================================================================
 # Main
 # =============================================================================
@@ -844,100 +860,90 @@ main() {
   log "[OK] Setup selesai."
   log "Restart terminal atau jalankan: exec zsh"
 
+  next_steps_menu
+}
 
-  echo
-  echo "============================================================================="
-  echo " Langkah Berikutnya"
-  echo "============================================================================="
-  echo
-  echo "1. Selesai"
-  echo "2. Install Fail2ban"
-  echo "3. Hardening SSH"
-  echo "4. Setup ZSH Root"
-  echo
+
+# =============================================================================
+# Langkah Berikutnya
+# =============================================================================
+
+next_steps_menu() {
+  local choice
 
   while true; do
-    read -rp "Pilih [1/4]: " choice
+    echo
+    echo "============================================================================="
+    echo " Langkah Berikutnya"
+    echo "============================================================================="
+    echo
+    echo "  1. Selesai"
+    echo "     Keluar dari installer."
+    echo
+    echo "  2. Install Fail2Ban"
+    echo "     Memasang dan mengonfigurasi Fail2Ban sebagai service sistem."
+    echo
+    echo "  3. Hardening SSH"
+    echo "     Mengamankan konfigurasi SSH pada sistem."
+    echo
+    echo "  4. Setup ZSH Root"
+    echo "     Menyalin konfigurasi ZSH untuk akun root."
+    echo
+    echo "============================================================================="
+    echo
+
+    read -r -p "Pilih [1-4] (default: 1): " choice
+    choice="${choice:-1}"
 
     case "$choice" in
       1)
-        log "[OK] Melanjutkan setup."
-        break
+        log "Selesai."
+        return 0
         ;;
 
       2)
-        local FAIL2BAN="$HOME/.dotfiles/Install/03-install-fail2ban.sh"
-
-        if [[ ! -f "$FAIL2BAN" ]]; then
-          err "File tidak ditemukan: $FAIL2BAN"
-          continue
-        fi
-
-        chmod +x "$FAIL2BAN"
-
+        log "Pilihan: Install Fail2Ban."
         log "Menjalankan 03-install-fail2ban.sh..."
 
-        if bash "$FAIL2BAN"; then
-          log "[OK] Setup Fail2ban selesai."
-          break
+        if bash "$INSTALL_DIR/03-install-fail2ban.sh"; then
+          log "[OK] Install Fail2Ban selesai."
         else
-          err "[ERROR] Setup Fail2ban gagal."
-          continue
+          err "Install Fail2Ban gagal."
         fi
         ;;
 
       3)
-        local HARDEN_SSH="$HOME/.dotfiles/Install/05-harden-ssh.sh"
-
-        if [[ ! -f "$HARDEN_SSH" ]]; then
-          err "File tidak ditemukan: $HARDEN_SSH"
-          continue
-        fi
-
-        chmod +x "$HARDEN_SSH"
-
+        log "Pilihan: Hardening SSH."
         log "Menjalankan 05-harden-ssh.sh..."
 
-        if bash "$HARDEN_SSH"; then
+        if bash "$INSTALL_DIR/05-harden-ssh.sh"; then
           log "[OK] Hardening SSH selesai."
-          break
         else
-          err "[ERROR] Hardening SSH gagal."
-          continue
+          err "Hardening SSH gagal."
         fi
         ;;
 
       4)
-        local ZSH_ROOT="$HOME/.dotfiles/Install/04-zsh-root.sh"
+        log "Pilihan: Setup ZSH Root."
+        log "Menjalankan 04-setup-zsh-root.sh..."
 
-        if [[ ! -f "$ZSH_ROOT" ]]; then
-          err "File tidak ditemukan: $ZSH_ROOT"
-          continue
-        fi
-
-        chmod +x "$ZSH_ROOT"
-
-        log "Menjalankan 04-zsh-root.sh..."
-
-        if bash "$ZSH_ROOT"; then
+        if bash "$INSTALL_DIR/04-setup-zsh-root.sh"; then
           log "[OK] Setup ZSH Root selesai."
-          break
         else
-          err "[ERROR] Setup ZSH Root gagal."
-          continue
+          err "Setup ZSH Root gagal."
         fi
         ;;
 
       *)
-        warn "Pilihan tidak valid. Masukkan angka 1 sampai 4."
+        warn "Pilihan tidak valid: $choice"
+        warn "Masukkan angka 1 sampai 4."
         ;;
     esac
   done
-
-  echo
-
-  log "============================================================================="
-  log "[OK] Setup ZSH dan konfigurasi selesai."
-  log "============================================================================="
 }
 
+
+# =============================================================================
+# Run
+# =============================================================================
+main "$@"
