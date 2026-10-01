@@ -1,7 +1,31 @@
 #!/usr/bin/env zsh
-# ~/.config/fastfetch/motd-fastfetch.sh
-# Clean MOTD for Zsh + Fastfetch + iTerm2
-# Cross-platform: macOS + Linux + Raspberry Pi
+
+# =============================================================================
+# MOTD FASTFETCH
+# =============================================================================
+# Clean MOTD for Zsh + Fastfetch + optional iTerm2 image
+#
+# Supported:
+#   - macOS
+#   - Debian
+#   - Ubuntu
+#   - Raspberry Pi / Raspberry Pi OS
+#
+# Design goals:
+#   - Safe for SSH
+#   - Safe for root and normal users
+#   - No shell-state modification
+#   - No Linux cursor positioning
+#   - iTerm2 image only on macOS
+#   - Fastfetch version independent
+# =============================================================================
+
+# =============================================================================
+# ZSH OPTIONS
+# =============================================================================
+
+# Jangan error hanya karena glob tidak menemukan file.
+setopt NO_NOMATCH
 
 # =============================================================================
 # PATH
@@ -10,36 +34,97 @@
 export PATH="/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/.config/iterm2/bin:$PATH"
 
 # =============================================================================
+# SCRIPT DIRECTORY
+# =============================================================================
+#
+# Logo dicari relatif terhadap lokasi script.
+# Ini penting agar:
+#
+#   /home/fachmi/.config/fastfetch/motd-fastfetch.sh
+#
+# tetap bisa mencari:
+#
+#   /home/fachmi/.config/fastfetch/logo/*.png
+#
+# walaupun script dijalankan sebagai root.
+# =============================================================================
+
+script_dir="${0:A:h}"
+
+logo_dir="$script_dir/logo"
+
+# =============================================================================
+# OPTIONAL COLORS / LOLCAT
+# =============================================================================
+
+if (( $+commands[lolcat] )); then
+  use_lolcat=true
+else
+  use_lolcat=false
+fi
+
+# =============================================================================
+# OUTPUT HELPER
+# =============================================================================
+
+print_line() {
+  local text="$1"
+
+  if [[ "$use_lolcat" == true ]]; then
+    printf '%s\n' "$text" | lolcat
+  else
+    printf '%s\n' "$text"
+  fi
+}
+
+# =============================================================================
 # DETEKSI OS
 # =============================================================================
 
-os_name="$(uname -s)"
+os_name="$(uname -s 2>/dev/null)"
 
 distro=""
 
-# Linux: baca distro dari /etc/os-release
-if [[ "$os_name" == "Linux" && -f /etc/os-release ]]; then
+if [[ "$os_name" == "Linux" && -r /etc/os-release ]]; then
+
   distro="$(
     awk -F= '
       /^ID=/ {
         gsub(/"/, "", $2)
-        print $2
+        print tolower($2)
+        exit
       }
     ' /etc/os-release 2>/dev/null
   )"
-fi
 
-# Raspberry Pi hanya dicek pada Linux
-is_rpi=false
-
-if [[ "$os_name" == "Linux" && -f /proc/cpuinfo ]]; then
-  if grep -qi 'Raspberry Pi' /proc/cpuinfo 2>/dev/null; then
-    is_rpi=true
-  fi
 fi
 
 # =============================================================================
-# LOGO SESUAI OS
+# DETEKSI RASPBERRY PI
+# =============================================================================
+
+is_rpi=false
+
+if [[ "$os_name" == "Linux" ]]; then
+
+  if [[ -r /proc/device-tree/model ]]; then
+
+    if grep -qi 'raspberry pi' /proc/device-tree/model 2>/dev/null; then
+      is_rpi=true
+    fi
+
+  elif [[ -r /proc/cpuinfo ]]; then
+
+    if grep -qi 'raspberry pi' /proc/cpuinfo 2>/dev/null; then
+      is_rpi=true
+    fi
+
+  fi
+
+fi
+
+# =============================================================================
+# LOGO
 # =============================================================================
 
 case "$os_name" in
@@ -51,16 +136,21 @@ case "$os_name" in
   Linux)
 
     if [[ "$is_rpi" == true ]]; then
+
       logo_name="raspberrypi-logo.png"
 
     elif [[ "$distro" == "ubuntu" ]]; then
+
       logo_name="ubuntu-logo.png"
 
     elif [[ "$distro" == "debian" ]]; then
+
       logo_name="debian-logo.png"
 
     else
+
       logo_name="linux-generic-logo.png"
+
     fi
 
     ;;
@@ -71,19 +161,29 @@ case "$os_name" in
 
 esac
 
-image_path="$HOME/.config/fastfetch/logo/$logo_name"
+image_path="$logo_dir/$logo_name"
 
 # =============================================================================
-# FASTFETCH TANPA LOGO
+# FASTFETCH
+# =============================================================================
+#
+# Jangan menggunakan:
+#
+#   fastfetch --disable-logging
+#
+# karena opsi tersebut tidak tersedia pada Fastfetch 2.69.0.
+#
+# Fastfetch dijalankan langsung dan output ditangkap.
 # =============================================================================
 
-if command -v fastfetch >/dev/null 2>&1; then
+if (( $+commands[fastfetch] )); then
 
-  fastfetch_output="$(fastfetch --disable-logging 2>/dev/null)"
+  fastfetch_output="$(fastfetch 2>/dev/null)"
 
-  # Fallback apabila --disable-logging tidak didukung
-  if [[ -z "$fastfetch_output" ]]; then
-    fastfetch_output="$(fastfetch 2>/dev/null)"
+  fastfetch_exit=$?
+
+  if (( fastfetch_exit != 0 || -z "$fastfetch_output" )); then
+    fastfetch_output="Fastfetch failed"
   fi
 
 else
@@ -92,51 +192,111 @@ else
 
 fi
 
-output_lines=$(echo "$fastfetch_output" | wc -l | tr -d ' ')
+# =============================================================================
+# FASTFETCH OUTPUT
+# =============================================================================
 
 output_array=("${(@f)fastfetch_output}")
 
-echo
+output_lines=${#output_array[@]}
+
+printf '\n'
 
 for line in "${output_array[@]}"; do
-  echo -e "$line"
-done | lolcat
+
+  if [[ "$use_lolcat" == true ]]; then
+    printf '%s\n' "$line" | lolcat
+  else
+    printf '%s\n' "$line"
+  fi
+
+done
 
 # =============================================================================
-# TAMPILKAN LOGO DI KANAN (iTerm2)
+# iTERm2 IMAGE
+# =============================================================================
+#
+# PENTING:
+#
+# Fitur ini HANYA dijalankan pada macOS.
+#
+# Tidak ada:
+#
+#   ESC[...A
+#   ESC[...C
+#   ESC[...B
+#
+# pada Linux / Debian / Ubuntu / Raspberry Pi.
+#
+# Ini mencegah cursor terminal SSH rusak.
 # =============================================================================
 
-vertical_offset=$((output_lines - 2))
-horizontal_offset=80
+if [[ "$os_name" == "Darwin" &&
+      "$TERM" == "xterm-256color" &&
+      -f "$image_path" ]]; then
 
-printf "\033[%dA" "$vertical_offset"
-printf "\033[%dC" "$horizontal_offset"
+  imgcat_path=""
 
-if [[ -f "$image_path" && "$TERM" == "xterm-256color" ]] \
-   && command -v imgcat >/dev/null 2>&1; then
+  # Prioritas path milik konfigurasi user.
+  if [[ -x "$HOME/.config/iterm2/bin/imgcat" ]]; then
 
-  imgcat "$image_path"
+    imgcat_path="$HOME/.config/iterm2/bin/imgcat"
+
+  elif [[ -x "$HOME/.iterm2/imgcat" ]]; then
+
+    imgcat_path="$HOME/.iterm2/imgcat"
+
+  elif [[ -x "/opt/homebrew/bin/imgcat" ]]; then
+
+    imgcat_path="/opt/homebrew/bin/imgcat"
+
+  elif [[ -x "/usr/local/bin/imgcat" ]]; then
+
+    imgcat_path="/usr/local/bin/imgcat"
+
+  fi
+
+  if [[ -n "$imgcat_path" ]]; then
+
+    vertical_offset=$((output_lines - 2))
+
+    if (( vertical_offset > 0 )); then
+
+      horizontal_offset=80
+
+      printf '\033[%dA' "$vertical_offset"
+      printf '\033[%dC' "$horizontal_offset"
+
+      "$imgcat_path" "$image_path" 2>/dev/null
+
+      printf '\033[%dB' "$vertical_offset"
+
+    fi
+
+  fi
 
 fi
-
-printf "\033[%dB" "$vertical_offset"
 
 # =============================================================================
 # PEMBATAS
 # =============================================================================
 
-echo "─────────────────────────────────────────────" | lolcat
+print_line "─────────────────────────────────────────────"
 
 # =============================================================================
-# TANGGAL & UPTIME
+# TANGGAL
 # =============================================================================
 
-echo -e "📅  $(date '+%a, %d %b %Y %H:%M:%S %Z')" | lolcat
+print_line "📅  $(date '+%a, %d %b %Y %H:%M:%S %Z')"
+
+# =============================================================================
+# UPTIME
+# =============================================================================
 
 if [[ "$os_name" == "Darwin" ]]; then
 
   # ---------------------------------------------------------------------------
-  # macOS Uptime
+  # macOS
   # ---------------------------------------------------------------------------
 
   boot_time="$(
@@ -155,76 +315,75 @@ if [[ "$os_name" == "Darwin" ]]; then
     hours=$(((up % 86400) / 3600))
     mins=$(((up % 3600) / 60))
 
-    echo -e "🕒  Uptime : ${days}d ${hours}h ${mins}m" | lolcat
+    print_line "🕒  Uptime : ${days}d ${hours}h ${mins}m"
 
   else
 
-    echo -e "🕒  Uptime : unavailable" | lolcat
+    print_line "🕒  Uptime : unavailable"
 
   fi
 
 else
 
   # ---------------------------------------------------------------------------
-  # Linux Uptime
+  # Linux
   # ---------------------------------------------------------------------------
 
-  if command -v uptime >/dev/null 2>&1; then
+  if (( $+commands[uptime] )); then
 
-    if uptime -p >/dev/null 2>&1; then
+    uptime_output="$(uptime -p 2>/dev/null)"
 
-      uptime -p |
-        sed 's/^/🕒  /' |
-        lolcat
+    if [[ -n "$uptime_output" ]]; then
+
+      print_line "🕒  ${uptime_output}"
 
     else
 
-      echo -e "🕒  Uptime : $(uptime)" | lolcat
+      print_line "🕒  Uptime : $(uptime 2>/dev/null)"
 
     fi
 
   else
 
-    echo -e "🕒  Uptime : unavailable" | lolcat
+    print_line "🕒  Uptime : unavailable"
 
   fi
 
 fi
 
 # =============================================================================
-# IP ADDRESS TANPA DOCKER
+# IP ADDRESS
 # =============================================================================
 
-echo -e "🌐  IP Address :" | lolcat
+print_line "🌐  IP Address :"
 
 if [[ "$os_name" == "Darwin" ]]; then
 
   # ---------------------------------------------------------------------------
   # macOS
-  #
-  # macOS menggunakan BSD utilities.
-  # Tidak menggunakan command "ip" dan tidak menggunakan grep -P.
   # ---------------------------------------------------------------------------
 
-  if command -v ifconfig >/dev/null 2>&1; then
+  if (( $+commands[ifconfig] )); then
 
-    ifconfig |
+    ifconfig 2>/dev/null |
       awk '
         /inet / {
           ip=$2
 
-          if (ip !~ /^127\./ &&
-              ip !~ /^169\.254\./ &&
-              ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
+          if (
+            ip !~ /^127\./ &&
+            ip !~ /^169\.254\./ &&
+            ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./
+          ) {
             print ip
           }
         }
       ' |
-      while read -r ip_address; do
+      while IFS= read -r ip_address; do
 
-        if [[ -n "$ip_address" ]]; then
-          echo -e "  • ${ip_address}" | lolcat
-        fi
+        [[ -z "$ip_address" ]] && continue
+
+        print_line "  • ${ip_address}"
 
       done
 
@@ -235,56 +394,60 @@ else
   # ---------------------------------------------------------------------------
   # Linux
   #
-  # Prioritas menggunakan iproute2.
-  # Tidak menggunakan grep -P agar tetap portable.
+  # Menggunakan interface name agar alamat Docker/container tidak ikut.
   # ---------------------------------------------------------------------------
 
-  if command -v ip >/dev/null 2>&1; then
+  if (( $+commands[ip] )); then
 
-    ip -4 addr show |
+    ip -4 -o addr show scope global 2>/dev/null |
       awk '
-        /inet / {
-          split($2, a, "/")
-          ip=a[1]
+        {
+          interface=$2
+          address=$4
+          sub(/\/.*/, "", address)
 
-          if (ip !~ /^127\./ &&
-              ip !~ /^169\.254\./ &&
-              ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
-            print ip
+          if (
+            interface !~ /^(docker|br-|veth|cni|flannel|virbr|podman)/ &&
+            address !~ /^127\./ &&
+            address !~ /^169\.254\./
+          ) {
+            print address
           }
         }
       ' |
-      while read -r ip_address; do
+      while IFS= read -r ip_address; do
 
-        if [[ -n "$ip_address" ]]; then
-          echo -e "  • ${ip_address}" | lolcat
-        fi
+        [[ -z "$ip_address" ]] && continue
+
+        print_line "  • ${ip_address}"
 
       done
 
-  elif command -v ifconfig >/dev/null 2>&1; then
+  elif (( $+commands[ifconfig] )); then
 
     # -------------------------------------------------------------------------
-    # Fallback apabila Linux tidak mempunyai command "ip"
+    # Linux fallback
     # -------------------------------------------------------------------------
 
-    ifconfig |
+    ifconfig 2>/dev/null |
       awk '
         /inet / {
           ip=$2
 
-          if (ip !~ /^127\./ &&
-              ip !~ /^169\.254\./ &&
-              ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
+          if (
+            ip !~ /^127\./ &&
+            ip !~ /^169\.254\./ &&
+            ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./
+          ) {
             print ip
           }
         }
       ' |
-      while read -r ip_address; do
+      while IFS= read -r ip_address; do
 
-        if [[ -n "$ip_address" ]]; then
-          echo -e "  • ${ip_address}" | lolcat
-        fi
+        [[ -z "$ip_address" ]] && continue
+
+        print_line "  • ${ip_address}"
 
       done
 
@@ -296,18 +459,31 @@ fi
 # LAST LOGIN
 # =============================================================================
 
-if command -v last >/dev/null 2>&1; then
+if (( $+commands[last] )); then
 
   last_login="$(last -n 1 "$USER" 2>/dev/null | head -n 1)"
 
   if [[ -n "$last_login" ]]; then
-    echo -e "👤  Last Login : $last_login" | lolcat
+
+    print_line "👤  Last Login : $last_login"
+
   fi
 
 fi
 
 # =============================================================================
-# LOAD EXTERNAL FUNCTIONS
+# EXTERNAL FUNCTIONS
+# =============================================================================
+#
+# MOTD dijalankan sebagai CHILD PROCESS.
+#
+# Karena itu "source" function di sini tidak akan membuat function tersedia
+# di shell induk (.zshrc).
+#
+# Kita hanya menampilkan function files yang tersedia.
+#
+# Tidak source file function di sini agar function tersebut tidak bisa
+# mengubah environment, FD, PATH, alias, option Zsh, atau output MOTD.
 # =============================================================================
 
 functions_dir="$HOME/.config/zsh/functions"
@@ -316,28 +492,33 @@ if [[ -d "$functions_dir" ]]; then
 
   files=("$functions_dir"/*.zsh)
 
-  if [[ ${#files[@]} -eq 0 || ! -e "${files[1]}" ]]; then
+  valid_function_count=0
 
-    echo "⚙️  External functions empty" | lolcat
+  for func in "${files[@]}"; do
+
+    if [[ -f "$func" && -r "$func" ]]; then
+
+      ((valid_function_count++))
+
+    fi
+
+  done
+
+  if (( valid_function_count == 0 )); then
+
+    print_line "⚙️  External functions empty"
 
   else
 
-    echo "🔧  Loaded Functions :" | lolcat
-
-    count=0
+    print_line "🔧  Loaded Functions :"
 
     for func in "${files[@]}"; do
 
       if [[ -f "$func" && -r "$func" ]]; then
 
-        # basename tanpa ekstensi — Zsh style
         func_name="${func:t:r}"
 
-        source "$func"
-
-        echo "   • $func_name loaded" | lolcat
-
-        ((count++))
+        print_line "   • ${func_name} available"
 
       fi
 
@@ -351,6 +532,8 @@ fi
 # FOOTER
 # =============================================================================
 
-echo "─────────────────────────────────────────────" | lolcat
-echo ""
+print_line "─────────────────────────────────────────────"
 
+printf '\n'
+
+exit 0

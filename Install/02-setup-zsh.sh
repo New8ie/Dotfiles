@@ -479,6 +479,10 @@ install_fastfetch() {
           URL="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-aarch64.deb"
           ;;
 
+        armv7l)
+          URL="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-armhf.deb"
+          ;;
+
         *)
           err "Fastfetch package otomatis belum tersedia untuk arsitektur: $ARCH"
           return 1
@@ -606,6 +610,43 @@ install_fastfetch() {
 # Copy Configurations
 # =============================================================================
 
+copy_file() {
+  local source="$1"
+  local destination="$2"
+
+  if [[ -L "$destination" ]]; then
+    rm -f "$destination"
+  fi
+
+  cp "$source" "$destination"
+}
+
+copy_directory_contents() {
+  local source="$1"
+  local destination="$2"
+  local item
+  local target
+
+  [[ -d "$source" ]] || return 0
+
+  if [[ -L "$destination" ]]; then
+    rm -f "$destination"
+  fi
+
+  mkdir -p "$destination"
+
+  for item in "$source"/* "$source"/.[!.]* "$source"/..?*; do
+    [[ -e "$item" || -L "$item" ]] || continue
+
+    target="$destination/$(basename "$item")"
+    if [[ -e "$target" || -L "$target" ]]; then
+      rm -rf "$target"
+    fi
+
+    cp -a "$item" "$destination/"
+  done
+}
+
 copy_configs() {
   local file
 
@@ -644,56 +685,53 @@ copy_configs() {
   # ---------------------------------------------------------------------------
 
   if [[ "$OS_TYPE" == "macos" ]]; then
-    cp "$HOME/.dotfiles/Zsh/macos-zshrc.zsh" "$HOME/.zshrc"
+    copy_file "$HOME/.dotfiles/Zsh/macos-zshrc.zsh" "$HOME/.zshrc"
   else
-    cp "$HOME/.dotfiles/Zsh/linux-zshrc.zsh" "$HOME/.zshrc"
+    copy_file "$HOME/.dotfiles/Zsh/linux-zshrc.zsh" "$HOME/.zshrc"
   fi
 
-  cp "$HOME/.dotfiles/OhMyZsh/p10k.zsh" "$HOME/.p10k.zsh"
-  cp "$HOME/.dotfiles/Zsh/zprofile.zsh" "$HOME/.zprofile"
-  cp "$HOME/.dotfiles/Zsh/Alias/alias.zsh" "$HOME/.config/zsh/alias.zsh"
-  cp "$HOME/.dotfiles/Zsh/function-manager.zsh" "$HOME/.config/zsh/function-manager.zsh"
+  copy_file "$HOME/.dotfiles/OhMyZsh/p10k.zsh" "$HOME/.p10k.zsh"
+  copy_file "$HOME/.dotfiles/Zsh/zprofile.zsh" "$HOME/.zprofile"
+  copy_file "$HOME/.dotfiles/Zsh/Alias/alias.zsh" "$HOME/.config/zsh/alias.zsh"
+  copy_file "$HOME/.dotfiles/Zsh/function-manager.zsh" "$HOME/.config/zsh/function-manager.zsh"
 
   # ---------------------------------------------------------------------------
   # Nano
   # ---------------------------------------------------------------------------
 
-  if [[ -d "$HOME/.dotfiles/Nano" ]]; then
-    cp -a "$HOME/.dotfiles/Nano/." "$HOME/.config/nano/"
-  fi
+  copy_directory_contents "$HOME/.dotfiles/Nano" "$HOME/.config/nano"
 
-  cp "$HOME/.dotfiles/Nano/Config/nanorc" "$HOME/.nanorc"
+  copy_file "$HOME/.dotfiles/Nano/Config/nanorc" "$HOME/.nanorc"
 
   # ---------------------------------------------------------------------------
   # ZSH Functions
   # ---------------------------------------------------------------------------
 
-  if [[ -d "$HOME/.dotfiles/Zsh/Functions" ]]; then
-    cp -a "$HOME/.dotfiles/Zsh/Functions/." "$HOME/.config/zsh/functions/"
-  fi
+  copy_directory_contents \
+    "$HOME/.dotfiles/Zsh/Functions" \
+    "$HOME/.config/zsh/functions"
 
   # ---------------------------------------------------------------------------
   # Scripts
   # ---------------------------------------------------------------------------
 
-  if [[ -d "$HOME/.dotfiles/Script" ]]; then
-    cp -a "$HOME/.dotfiles/Script/." "$HOME/.config/script/"
-  fi
+  copy_directory_contents "$HOME/.dotfiles/Script" "$HOME/.config/script"
 
   # ---------------------------------------------------------------------------
   # Fastfetch
   # ---------------------------------------------------------------------------
 
-  cp "$HOME/.dotfiles/Fastfetch/config.jsonc" \
+  copy_file \
+    "$HOME/.dotfiles/Fastfetch/config.jsonc" \
     "$HOME/.config/fastfetch/config.jsonc"
 
-  cp "$HOME/.dotfiles/Fastfetch/motd-fastfetch.sh" \
+  copy_file \
+    "$HOME/.dotfiles/Fastfetch/motd-fastfetch.sh" \
     "$HOME/.config/fastfetch/motd-fastfetch.sh"
 
-  if [[ -d "$HOME/.dotfiles/Fastfetch/logo" ]]; then
-    cp -a "$HOME/.dotfiles/Fastfetch/logo/." \
-      "$HOME/.config/fastfetch/logo/"
-  fi
+  copy_directory_contents \
+    "$HOME/.dotfiles/Fastfetch/logo" \
+    "$HOME/.config/fastfetch/logo"
 
   # ---------------------------------------------------------------------------
   # iTerm2
@@ -701,13 +739,13 @@ copy_configs() {
   # Hanya relevan untuk macOS, tetapi tidak berbahaya jika directory tidak ada.
   # ---------------------------------------------------------------------------
 
-  if [[ -d "$HOME/.dotfiles/Iterm2/bin" ]]; then
-    cp -a "$HOME/.dotfiles/Iterm2/bin/." \
-      "$HOME/.config/iterm2/bin/"
-  fi
+  copy_directory_contents \
+    "$HOME/.dotfiles/Iterm2/bin" \
+    "$HOME/.config/iterm2/bin"
 
   if [[ -f "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" ]]; then
-    cp "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" \
+    copy_file \
+      "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" \
       "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
   fi
 
@@ -715,186 +753,7 @@ copy_configs() {
 }
 
 # =============================================================================
-# Safe Symlink
-# =============================================================================
-
-safe_link() {
-  local src="$1"
-  local dest="$2"
-
-  # ---------------------------------------------------------------------------
-  # Validasi source
-  # ---------------------------------------------------------------------------
-
-  if [[ ! -e "$src" && ! -L "$src" ]]; then
-    warn "Source tidak ditemukan: $src"
-    return 1
-  fi
-
-  # ---------------------------------------------------------------------------
-  # Pastikan destination berada di HOME user.
-  # ---------------------------------------------------------------------------
-
-  case "$dest" in
-    "$HOME"/*)
-      ;;
-    *)
-      err "Destination symlink berada di luar HOME: $dest"
-      return 1
-      ;;
-  esac
-
-  # ---------------------------------------------------------------------------
-  # Hapus target lama
-  # ---------------------------------------------------------------------------
-
-  if [[ -e "$dest" || -L "$dest" ]]; then
-    rm -rf "$dest"
-  fi
-
-  mkdir -p "$(dirname "$dest")"
-
-  ln -s "$src" "$dest"
-}
-
-# =============================================================================
-# Symlink Configurations
-# =============================================================================
-
-symlink_configs() {
-  local file
-
-  log "Membuat symlink konfigurasi..."
-
-  mkdir -p \
-    "$HOME/.config/nano" \
-    "$HOME/.config/fastfetch" \
-    "$HOME/.config/iterm2/bin" \
-    "$HOME/.config/zsh/functions"
-
-  mkdir -p "$HOME/.config/fastfetch/logo"
-
-  # ---------------------------------------------------------------------------
-  # ZSH
-  # ---------------------------------------------------------------------------
-
-  if [[ "$OS_TYPE" == "macos" ]]; then
-    safe_link \
-      "$HOME/.dotfiles/Zsh/macos-zshrc.zsh" \
-      "$HOME/.zshrc"
-  else
-    safe_link \
-      "$HOME/.dotfiles/Zsh/linux-zshrc.zsh" \
-      "$HOME/.zshrc"
-  fi
-
-  safe_link \
-    "$HOME/.dotfiles/OhMyZsh/p10k.zsh" \
-    "$HOME/.p10k.zsh"
-
-  safe_link \
-    "$HOME/.dotfiles/Zsh/zprofile.zsh" \
-    "$HOME/.zprofile"
-
-  safe_link \
-    "$HOME/.dotfiles/Zsh/Alias/alias.zsh" \
-    "$HOME/.config/zsh/alias.zsh"
-
-  safe_link \
-    "$HOME/.dotfiles/Zsh/function-manager.zsh" \
-    "$HOME/.config/zsh/function-manager.zsh"
-
-  # ---------------------------------------------------------------------------
-  # ZSH Functions
-  # ---------------------------------------------------------------------------
-
-  if [[ -d "$HOME/.dotfiles/Zsh/Functions" ]]; then
-    for file in "$HOME/.dotfiles/Zsh/Functions/"*; do
-      [[ -e "$file" || -L "$file" ]] || continue
-
-      safe_link \
-        "$file" \
-        "$HOME/.config/zsh/functions/$(basename "$file")"
-    done
-  fi
-
-  # ---------------------------------------------------------------------------
-  # Nano
-  # ---------------------------------------------------------------------------
-
-  if [[ -d "$HOME/.dotfiles/Nano" ]]; then
-    for file in "$HOME/.dotfiles/Nano/"*; do
-      [[ -e "$file" || -L "$file" ]] || continue
-
-      safe_link \
-        "$file" \
-        "$HOME/.config/nano/$(basename "$file")"
-    done
-  fi
-
-  if [[ -f "$HOME/.dotfiles/Nano/Config/nanorc" ]]; then
-    safe_link \
-      "$HOME/.dotfiles/Nano/Config/nanorc" \
-      "$HOME/.nanorc"
-  fi
-
-  # ---------------------------------------------------------------------------
-  # Script
-  # ---------------------------------------------------------------------------
-
-  if [[ -d "$HOME/.dotfiles/Script" ]]; then
-    safe_link \
-      "$HOME/.dotfiles/Script" \
-      "$HOME/.config/script"
-  fi
-
-  # ---------------------------------------------------------------------------
-  # Fastfetch
-  # ---------------------------------------------------------------------------
-
-  safe_link \
-    "$HOME/.dotfiles/Fastfetch/config.jsonc" \
-    "$HOME/.config/fastfetch/config.jsonc"
-
-  safe_link \
-    "$HOME/.dotfiles/Fastfetch/motd-fastfetch.sh" \
-    "$HOME/.config/fastfetch/motd-fastfetch.sh"
-
-  if [[ -d "$HOME/.dotfiles/Fastfetch/logo" ]]; then
-    for file in "$HOME/.dotfiles/Fastfetch/logo/"*-logo.png; do
-      [[ -e "$file" || -L "$file" ]] || continue
-
-      safe_link \
-        "$file" \
-        "$HOME/.config/fastfetch/logo/$(basename "$file")"
-    done
-  fi
-
-  # ---------------------------------------------------------------------------
-  # iTerm2
-  # ---------------------------------------------------------------------------
-
-  if [[ -d "$HOME/.dotfiles/Iterm2/bin" ]]; then
-    for file in "$HOME/.dotfiles/Iterm2/bin/"*; do
-      [[ -e "$file" || -L "$file" ]] || continue
-
-      safe_link \
-        "$file" \
-        "$HOME/.config/iterm2/bin/$(basename "$file")"
-    done
-  fi
-
-  if [[ -f "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" ]]; then
-    safe_link \
-      "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" \
-      "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
-  fi
-
-  log "[OK] Symlink konfigurasi berhasil dibuat."
-}
-
-# =============================================================================
-# Configuration Menu
+# Approve Configuration Copy
 # =============================================================================
 
 config_menu() {
@@ -902,29 +761,27 @@ config_menu() {
 
   echo
   echo "============================================================================="
-  echo " Konfigurasi Dotfiles"
+  echo " Salin konfigurasi Dotfiles"
   echo "============================================================================="
-  echo
-  echo "1. Copy konfigurasi"
-  echo "2. Symlink konfigurasi"
+  echo "File konfigurasi yang sudah ada dan dikelola installer akan diganti."
   echo
 
   while true; do
-    read -r -p "Pilih [1/2]: " choice
+    read -r -p "Lanjutkan menyalin konfigurasi? [y/N]: " choice
 
     case "$choice" in
-      1)
+      y|Y|yes|YES|Yes)
         copy_configs
-        break
+        return
         ;;
 
-      2)
-        symlink_configs
-        break
+      ""|n|N|no|NO|No)
+        log "[SKIP] Penyalinan konfigurasi dilewati."
+        return
         ;;
 
       *)
-        warn "Pilihan tidak valid. Masukkan 1 atau 2."
+        warn "Pilihan tidak valid. Masukkan y atau n."
         ;;
     esac
   done
@@ -1190,4 +1047,3 @@ main() {
 # =============================================================================
 
 main "$@"
-
