@@ -1,4 +1,3 @@
-```zsh
 #!/usr/bin/env zsh
 # ~/.config/fastfetch/motd-fastfetch.sh
 # Clean MOTD for Zsh + Fastfetch + iTerm2
@@ -354,4 +353,4 @@ fi
 
 echo "─────────────────────────────────────────────" | lolcat
 echo ""
-```
+
