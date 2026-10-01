@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 # =============================================================================
@@ -749,7 +748,27 @@ copy_configs() {
       "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
   fi
 
-  log "[OK] Konfigurasi berhasil disalin."
+  # ---------------------------------------------------------------------------
+  # Grant Execution Permissions (chmod +x)
+  # ---------------------------------------------------------------------------
+
+  log "Mengatur izin eksekusi (chmod +x) untuk script dan fungsi..."
+
+  [[ -f "$HOME/.config/fastfetch/motd-fastfetch.sh" ]] && chmod +x "$HOME/.config/fastfetch/motd-fastfetch.sh"
+
+  if [[ -d "$HOME/.config/script" ]]; then
+    find "$HOME/.config/script" -type f -exec chmod +x {} + 2>/dev/null || true
+  fi
+
+  if [[ -d "$HOME/.config/zsh/functions" ]]; then
+    find "$HOME/.config/zsh/functions" -type f -name "*.zsh" -exec chmod +x {} + 2>/dev/null || true
+  fi
+
+  if [[ -d "$HOME/.config/iterm2/bin" ]]; then
+    find "$HOME/.config/iterm2/bin" -type f -exec chmod +x {} + 2>/dev/null || true
+  fi
+
+  log "[OK] Konfigurasi berhasil disalin dan izin eksekusi terpasang."
 }
 
 # =============================================================================
@@ -772,12 +791,12 @@ config_menu() {
     case "$choice" in
       y|Y|yes|YES|Yes)
         copy_configs
-        return
+        return 0
         ;;
 
       ""|n|N|no|NO|No)
         log "[SKIP] Penyalinan konfigurasi dilewati."
-        return
+        return 1
         ;;
 
       *)
@@ -1024,13 +1043,15 @@ main() {
   log "============================================================================="
   echo
 
-  backup_dotfiles
-  setup_ohmyzsh
-  install_plugins
-  install_fastfetch
-  config_menu
-  set_shell
-  verify_fastfetch
+  # Meminta persetujuan salin konfigurasi terlebih dahulu
+  if config_menu; then
+    backup_dotfiles
+    setup_ohmyzsh
+    install_plugins
+    install_fastfetch
+    set_shell
+    verify_fastfetch
+  fi
 
   echo
 
