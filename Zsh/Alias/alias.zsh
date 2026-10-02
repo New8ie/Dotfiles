@@ -405,10 +405,21 @@ zsh-alias-audit() {
   # ---------------------------------------------------------------------------
 
   alias -L |
-  sed -E \
-    's/^alias[[:space:]]+//;
-     s/^([^=]+)=[[:space:]]*['\''"](.*)['\''"]$/\1 → \2/' |
-  sort -u > "$tmp_active"
+  sed -E 's/^alias[[:space:]]+//' |
+  awk '{
+      pos = index($0, "=")
+
+      if (pos > 0) {
+        name = substr($0, 1, pos - 1)
+        value = substr($0, pos + 1)
+
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+        gsub(/^'\''|'\''$/, "", value)
+
+        printf "%s → %s\n", name, value
+      }
+    }' | 
+    sort -u > "$tmp_active"
 
   # ---------------------------------------------------------------------------
   # PLUGIN ALIAS
