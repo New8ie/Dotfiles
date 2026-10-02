@@ -606,12 +606,19 @@ install_fastfetch() {
 }
 
 # =============================================================================
-# Copy Configurations
+# Copy File
 # =============================================================================
 
 copy_file() {
   local source="$1"
   local destination="$2"
+
+  if [[ ! -f "$source" ]]; then
+    warn "Source file tidak ditemukan: $source"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$destination")"
 
   if [[ -L "$destination" ]]; then
     rm -f "$destination"
@@ -619,6 +626,16 @@ copy_file() {
 
   cp "$source" "$destination"
 }
+
+# =============================================================================
+# Copy Directory Contents
+#
+# Mode:
+#   UPDATE / MERGE
+#
+# File existing yang tidak ada di .dotfiles tetap dipertahankan.
+# File yang memiliki nama sama akan diperbarui dari .dotfiles.
+# =============================================================================
 
 copy_directory_contents() {
   local source="$1"
@@ -638,6 +655,7 @@ copy_directory_contents() {
     [[ -e "$item" || -L "$item" ]] || continue
 
     target="$destination/$(basename "$item")"
+
     if [[ -e "$target" || -L "$target" ]]; then
       rm -rf "$target"
     fi
@@ -646,10 +664,65 @@ copy_directory_contents() {
   done
 }
 
+# =============================================================================
+# Replace Directory
+#
+# Mode:
+#   REPLACE / SYNC
+#
+# Directory target akan dihapus lalu dibuat ulang berdasarkan source
+# dari ~/.dotfiles.
+#
+# Hanya directory yang secara eksplisit dikelola oleh installer yang akan
+# diproses menggunakan fungsi ini.
+# =============================================================================
+
+replace_directory() {
+  local source="$1"
+  local destination="$2"
+
+  if [[ ! -d "$source" ]]; then
+    warn "Source directory tidak ditemukan: $source"
+    return 0
+  fi
+
+  if [[ -e "$destination" || -L "$destination" ]]; then
+    rm -rf "$destination"
+  fi
+
+  mkdir -p "$destination"
+
+  cp -a "$source"/. "$destination"/
+}
+
+# =============================================================================
+# Copy Configurations
+# =============================================================================
+
 copy_configs() {
+  local MODE="${1:-merge}"
   local file
 
-  log "Menyalin konfigurasi..."
+  case "$MODE" in
+    merge)
+      log "Mode konfigurasi: UPDATE / MERGE"
+      ;;
+
+    replace)
+      log "Mode konfigurasi: REPLACE / SYNC"
+      ;;
+
+    *)
+      err "Mode konfigurasi tidak valid: $MODE"
+      return 1
+      ;;
+  esac
+
+  log "Menyalin konfigurasi dari: $HOME/.dotfiles"
+
+  # ---------------------------------------------------------------------------
+  # Directory dasar
+  # ---------------------------------------------------------------------------
 
   mkdir -p \
     "$HOME/.config/nano" \
@@ -658,10 +731,11 @@ copy_configs() {
     "$HOME/.config/script" \
     "$HOME/.config/zsh/functions"
 
-  mkdir -p "$HOME/.config/fastfetch/logo"
-
   # ---------------------------------------------------------------------------
-  # Hapus konfigurasi lama yang akan diganti
+  # File konfigurasi utama
+  #
+  # File-file ini memang dikelola langsung oleh .dotfiles sehingga akan
+  # selalu diperbarui / diganti.
   # ---------------------------------------------------------------------------
 
   local files_to_replace=(
@@ -671,6 +745,9 @@ copy_configs() {
     "$HOME/.nanorc"
     "$HOME/.config/zsh/alias.zsh"
     "$HOME/.config/zsh/function-manager.zsh"
+    "$HOME/.config/fastfetch/config.jsonc"
+    "$HOME/.config/fastfetch/motd-fastfetch.sh"
+    "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
   )
 
   for file in "${files_to_replace[@]}"; do
@@ -684,37 +761,76 @@ copy_configs() {
   # ---------------------------------------------------------------------------
 
   if [[ "$OS_TYPE" == "macos" ]]; then
-    copy_file "$HOME/.dotfiles/Zsh/macos-zshrc.zsh" "$HOME/.zshrc"
+    copy_file \
+      "$HOME/.dotfiles/Zsh/macos-zshrc.zsh" \
+      "$HOME/.zshrc"
   else
-    copy_file "$HOME/.dotfiles/Zsh/linux-zshrc.zsh" "$HOME/.zshrc"
+    copy_file \
+      "$HOME/.dotfiles/Zsh/linux-zshrc.zsh" \
+      "$HOME/.zshrc"
   fi
 
-  copy_file "$HOME/.dotfiles/OhMyZsh/p10k.zsh" "$HOME/.p10k.zsh"
-  copy_file "$HOME/.dotfiles/Zsh/zprofile.zsh" "$HOME/.zprofile"
-  copy_file "$HOME/.dotfiles/Zsh/Alias/alias.zsh" "$HOME/.config/zsh/alias.zsh"
-  copy_file "$HOME/.dotfiles/Zsh/function-manager.zsh" "$HOME/.config/zsh/function-manager.zsh"
+  copy_file \
+    "$HOME/.dotfiles/OhMyZsh/p10k.zsh" \
+    "$HOME/.p10k.zsh"
+
+  copy_file \
+    "$HOME/.dotfiles/Zsh/zprofile.zsh" \
+    "$HOME/.zprofile"
+
+  copy_file \
+    "$HOME/.dotfiles/Zsh/Alias/alias.zsh" \
+    "$HOME/.config/zsh/alias.zsh"
+
+  copy_file \
+    "$HOME/.dotfiles/Zsh/function-manager.zsh" \
+    "$HOME/.config/zsh/function-manager.zsh"
 
   # ---------------------------------------------------------------------------
   # Nano
   # ---------------------------------------------------------------------------
 
-  copy_directory_contents "$HOME/.dotfiles/Nano" "$HOME/.config/nano"
+  if [[ "$MODE" == "replace" ]]; then
+    replace_directory \
+      "$HOME/.dotfiles/Nano" \
+      "$HOME/.config/nano"
+  else
+    copy_directory_contents \
+      "$HOME/.dotfiles/Nano" \
+      "$HOME/.config/nano"
+  fi
 
-  copy_file "$HOME/.dotfiles/Nano/Config/nanorc" "$HOME/.nanorc"
+  copy_file \
+    "$HOME/.dotfiles/Nano/Config/nanorc" \
+    "$HOME/.nanorc"
 
   # ---------------------------------------------------------------------------
   # ZSH Functions
   # ---------------------------------------------------------------------------
 
-  copy_directory_contents \
-    "$HOME/.dotfiles/Zsh/Functions" \
-    "$HOME/.config/zsh/functions"
+  if [[ "$MODE" == "replace" ]]; then
+    replace_directory \
+      "$HOME/.dotfiles/Zsh/Functions" \
+      "$HOME/.config/zsh/functions"
+  else
+    copy_directory_contents \
+      "$HOME/.dotfiles/Zsh/Functions" \
+      "$HOME/.config/zsh/functions"
+  fi
 
   # ---------------------------------------------------------------------------
   # Scripts
   # ---------------------------------------------------------------------------
 
-  copy_directory_contents "$HOME/.dotfiles/Script" "$HOME/.config/script"
+  if [[ "$MODE" == "replace" ]]; then
+    replace_directory \
+      "$HOME/.dotfiles/Script" \
+      "$HOME/.config/script"
+  else
+    copy_directory_contents \
+      "$HOME/.dotfiles/Script" \
+      "$HOME/.config/script"
+  fi
 
   # ---------------------------------------------------------------------------
   # Fastfetch
@@ -728,19 +844,31 @@ copy_configs() {
     "$HOME/.dotfiles/Fastfetch/motd-fastfetch.sh" \
     "$HOME/.config/fastfetch/motd-fastfetch.sh"
 
-  copy_directory_contents \
-    "$HOME/.dotfiles/Fastfetch/logo" \
-    "$HOME/.config/fastfetch/logo"
+  if [[ "$MODE" == "replace" ]]; then
+    replace_directory \
+      "$HOME/.dotfiles/Fastfetch/logo" \
+      "$HOME/.config/fastfetch/logo"
+  else
+    copy_directory_contents \
+      "$HOME/.dotfiles/Fastfetch/logo" \
+      "$HOME/.config/fastfetch/logo"
+  fi
 
   # ---------------------------------------------------------------------------
   # iTerm2
   #
-  # Hanya relevan untuk macOS, tetapi tidak berbahaya jika directory tidak ada.
+  # Path tetap sama seperti konfigurasi existing.
   # ---------------------------------------------------------------------------
 
-  copy_directory_contents \
-    "$HOME/.dotfiles/Iterm2/bin" \
-    "$HOME/.config/iterm2/bin"
+  if [[ "$MODE" == "replace" ]]; then
+    replace_directory \
+      "$HOME/.dotfiles/Iterm2/bin" \
+      "$HOME/.config/iterm2/bin"
+  else
+    copy_directory_contents \
+      "$HOME/.dotfiles/Iterm2/bin" \
+      "$HOME/.config/iterm2/bin"
+  fi
 
   if [[ -f "$HOME/.dotfiles/Iterm2/iterm2_shell_integration.zsh" ]]; then
     copy_file \
@@ -754,18 +882,30 @@ copy_configs() {
 
   log "Mengatur izin eksekusi (chmod +x) untuk script dan fungsi..."
 
-  [[ -f "$HOME/.config/fastfetch/motd-fastfetch.sh" ]] && chmod +x "$HOME/.config/fastfetch/motd-fastfetch.sh"
+  if [[ -f "$HOME/.config/fastfetch/motd-fastfetch.sh" ]]; then
+    chmod +x "$HOME/.config/fastfetch/motd-fastfetch.sh"
+  fi
 
   if [[ -d "$HOME/.config/script" ]]; then
-    find "$HOME/.config/script" -type f -exec chmod +x {} + 2>/dev/null || true
+    find "$HOME/.config/script" \
+      -type f \
+      -exec chmod +x {} + \
+      2>/dev/null || true
   fi
 
   if [[ -d "$HOME/.config/zsh/functions" ]]; then
-    find "$HOME/.config/zsh/functions" -type f -name "*.zsh" -exec chmod +x {} + 2>/dev/null || true
+    find "$HOME/.config/zsh/functions" \
+      -type f \
+      -name "*.zsh" \
+      -exec chmod +x {} + \
+      2>/dev/null || true
   fi
 
   if [[ -d "$HOME/.config/iterm2/bin" ]]; then
-    find "$HOME/.config/iterm2/bin" -type f -exec chmod +x {} + 2>/dev/null || true
+    find "$HOME/.config/iterm2/bin" \
+      -type f \
+      -exec chmod +x {} + \
+      2>/dev/null || true
   fi
 
   log "[OK] Konfigurasi berhasil disalin dan izin eksekusi terpasang."
@@ -777,30 +917,104 @@ copy_configs() {
 
 config_menu() {
   local choice
+  local confirm
 
   echo
   echo "============================================================================="
   echo " Salin konfigurasi Dotfiles"
   echo "============================================================================="
-  echo "File konfigurasi yang sudah ada dan dikelola installer akan diganti."
+  echo
+  echo "Source:"
+  echo "  $HOME/.dotfiles"
+  echo
+  echo "Pilih metode konfigurasi:"
+  echo
+  echo "  1. Update / Merge"
+  echo "     File dari .dotfiles akan diperbarui."
+  echo "     File existing yang tidak ada di .dotfiles tetap dipertahankan."
+  echo
+  echo "  2. Replace / Sync"
+  echo "     Directory yang dikelola installer akan diganti penuh."
+  echo "     File lama yang tidak lagi ada di .dotfiles akan dihapus."
+  echo
+  echo "  3. Skip"
+  echo "     Tidak menyalin konfigurasi."
+  echo
+  echo "============================================================================="
   echo
 
   while true; do
-    read -r -p "Lanjutkan menyalin konfigurasi? [y/N]: " choice
+    read -r -p "Pilih [1-3] (default: 1): " choice
+
+    choice="${choice:-1}"
 
     case "$choice" in
-      y|Y|yes|YES|Yes)
-        copy_configs
+
+      1)
+        echo
+        log "Mode dipilih: Update / Merge."
+        echo
+
+        # Backup dilakukan SEBELUM konfigurasi diubah.
+        backup_dotfiles
+
+        copy_configs "merge"
         return 0
         ;;
 
-      ""|n|N|no|NO|No)
+      2)
+        echo
+        log "Mode dipilih: Replace / Sync."
+        echo
+
+        printf '%b[WARN]%b Mode Replace / Sync akan mengganti directory konfigurasi yang dikelola installer.\n' \
+          "$YELLOW" \
+          "$RESET"
+
+        printf '%b[WARN]%b File existing yang tidak terdapat di .dotfiles pada directory tersebut akan dihapus.\n' \
+          "$YELLOW" \
+          "$RESET"
+
+        printf '%b[INFO]%b Backup akan dibuat terlebih dahulu.\n' \
+          "$CYAN" \
+          "$RESET"
+
+        echo
+
+        while true; do
+          read -r -p "Lanjutkan Replace / Sync? [y/N]: " confirm
+
+          case "$confirm" in
+            y|Y|yes|YES|Yes)
+              echo
+
+              # Backup dilakukan SEBELUM replace.
+              backup_dotfiles
+
+              copy_configs "replace"
+              return 0
+              ;;
+
+            ""|n|N|no|NO|No)
+              log "[SKIP] Replace / Sync dibatalkan."
+              return 1
+              ;;
+
+            *)
+              warn "Pilihan tidak valid. Masukkan y atau n."
+              ;;
+          esac
+        done
+        ;;
+
+      3)
         log "[SKIP] Penyalinan konfigurasi dilewati."
         return 1
         ;;
 
       *)
-        warn "Pilihan tidak valid. Masukkan y atau n."
+        warn "Pilihan tidak valid."
+        warn "Masukkan angka 1 sampai 3."
         ;;
     esac
   done
@@ -1043,9 +1257,18 @@ main() {
   log "============================================================================="
   echo
 
-  # Meminta persetujuan salin konfigurasi terlebih dahulu
+  # ---------------------------------------------------------------------------
+  # Meminta pilihan metode konfigurasi terlebih dahulu.
+  #
+  # config_menu:
+  #   1 = Update / Merge
+  #   2 = Replace / Sync
+  #   3 = Skip
+  #
+  # Backup dilakukan oleh config_menu sebelum perubahan konfigurasi.
+  # ---------------------------------------------------------------------------
+
   if config_menu; then
-    backup_dotfiles
     setup_ohmyzsh
     install_plugins
     install_fastfetch
@@ -1068,3 +1291,4 @@ main() {
 # =============================================================================
 
 main "$@"
+

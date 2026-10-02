@@ -7,7 +7,8 @@
 # PATH
 # =============================================================================
 
-export PATH="/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/.config/iterm2/bin:$PATH"
+export PATH="/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/.config/iterm2/b
+in:$PATH"
 
 # =============================================================================
 # DETEKSI OS
@@ -20,12 +21,12 @@ distro=""
 # Linux: baca distro dari /etc/os-release
 if [[ "$os_name" == "Linux" && -f /etc/os-release ]]; then
   distro="$(
-  awk -F= '
-    /^ID=/ {
-      gsub(/"/, "", $2)
-  print $2
-}
-' /etc/os-release 2>/dev/null
+    awk -F= '
+      /^ID=/ {
+        gsub(/"/, "", $2)
+        print $2
+      }
+    ' /etc/os-release 2>/dev/null
   )"
 fi
 
@@ -45,7 +46,7 @@ fi
 case "$os_name" in
 
   Darwin)
-    logo_name="macos-logo.png"
+    logo_name="macos-logo-small.png"
     ;;
 
   Linux)
@@ -210,50 +211,50 @@ if [[ "$os_name" == "Darwin" ]]; then
 
     ifconfig |
       awk '
-/inet / {
-  ip=$2
+        /inet / {
+          ip=$2
 
-  if (ip !~ /^127\./ &&
-    ip !~ /^169\.254\./ &&
-    ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
-    print ip
-  }
-}
-' |
-        while read -r ip_address; do
+          if (ip !~ /^127\./ &&
+              ip !~ /^169\.254\./ &&
+              ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
+            print ip
+          }
+        }
+      ' |
+      while read -r ip_address; do
 
-          if [[ -n "$ip_address" ]]; then
-            echo -e "  • ${ip_address}" | lolcat
-          fi
+        if [[ -n "$ip_address" ]]; then
+          echo -e "  • ${ip_address}" | lolcat
+        fi
 
-        done
+      done
 
-    fi
+  fi
 
-  else
+else
 
-    # ---------------------------------------------------------------------------
-    # Linux
-    #
-    # Prioritas menggunakan iproute2.
-    # Tidak menggunakan grep -P agar tetap portable.
-    # ---------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------
+  # Linux
+  #
+  # Prioritas menggunakan iproute2.
+  # Tidak menggunakan grep -P agar tetap portable.
+  # ---------------------------------------------------------------------------
 
-    if command -v ip >/dev/null 2>&1; then
+  if command -v ip >/dev/null 2>&1; then
 
-      ip -4 addr show |
-        awk '
-/inet / {
-  split($2, a, "/")
-  ip=a[1]
+    ip -4 addr show |
+      awk '
+        /inet / {
+          split($2, a, "/")
+          ip=a[1]
 
-  if (ip !~ /^127\./ &&
-    ip !~ /^169\.254\./ &&
-    ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
-    print ip
-  }
-}
-' |
+          if (ip !~ /^127\./ &&
+              ip !~ /^169\.254\./ &&
+              ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
+            print ip
+          }
+        }
+      ' |
       while read -r ip_address; do
 
         if [[ -n "$ip_address" ]]; then
@@ -270,13 +271,45 @@ if [[ "$os_name" == "Darwin" ]]; then
 
     ifconfig |
       awk '
-/inet / {
-  ip=$2
+        /inet / {
+          ip=$2
 
-  if (ip !~ /^127\./ &&
-    ip !~ /^169\.254\./ &&
-    ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
-    print ip
-  }
-}
-' |
+          if (ip !~ /^127\./ &&
+              ip !~ /^169\.254\./ &&
+              ip !~ /^172\.(1[6-9]|2[0-9]|3[0-1])\./) {
+            print ip
+          }
+        }
+      ' |
+      while read -r ip_address; do
+
+        if [[ -n "$ip_address" ]]; then
+          echo -e "  • ${ip_address}" | lolcat
+        fi
+
+      done
+
+  fi
+
+fi
+
+# =============================================================================
+# LAST LOGIN
+# =============================================================================
+
+if command -v last >/dev/null 2>&1; then
+
+  last_login="$(last -n 1 "$USER" 2>/dev/null | head -n 1)"
+
+  if [[ -n "$last_login" ]]; then
+    echo -e "👤  Last Login : $last_login" | lolcat
+  fi
+
+fi
+
+# =============================================================================
+# FOOTER
+# =============================================================================
+
+echo "─────────────────────────────────────────────" | lolcat
+echo ""
