@@ -6,7 +6,7 @@
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/fachmi/.local/bin/:/usr/games:"
 
 # PATH Extras : Venv, lokal, plugin, apps , script
-export PATH="$HOME/.config/venv/myvenv/bin:$PATH"
+
 export PATH="$HOME/.config/script:$PATH"
 export PATH="$HOME/.config/fastfetch/bin:$PATH"
 export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
@@ -68,14 +68,14 @@ fpath=(/Users/fachmi/.docker/completions $fpath)
 
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(
-  git
-  zsh-completions
-  zsh-autosuggestions
-  zsh-you-should-use
-  zsh-bat
-  web-search
-  fzf-tab
-  zsh-syntax-highlighting
+git
+zsh-completions
+zsh-autosuggestions
+zsh-you-should-use
+zsh-bat
+web-search
+fzf-tab
+zsh-syntax-highlighting
 )
 
 source "$ZSH/oh-my-zsh.sh"
@@ -151,7 +151,6 @@ else
   echo "[.config/fastfetch/motd-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
 fi
 
-
 # ==============================================================================
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
 # Docker CLI completions
@@ -166,13 +165,12 @@ fpath=(/Users/fachmi/.docker/completions $fpath)
 [[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
 [[ -f "$HOME/.config/zsh/function-manager.zsh" ]] && source "$HOME/.config/zsh/function-manager.zsh"
 
-# ==============================================================================  
+# ==============================================================================
 # Load zsh completion system
 autoload -U +X compinit && compinit
 autoload -U +X bashcompinit && bashcompinit
 
-
 if [ -f /usr/share/bash-completion/completions/service ]; then
   source /usr/share/bash-completion/completions/service
 fi
-# ==============================================================================  
+# ==============================================================================

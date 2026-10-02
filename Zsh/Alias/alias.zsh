@@ -4,7 +4,7 @@
 # ALIAS UNTUK macOS
 # =========================
 if [[ "$PLATFORM" == "macOS" ]]; then
-  
+
   alias dock-reset="defaults write com.apple.dock ResetLaunchPad -bool true && killall Dock" ## reset Launchpad di Mac
   alias cpwd='pwd | tr -d "\n" | pbcopy' ## menyalin path direktori saat ini
   alias caff="caffeinate -ism" ## mencegah Mac masuk ke mode tidur
@@ -19,7 +19,7 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias restartfinder="killall Finder" ## me-restart Finder
   alias restartdock="killall Dock" ## me-restart Dock
   alias backupdock="defaults export com.apple.dock ~/Desktop/dock-backup.plist" ## menyimpan pengaturan Dock sebelum restart
-  alias restoredock="defaults import com.apple.dock ~/Desktop/dock-backup.plist; killall Dock" ## mengembalikan pengaturan Dock setelah restart 
+  alias restoredock="defaults import com.apple.dock ~/Desktop/dock-backup.plist; killall Dock" ## mengembalikan pengaturan Dock setelah restart
   alias wifi-status="networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/{getline; print \$NF}' | xargs -I{} networksetup -getairportpower {}" ## melihat status Wi-Fi dengan mendeteksi antarmuka yang benar
   alias wifi-on="networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/{getline; print \$NF}' | xargs -I{} networksetup -setairportpower {} on" ## mengaktifkan Wi-Fi secara otomatis di antarmuka yang benar
   alias wifi-off="networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/{getline; print \$NF}' | xargs -I{} networksetup -setairportpower {} off" ## menonaktifkan Wi-Fi secara otomatis di antarmuka yang benar
@@ -31,7 +31,7 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias keyrepeat-normal='defaults write NSGlobalDomain KeyRepeat -int 2 && defaults write NSGlobalDomain InitialKeyRepeat -int 15 && killall Dock && echo "✅ KeyRepeat diatur ke normal (2)"'
   alias keyrepeat-slow='defaults write NSGlobalDomain KeyRepeat -int 10 && defaults write NSGlobalDomain InitialKeyRepeat -int 25 && killall Dock && echo "✅ KeyRepeat diatur ke lambat (10)"'
   alias keyrepeat-default='defaults delete NSGlobalDomain KeyRepeat && defaults delete NSGlobalDomain InitialKeyRepeat && killall Dock && echo "♻️ KeyRepeat dikembalikan ke default sistem"'
-  
+
   # Aliases untuk macOS sama dengan linux
   alias cpuinfo="system_profiler SPHardwareDataType | grep Cores"
   alias gpuinfo="system_profiler SPDisplaysDataType Graphics/Displays:"
@@ -41,7 +41,7 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias showroute="netstat -nr -f inet" ## untuk melihat routing table
   alias listport="sudo lsof -i -P -n | grep LISTEN" ## melihat port yang sedang listening
   alias flushdns="sudo killall -HUP mDNSResponder" ## flush DNS cache
-  
+
   # Brew
   alias pkg-update='brew update && brew upgrade'
   alias pkg-install='brew install'
@@ -49,11 +49,11 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias pkg-clean='brew cleanup'
   alias pkg-search='brew search'
 
-# =========================
-# ALIAS UNTUK LINUX
-# =========================
+  # =========================
+  # ALIAS UNTUK LINUX
+  # =========================
 elif [[ "$PLATFORM" == "Linux" ]]; then
-  # Aliases untuk Linux Sama dengan macOS 
+  # Aliases untuk Linux Sama dengan macOS
   alias showroute='ip route show'
   alias myip='hostname -I | awk "{print \$1}"'
   alias listport='ss -tlupn'
@@ -102,26 +102,24 @@ alias killapp="pkill -f"
 alias lss='ls -lhG' ## Menampilkan isi direktori dengan ukuran file dalam format yang lebacakan
 alias clr="clear"
 alias quit="exit"
-alias du="du -sh ./*/" 
+alias du="du -sh ./*"
 alias df="df -h"
 alias h="history"
 alias j="jobs"
 alias now='date +"%T"'
 alias today='date +"%A, %B %d, %Y"'
 alias pwdl="pwd -P" ## Memeriksa semua perintah yang tersedia dengan cara mengeksekusi script bash
-alias allcom='compgen -c' ## Memeriksa daftar semua alias yang ada
-alias showalias="alias | less"
+alias showalias='alias | less'
 
 # ========================= Clean Dot Macos Files =========================
 
 cleanDotMacFiles() {
-    find . -type f -name "._*" -print0 | while IFS= read -r -d '' file; do
-        echo "Deleting $file"
-        rm "$file"
-    done
+  find . -type f -name "._*" -print0 | while IFS= read -r -d '' file; do
+    echo "Deleting $file"
+    rm "$file"
+  done
 }
 alias cleanDS="find . -type f -name '*.DS_Store' -ls -delete" ## menghapus file .DS_Store
-
 
 # ========================= Netapps =========================
 netapps() {
@@ -151,21 +149,26 @@ netapps() {
     done | sort -k3 -n
   fi
 }
-#========================= Konfigurasi bat (Pengganti cat) =========================
+# ========================= Konfigurasi bat (Pengganti cat) =========================
 
+if command -v bat &> /dev/null; then
+  alias cat="bat"
+  alias rcat="/bin/cat"
   export BAT_THEME="Dracula"
   export BAT_STYLE="snip"
-  alias cat-l="batcat --style=numbers"
+  alias cat-l="bat --style=numbers"
+else
+  alias cat="command cat"
+  alias rcat="/bin/cat"
+fi
 
 # ========================= Konfigurasi eza (Pengganti ls) =========================
-if command -v eza &> /dev/null; then
+if command -v eza &>/dev/null; then
   alias ls="eza $eza_params --icons --group-directories-first"
   alias ll="eza --icons --group-directories-first -AolhM"
   alias lt="eza --icons -AiolbM --total-size --tree --level=2"
   alias lg="eza --icons -lbGF --git"
   alias la="eza -lbhHgUmuSao --total-size --group-directories-first --icons"
-else
-  alias ls="ls" ## kembali ke default ls jika eza tidak ditemukan
 fi
 
 # ================================= Grc Curl ======================================
@@ -197,7 +200,6 @@ if command -v fzf &>/dev/null; then
   alias fe='fzf --preview "bat --style=numbers --color=always --line-range :100 {}" | xargs -r $EDITOR'
 fi
 
-
 # Deteksi zoxide
 if command -v zoxide &>/dev/null; then
   eval "$(zoxide init zsh)"
@@ -205,7 +207,6 @@ if command -v zoxide &>/dev/null; then
   alias zj='cd "$(zoxide query -l | fzf)"'     ## cd ke direktori pilihan
   alias zz='zoxide query -l | fzf --preview "ls -la {}"' # preview isi dir
 fi
-
 
 # ======================================
 # Aliases untuk penggunaan astro
@@ -215,14 +216,13 @@ alias astrob="astro build"
 alias astroc="astro check"
 alias astronew="npm create astro@latest"
 
-
 # ======================================
 # Aliases untuk penggunaan Node.js
 # ======================================
 
 alias difffile="diff <(cat file1.txt) <(cat file2.txt)" ## Memeriksa perbedaan antara dua versi file dengan mengeksekusi script bash
-alias np='npm "$1"' ## Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
-alias n='node "$1"' ## Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
+alias np='npm' ## Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
+alias n='node' ## Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
 alias ndev="node -v"
 alias ninsstall="npm install"
 alias nstart="npm start"
@@ -241,7 +241,7 @@ alias olllog="ollama logs"
 alias ollserve="ollama serve"
 
 ## ------------------
-## Source user function directory 
+## Source user function directory
 ## ------------------
 
 FUNC_DIR="$HOME/.config/zsh/functions"
@@ -259,86 +259,72 @@ fi
 # 5. Fingerprint SHA256
 alias crtfp='openssl x509 -noout -fingerprint -sha256 -in'
 
-
 # 6. Subject Alternative Name
 alias crtsan='openssl x509 -noout -ext subjectAltName -in'
 
-
 # 7. Validasi cert vs private key
 crtmatch() {
-if [[ $# -ne 2 ]]; then
-echo "Usage: crtmatch <cert.crt> <private.key>"
-return 1
-fi
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: crtmatch <cert.crt> <private.key>"
+    return 1
+  fi
 
-
-openssl x509 -noout -modulus -in "$1" | openssl md5
-openssl rsa -noout -modulus -in "$2" | openssl md5
+  openssl x509 -noout -modulus -in "$1" | openssl md5
+  openssl rsa -noout -modulus -in "$2" | openssl md5
 }
-
 
 # 8. Scan semua cert di folder
 crtcheckdir() {
-for f in *.crt *.pem; do
-[[ -f "$f" ]] || continue
-echo "===== $f ====="
-openssl x509 -noout -subject -enddate -in "$f"
-echo
-done
+  for f in *.crt *.pem; do
+    [[ -f "$f" ]] || continue
+    echo "===== $f ====="
+    openssl x509 -noout -subject -enddate -in "$f"
+    echo
+  done
 }
-
 
 # 9. Cek certificate remote HTTPS
 crtremote() {
-if [[ -z "$1" ]]; then
-echo "Usage: crtremote <hostname>"
-return 1
-fi
+  if [[ -z "$1" ]]; then
+    echo "Usage: crtremote <hostname>"
+    return 1
+  fi
 
-
-echo | openssl s_client -connect "$1:443" -servername "$1" 2>/dev/null \
-| openssl x509 -noout -subject -issuer -startdate -enddate
+  echo | openssl s_client -connect "$1:443" -servername "$1" 2>/dev/null \
+    | openssl x509 -noout -subject -issuer -startdate -enddate
 }
-
 
 # 10. All-in-one summary
 crtall() {
-if [[ -z "$1" ]]; then
-echo "Usage: crtall <file.crt>"
-return 1
-fi
+  if [[ -z "$1" ]]; then
+    echo "Usage: crtall <file.crt>"
+    return 1
+  fi
 
+  echo "Subject :"
+  openssl x509 -noout -subject -in "$1"
 
-echo "Subject :"
-openssl x509 -noout -subject -in "$1"
+  echo "
+  Issuer :"
+  openssl x509 -noout -issuer -in "$1"
 
+  echo "
+  Validity :"
+  openssl x509 -noout -startdate -enddate -in "$1"
 
-echo "
-Issuer :"
-openssl x509 -noout -issuer -in "$1"
+  echo "
+  SAN :"
+  openssl x509 -noout -ext subjectAltName -in "$1" 2>/dev/null
 
-
-echo "
-Validity :"
-openssl x509 -noout -startdate -enddate -in "$1"
-
-
-echo "
-SAN :"
-openssl x509 -noout -ext subjectAltName -in "$1" 2>/dev/null
-
-
-echo "
-Fingerprint (SHA256) :"
-openssl x509 -noout -fingerprint -sha256 -in "$1"
+  echo "
+  Fingerprint (SHA256) :"
+  openssl x509 -noout -fingerprint -sha256 -in "$1"
 }
-
 
 # 11. Help / bantuan
 crthelp() {
-cat << 'EOF'
+  cat << 'EOF'
 Zsh Certificate Toolkit - Help
-
 
 cekcrt <file.crt> : cek expired date
 crtinfo <file.crt> : subject, issuer, expired
@@ -356,3 +342,154 @@ EOF
 # ===============================
 
 alias UpdateDotfiles='[ -d "$HOME/.dotfiles/.git" ] && git -C "$HOME/.dotfiles" pull || git clone https://github.com/New8ie/Dotfiles.git "$HOME/.dotfiles"'
+
+# =============================================================================
+# ZSH - ALIAS AUDIT
+# =============================================================================
+
+zsh-alias-audit() {
+  local custom="$HOME/.config/zsh/alias.zsh"
+  local tmp_custom
+  local tmp_active
+  local tmp_plugin
+  local tmp_custom_names
+  local plugin
+  local file
+  local name
+
+  local -a plugins=(
+    git
+    zsh-completions
+    zsh-autosuggestions
+    zsh-you-should-use
+    zsh-bat
+    web-search
+    fzf-tab
+    zsh-syntax-highlighting
+  )
+
+  # ---------------------------------------------------------------------------
+  # TEMP FILES
+  # ---------------------------------------------------------------------------
+
+  tmp_custom=$(mktemp)
+  tmp_active=$(mktemp)
+  tmp_plugin=$(mktemp)
+  tmp_custom_names=$(mktemp)
+
+  # ---------------------------------------------------------------------------
+  # CUSTOM ALIAS
+  # ---------------------------------------------------------------------------
+  # Hanya membaca deklarasi:
+  #
+  #   alias foo='command'
+  #
+  # Variable seperti:
+  #
+  #   tmp_active=$(mktemp)
+  #   FUNC_DIR=...
+  #
+  # tidak akan dianggap alias.
+  # ---------------------------------------------------------------------------
+
+  grep -hE \
+    '^[[:space:]]*alias[[:space:]]+[A-Za-z_][A-Za-z0-9_!.-]*[[:space:]]*=' \
+    "$custom" 2>/dev/null |
+  sed -E \
+    's/^[[:space:]]*alias[[:space:]]+//;
+     s/^([A-Za-z_][A-Za-z0-9_!.-]*)[[:space:]]*=[[:space:]]*/\1 → /' |
+  sort -u > "$tmp_custom"
+
+  # ---------------------------------------------------------------------------
+  # ACTIVE ALIAS
+  # ---------------------------------------------------------------------------
+
+  alias -L |
+  sed -E \
+    's/^alias[[:space:]]+//;
+     s/^([^=]+)=[[:space:]]*['\''"](.*)['\''"]$/\1 → \2/' |
+  sort -u > "$tmp_active"
+
+  # ---------------------------------------------------------------------------
+  # PLUGIN ALIAS
+  # ---------------------------------------------------------------------------
+
+  for plugin in "${plugins[@]}"; do
+    for file in \
+      "$ZSH_CUSTOM/plugins/$plugin/$plugin.plugin.zsh" \
+      "$ZSH/plugins/$plugin/$plugin.plugin.zsh"
+    do
+      [[ -f "$file" ]] || continue
+
+      grep -hE \
+        '^[[:space:]]*alias[[:space:]]+[A-Za-z_][A-Za-z0-9_!.-]*[[:space:]]*=' \
+        "$file" |
+      sed -E \
+        's/^[[:space:]]*alias[[:space:]]+([^=]+)=.*/\1/' \
+        >> "$tmp_plugin"
+
+      break
+    done
+  done
+
+  sort -u "$tmp_plugin" -o "$tmp_plugin"
+
+  # ---------------------------------------------------------------------------
+  # CUSTOM ALIAS NAMES
+  # ---------------------------------------------------------------------------
+
+  sed -E 's/[[:space:]]+→.*$//' "$tmp_custom" |
+    sort -u > "$tmp_custom_names"
+
+  # ---------------------------------------------------------------------------
+  # CUSTOM ALIAS
+  # ---------------------------------------------------------------------------
+
+  printf '\n\033[1;35mCUSTOM ALIAS\033[0m\n'
+  printf '%s\n' '────────────────────────────────────────'
+
+  if [[ -s "$tmp_custom" ]]; then
+    awk -F ' → ' '{
+      printf "\033[1;36m%s\033[0m → %s\n", $1, $2
+    }' "$tmp_custom"
+  else
+    printf '%s\n' '(none)'
+  fi
+
+  # ---------------------------------------------------------------------------
+  # ACTIVE ALIAS
+  # ---------------------------------------------------------------------------
+
+  printf '\n\033[1;35mACTIVE ALIAS\033[0m\n'
+  printf '%s\n' '────────────────────────────────────────'
+
+  if [[ -s "$tmp_active" ]]; then
+    awk -F ' → ' '{
+      printf "\033[1;32m%s\033[0m → %s\n", $1, $2
+    }' "$tmp_active"
+  else
+    printf '%s\n' '(none)'
+  fi
+
+  # ---------------------------------------------------------------------------
+  # OVERRIDE / DUPLICATE
+  # ---------------------------------------------------------------------------
+
+  printf '\n\033[1;35mOVERRIDE / DUPLICATE\033[0m\n'
+  printf '%s\n' '────────────────────────────────────────'
+
+  while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    printf '\033[1;31m%-16s\033[0m → custom + OMZ/plugin\n' "$name"
+  done < <(comm -12 "$tmp_custom_names" "$tmp_plugin")
+
+  # ---------------------------------------------------------------------------
+  # CLEANUP
+  # ---------------------------------------------------------------------------
+
+  rm -f \
+    "$tmp_custom" \
+    "$tmp_active" \
+    "$tmp_plugin" \
+    "$tmp_custom_names"
+}

@@ -2,12 +2,12 @@
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -37,7 +37,7 @@ if [[ -o interactive ]]; then
     whence -v iterm2_print_user_vars > /dev/null 2>&1
     if [ $? -ne 0 ]; then
       iterm2_print_user_vars() {
-          true
+        true
       }
     fi
 
@@ -176,4 +176,19 @@ if [[ -o interactive ]]; then
     printf "\033]1337;ShellIntegrationVersion=14;shell=zsh\007"
   fi
 fi
-alias imgcat=${HOME}/.config/iterm2/imgcat;alias imgls=${HOME}/.config/iterm2/imgls;alias it2api=${HOME}/.config/iterm2/it2api;alias it2attention=${HOME}/.config/iterm2/it2attention;alias it2check=${HOME}/.config/iterm2/it2check;alias it2copy=${HOME}/.config/iterm2/it2copy;alias it2dl=${HOME}/.config/iterm2/it2dl;alias it2getvar=${HOME}/.config/iterm2/it2getvar;alias it2git=${HOME}/.config/iterm2/it2git;alias it2setcolor=${HOME}/.config/iterm2/it2setcolor;alias it2setkeylabel=${HOME}/.config/iterm2/it2setkeylabel;alias it2tip=${HOME}/.config/iterm2/it2tip;alias it2ul=${HOME}/.config/iterm2/it2ul;alias it2universion=${HOME}/.config/iterm2/it2universion;alias it2profile=${HOME}/.config/iterm2/it2profile;alias it2cat=${HOME}/.config/iterm2/it2cat
+alias imgcat=${HOME}/.config/iterm2/bin/imgcat;
+alias imgls=${HOME}/.config/iterm2/bin/imgls;
+alias it2api=${HOME}/.config/iterm2/bin/it2api;
+alias it2attention=${HOME}/.config/iterm2/bin/it2attention;
+alias it2check=${HOME}/.config/iterm2/bin/it2check;
+alias it2copy=${HOME}/.config/iterm2/bin/it2copy;
+alias it2dl=${HOME}/.config/iterm2/bin/it2dl;
+alias it2getvar=${HOME}/.config/iterm2/bin/it2getvar;
+alias it2git=${HOME}/.config/iterm2/bin/it2git;
+alias it2setcolor=${HOME}/.config/iterm2/bin/it2setcolor;
+alias it2setkeylabel=${HOME}/.config/iterm2/bin/it2setkeylabel;
+alias it2tip=${HOME}/.config/iterm2/bin/it2tip;
+alias it2ul=${HOME}/.config/iterm2/bin/it2ul;
+alias it2universion=${HOME}/.config/iterm2/bin/it2universion;
+alias it2profile=${HOME}/.config/iterm2/bin/it2profile;
+alias it2cat=${HOME}/.config/iterm2/bin/it2cat;

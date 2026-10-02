@@ -5,15 +5,8 @@
 # PATH System Base
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/fachmi/.local/bin/:/usr/games:"
 
-# ============================================
-# 🍺 HOMEBREW
-# ============================================
-if [[ -d "/opt/homebrew/bin" ]]; then
-  export PATH="/opt/homebrew/bin:$PATH"
-fi
-
-# PATH Tambahan: Venv, lokal, plugin, apps
 export PATH="$HOME/.config/script:$PATH"
+export PATH="$HOME/.config/iterm2/bin:$PATH"
 export PATH="/usr/local/bin/nvim/bin:$PATH"
 export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
 export PATH="/opt/homebrew/opt/curl/bin:$PATH"
@@ -21,11 +14,7 @@ export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 export PATH="/Applications/OpenVPN Connect/OpenVPN Connect.app/Contents/MacOS:$PATH"
 export PATH="/Applications/Visual Studio Code.app/Contents/Resources/app/bin:$PATH"
 export PATH="$HOME/.lmstudio/bin:$PATH"
-
-# Path lolcat (via Ruby gem, jika digunakan)
-if [[ -d "$HOME/.gem/ruby/3.2.0/bin" ]]; then
-  export PATH="$HOME/.gem/ruby/3.2.0/bin:$PATH"
-fi
+export PATH="$HOME/.local/share/nvim/lazy-rocks/bin:$PATH"
 
 # ============================================
 # 🧱 Compiler Flags for Building Python
@@ -38,25 +27,19 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export ARCHFLAGS="-arch $(uname -m)"
 
 # ============================================
-# 🐍 PYENV: Manajemen Python
+# 🍺 HOMEBREW
 # ============================================
+if [[ -d "/opt/homebrew/bin" ]]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+fi
+
+# ==============================================================================
+#                                PYENV (Python)
+# ==============================================================================
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
-
-if command -v pyenv &> /dev/null; then
-  eval "$(pyenv init --path)"
-  eval "$(pyenv init -)"
-fi
-
-[[ -f "$HOME/.config/zsh/alias_venv.zsh" ]] && source "$HOME/.config/zsh/alias_venv.zsh"
-# ============================================
-# 🧪 CONDA (manual activation only)
-# ============================================
-if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
-  . "/opt/miniconda3/etc/profile.d/conda.sh"
-  conda config --set auto_activate false
-fi
-
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
 
 # ==============================================================================
 #                         Konfigurasi ZSH & Oh My Zsh
@@ -65,35 +48,25 @@ export ZSH="$HOME/.oh-my-zsh"
 export ZSH_DISABLE_COMPFIX=true
 POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
 
-# Tambahkan fpath zsh-completions
-fpath+=(${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-completions/src)
-
-# Docker CLI completions (harus sebelum compinit)
-fpath=(/Users/fachmi/.docker/completions $fpath)
-
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(
-  git
-  zsh-completions
-  zsh-autosuggestions
-  zsh-you-should-use
-  zsh-bat
-  web-search
-  fzf-tab
-  zsh-syntax-highlighting
+git
+zsh-autosuggestions
+zsh-syntax-highlighting
+web-search
+zsh-you-should-use
+zsh-bat
 )
 
 source "$ZSH/oh-my-zsh.sh"
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 [[ -f ~/.oh-my-zsh/custom/plugins/fzf-tab/fzf-tab.plugin.zsh ]] && source ~/.oh-my-zsh/custom/plugins/fzf-tab/fzf-tab.plugin.zsh
 
-
 # ==============================================================================
 #                               Konfigurasi Iterm2 macOS
 # ==============================================================================
-export PATH="$HOME/.config/iterm2/bin:$PATH"
-[[ -f "$HOME/.config/iterm2/iterm2_shell_integration.zsh" ]] && source "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
 
+[[ -f "$HOME/.config/iterm2/iterm2_shell_integration.zsh" ]] && source "$HOME/.config/iterm2/iterm2_shell_integration.zsh"
 
 # ==============================================================================
 #                            Deteksi Sistem Operasi
@@ -126,6 +99,12 @@ else
   export DISTRO="Unknown"
 fi
 
+# ==============================================================================
+#                             Custom Alias File
+# ==============================================================================
+if [[ -f "$HOME/.config/zsh/alias.zsh" ]]; then
+  source "$HOME/.config/zsh/alias.zsh"
+fi
 
 # ==============================================================================
 #                                Integrasi Zoxide
@@ -133,7 +112,6 @@ fi
 if command -v zoxide &> /dev/null; then
   eval "$(zoxide init zsh)"
 fi
-
 
 # ==============================================================================
 #                     Syntax Highlighting dan Warna GRC
@@ -146,7 +124,6 @@ elif [[ "$DISTRO" == "Arch" ]]; then
   [[ -s "/usr/share/grc/grc.zsh" ]] && source "/usr/share/grc/grc.zsh"
 fi
 
-
 # ==============================================================================
 #                              Preferensi Editor
 # ==============================================================================
@@ -158,34 +135,12 @@ else
   export EDITOR='nano'
 fi
 
-
 # ==============================================================================
 #                            Skrip MOTD Login
 # ==============================================================================
-FASTFETCH_SCRIPT="$HOME/.config/fastfetch/motd-fastfetch.sh"
-if [[ -o interactive && -z "$__FASTFETCH_RUN" && -x "$FASTFETCH_SCRIPT" ]]; then
-  export __FASTFETCH_RUN=1
-  "$FASTFETCH_SCRIPT"
-fi
 
-# ==============================================================================
-#                             Custom Alias File
-# ==============================================================================
-[[ -f "$HOME/.config/zsh/alias.zsh" ]] && source "$HOME/.config/zsh/alias.zsh"
-
-# ==============================================================================
-#                       Zsh Completion System (Smart Init)
-# ==============================================================================
-# Gunakan cache agar cepat dan hindari duplikasi
-autoload -Uz compinit
-if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
-  compinit -C
+if [[ -x "$HOME/.config/fastfetch/motd-fastfetch.sh" ]]; then
+  "$HOME/.config/fastfetch/motd-fastfetch.sh"
 else
-  compinit
-fi
-
-# Aktifkan bashcompinit hanya jika file completion bash tersedia
-if [ -f /usr/share/bash-completion/completions/service ]; then
-  autoload -U +X bashcompinit && bashcompinit
-  source /usr/share/bash-completion/completions/service
+  echo "[.config/fastfetch/motd-fastfetch.sh tidak ditemukan atau tidak executable]" >&2
 fi
