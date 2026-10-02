@@ -382,24 +382,32 @@ zsh-alias-audit() {
   # ---------------------------------------------------------------------------
   # Hanya membaca deklarasi:
   #
-  #   alias foo='command'
+  #   alias foo='command' ## komentar
   #
-  # Variable seperti:
-  #
-  #   tmp_active=$(mktemp)
-  #   FUNC_DIR=...
-  #
-  # tidak akan dianggap alias.
+  # Komentar ## dipertahankan untuk ditampilkan.
   # ---------------------------------------------------------------------------
 
   grep -hE \
     '^[[:space:]]*alias[[:space:]]+[A-Za-z_][A-Za-z0-9_!.-]*[[:space:]]*=' \
     "$custom" 2>/dev/null |
   sed -E \
-    's/^[[:space:]]*alias[[:space:]]+//;
-     s/^([A-Za-z_][A-Za-z0-9_!.-]*)[[:space:]]*=[[:space:]]*/\1 → /' |
-  sort -u > "$tmp_custom"
+    's/^[[:space:]]*alias[[:space:]]+//' |
+  awk '
+    {
+      pos = index($0, "=")
 
+      if (pos > 0) {
+        name = substr($0, 1, pos - 1)
+        value = substr($0, pos + 1)
+
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+
+        printf "%s → %s\n", name, value
+      }
+    }
+  ' |
+  sort -u > "$tmp_custom"
   # ---------------------------------------------------------------------------
   # ACTIVE ALIAS
   # ---------------------------------------------------------------------------
@@ -460,13 +468,35 @@ zsh-alias-audit() {
   printf '%s\n' '────────────────────────────────────────'
 
   if [[ -s "$tmp_custom" ]]; then
-    awk -F ' → ' '{
-      printf "\033[1;36m%s\033[0m → %s\n", $1, $2
-    }' "$tmp_custom"
+    awk '
+      {
+        pos = index($0, " → ")
+
+        if (pos > 0) {
+          name = substr($0, 1, pos - 1)
+          value = substr($0, pos + 4)
+
+          comment = ""
+          cpos = index(value, " ## ")
+
+          if (cpos > 0) {
+            comment = substr(value, cpos)
+            value = substr(value, 1, cpos - 1)
+          }
+
+          printf "\033[1;36m%-16s\033[0m → %s", name, value
+
+          if (comment != "") {
+            printf " \033[1;33m%s\033[0m", comment
+          }
+
+          printf "\n"
+        }
+      }
+    ' "$tmp_custom"
   else
     printf '%s\n' '(none)'
   fi
-
   # ---------------------------------------------------------------------------
   # ACTIVE ALIAS
   # ---------------------------------------------------------------------------
