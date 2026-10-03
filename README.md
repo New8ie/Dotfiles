@@ -14,9 +14,9 @@ Dotfiles/
 ├── Install/
 │   ├── 01-install-deps.sh          # Instalasi dependensi sistem
 │   ├── 02-setup-zsh.sh             # Pengaturan Zsh dan Oh My Zsh
-│   └── 03-install-fail2ban.sh      # Pengaturan Fail2Ban dengan notifikasi Telegram dan Cloudflare
+│   ├── 03-install-fail2ban.sh      # Pengaturan Fail2Ban dengan notifikasi Telegram dan Cloudflare
 │   ├── 04-zsh-root.sh              # Pengaturan Zsh dan Oh My Zsh untuk root
-│   ├── 05-harden-ssh.sh            # Pengaturan Hardening ssh
+│   └── 05-harden-ssh.sh            # Hardening SSH melalui drop-in sshd
 ├── .vscode/                        # Konfigurasi VSCode
 ├── Fail2Ban/                       # Konfigurasi Fail2Ban
 ├── Fastfetch/                      # Konfigurasi Fastfetch
@@ -42,19 +42,29 @@ git clone https://github.com/New8ie/Dotfiles.git ~/.dotfiles
 cd .dotfiles
 ```
 
-2. **Jalankan skrip instalasi otomatis:**
+2. **Jalankan installer:**
 
 ```bash
-./Install/01-install-deps.sh
-./Install/02-setup-zsh.sh
-./Install/03-install-fail2ban.sh
+bash ./Install/01-install-deps.sh
 ```
 
-Skrip ini akan:
+Installer akan mendeteksi OS, menginstal dependensi, dan clone repository ke
+`~/.dotfiles` jika direktori tersebut belum ada. Setelah itu, pilih:
 
-- Menginstal dependensi sistem yang diperlukan.  
-- Mengonfigurasi Zsh dengan Oh My Zsh dan plugin terkait.   
-- Mengonfigurasi Fail2Ban dengan notifikasi Telegram dan integrasi Cloudflare.
+- **1** untuk menjalankan `02-setup-zsh.sh`.
+- **2** untuk melewati setup Zsh.
+
+Pilihan **1** menjalankan setup Zsh secara interaktif. Ikuti prompt tambahan
+yang muncul di script tersebut; installer utama baru menampilkan pesan selesai
+setelah setup Zsh keluar. Pada menu **Langkah Berikutnya** di setup Zsh, pilih
+opsi yang diinginkan, termasuk Fail2Ban atau hardening SSH.
+
+Script juga bisa dijalankan terpisah jika diperlukan:
+
+```bash
+bash ./Install/02-setup-zsh.sh
+bash ./Install/03-install-fail2ban.sh
+```
 
 ---
 
@@ -85,6 +95,33 @@ cfuser = your_cloudflare_user_id
 - **Oh My Zsh:** Skrip `02-setup-zsh.sh` akan menginstal dan mengonfigurasi Oh My Zsh dengan tema `powerlevel10k` dan plugin yang berguna.  
 - **Terminal:** Skrip `02-setup-zsh.sh` akan mengonfigurasi terminal sesuai preferensi, termasuk pengaturan warna dan font.
 
+### Hardening SSH (Linux)
+
+Jalankan dari clone repository pada server Linux yang menggunakan systemd dan
+`/etc/ssh/sshd_config.d/`:
+
+```bash
+sudo bash ./Install/05-harden-ssh.sh
+```
+
+Script ini mengelola drop-in
+`/etc/ssh/sshd_config.d/00-local-hardening.conf`; file utama
+`/etc/ssh/sshd_config` tidak ditimpa. Kebijakan autentikasi password dan alamat
+listen yang sudah ada sengaja tidak diubah. Script menerapkan batas percobaan
+autentikasi dan sesi, menonaktifkan login root serta beberapa jenis forwarding,
+memvalidasi konfigurasi SSH efektif, lalu me-restart service SSH. Jika validasi
+atau restart gagal setelah perubahan, script mencoba memulihkan drop-in
+sebelumnya.
+
+Drop-in yang sudah ada tetapi bukan milik script tidak akan ditimpa. Jika
+`sshd_config` masih berisi penanda konfigurasi dari versi lama script yang
+menimpa file utama, script akan berhenti; tinjau dan pulihkan konfigurasi
+tersebut secara manual sebelum menjalankan versi ini.
+
+> **Peringatan:** perubahan SSH dapat memengaruhi akses remote. Pertahankan sesi
+> SSH yang sedang aktif dan uji koneksi baru sebelum menutupnya. Pastikan akses
+> public key dan akses pemulihan lokal/out-of-band tersedia.
+
 ---
 
 ## 🧪 Pengujian
@@ -94,6 +131,12 @@ Setelah instalasi, Anda dapat menguji konfigurasi dengan:
 - **Zsh:** Jalankan `zsh` di terminal.  
 - **Terminal:** Periksa tampilan dan fungsionalitas terminal Anda.  
 - **Fail2Ban:** Uji notifikasi Telegram dengan memicu aksi pada jail Fail2Ban.
+
+Tampilan alias help
+
+![Screenshot](/Source/alias-show.png "Screenshot")
+
+
 
 ---
 
