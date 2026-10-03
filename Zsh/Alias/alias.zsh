@@ -33,59 +33,59 @@ if [[ "$PLATFORM" == "macOS" ]]; then
   alias keyrepeat-default='defaults delete NSGlobalDomain KeyRepeat && defaults delete NSGlobalDomain InitialKeyRepeat && killall Dock && echo "♻️ KeyRepeat dikembalikan ke default sistem"'
 
   # Aliases untuk macOS sama dengan linux
-  alias cpuinfo="system_profiler SPHardwareDataType | grep Cores"
-  alias gpuinfo="system_profiler SPDisplaysDataType Graphics/Displays:"
-  alias sysinfo="top -o cpu" ## menampilkan proses dengan penggunaan CPU tertinggi
-  alias listservices="launchctl list" ## menampilkan daftar layanan yang berjalan di macOS
-  alias runningapps="ps aux | grep -v grep | grep -i" ## melihat proses aplikasi yang berjalan
-  alias showroute="netstat -nr -f inet" ## untuk melihat routing table
-  alias listport="sudo lsof -i -P -n | grep LISTEN" ## melihat port yang sedang listening
-  alias flushdns="sudo killall -HUP mDNSResponder" ## flush DNS cache
+  alias cpuinfo="system_profiler SPHardwareDataType | grep Cores" ## MacOS
+  alias gpuinfo="system_profiler SPDisplaysDataType Graphics/Displays:" ## MacOS
+  alias sysinfo="top -o cpu" ## menampilkan proses dengan penggunaan CPU tertinggi MacOS
+  alias listservices="launchctl list" ## menampilkan daftar layanan yang berjalan di MacOS
+  alias runningapps="ps aux | grep -v grep | grep -i" ## melihat proses aplikasi yang berjalan MacOS
+  alias showroute="netstat -nr -f inet" ## untuk melihat routing table MacOS
+  alias listport="sudo lsof -i -P -n | grep LISTEN" ## melihat port yang sedang listening MacOS
+  alias flushdns="sudo killall -HUP mDNSResponder" ## MacOS
 
   # Brew
-  alias pkg-update='brew update && brew upgrade'
-  alias pkg-install='brew install'
-  alias pkg-remove='brew uninstall'
-  alias pkg-clean='brew cleanup'
-  alias pkg-search='brew search'
+  alias pkg-update='brew update && brew upgrade' ## MacOS update & upgrade package
+  alias pkg-install='brew install' ## MacOS install package
+  alias pkg-remove='brew uninstall' ## MacOS uninstall package
+  alias pkg-clean='brew cleanup' ## MacOS cleanup package
+  alias pkg-search='brew search' ## MacOS search package
 
   # =========================
   # ALIAS UNTUK LINUX
   # =========================
 elif [[ "$PLATFORM" == "Linux" ]]; then
   # Aliases untuk Linux Sama dengan macOS
-  alias showroute='ip route show'
-  alias myip='hostname -I | awk "{print \$1}"'
-  alias listport='ss -tlupn'
-  alias sysinfo='top -o %CPU'
-  alias runningapps='ps aux | grep -v grep | grep -i'
-  alias cpuinfo='lscpu | egrep "CPU\(s\)|Core|Thread|Socket"'
-  alias cpwd='pwd | tr -d "\n" | xclip -selection clipboard'
+  alias showroute='ip route show' ## melihat route table
+  alias listport='ss -tlupn' ## melihat port yang sedang listening linux
+  alias sysinfo='top -o %CPU' ## menampilkan proses dengan penggunaan CPU tertinggi linux
+  alias runningapps='ps aux | grep -v grep | grep -i' ## melihat proses aplikasi yang berjalan linux
+  alias cpuinfo='lscpu | egrep "CPU\(s\)|Core|Thread|Socket"' ## menampilkan informasi CPU linux
+  alias cpwd='pwd | tr -d "\n" | xclip -selection clipboard' ## menyalin path direktori saat ini linux
 
   if [[ "$DISTRO" == "Debian" ]]; then
-    alias pkg-update='sudo apt update && sudo apt upgrade -y'
-    alias pkg-install='sudo apt install -y'
-    alias pkg-remove='sudo apt remove -y'
-    alias pkg-clean='sudo apt autoremove -y && sudo apt autoclean -y'
-    alias pkg-search='sudo apt search'
+    alias pkg-update='sudo apt update && sudo apt upgrade -y' ## debian update & upgrade package
+    alias pkg-install='sudo apt install -y' ## debian install package
+    alias pkg-remove='sudo apt remove -y' ## debian uninstall package
+    alias pkg-clean='sudo apt autoremove -y && sudo apt autoclean -y' ## debian cleanup package
+    alias pkg-search='sudo apt search' ## debian search package
 
-    alias flushdns='sudo systemd-resolve --flush-caches'
+    alias flushdns='sudo systemd-resolve --flush-caches' ## debian
 
   elif [[ "$DISTRO" == "Arch" ]]; then
-    alias pkg-update='sudo pacman -Syu'
-    alias pkg-install='sudo pacman -S'
-    alias pkg-remove='sudo pacman -Rns'
-    alias pkg-clean='sudo pacman -Sc'
-    alias pkg-search='sudo pacman -Ss'
-    alias flushdns='sudo systemctl restart systemd-resolved'
+    alias pkg-update='sudo pacman -Syu' ## arch update & upgrade package
+    alias pkg-install='sudo pacman -S' ## arch install package
+    alias pkg-remove='sudo pacman -Rns' ### arch uninstall package
+    alias pkg-clean='sudo pacman -Sc' ## arch cleanup package
+    alias pkg-list='pacman -Q' ## arch list package
+    alias pkg-search='sudo pacman -Ss' ## arch search package
+    alias flushdns='sudo systemctl restart systemd-resolved' ## arch
 
   elif [[ "$DISTRO" == "RedHat" ]]; then
-    alias pkg-update='sudo dnf update -y'
-    alias pkg-install='sudo dnf install -y'
-    alias pkg-remove='sudo dnf remove -y'
-    alias pkg-clean='sudo dnf autoremove -y && sudo dnf clean all'
-    alias pkg-search='sudo dnf search'
-    alias flushdns='sudo systemctl restart NetworkManager'
+    alias pkg-update='sudo dnf update -y' ## redhat update & upgrade package
+    alias pkg-install='sudo dnf install -y' ## redhat install package
+    alias pkg-remove='sudo dnf remove -y' ## redhat uninstall package
+    alias pkg-clean='sudo dnf autoremove -y && sudo dnf clean all' ## redhat cleanup package
+    alias pkg-search='sudo dnf search' ## redhat search package
+    alias flushdns='sudo systemctl restart NetworkManager' ## redhat
   fi
 fi
 
@@ -93,23 +93,22 @@ fi
 # =========================
 alias cfm="$HOME/.config/script/cloudflare_manager.sh" ## Menampilkan,menambakan dan mengapus banned ip di cloudflare
 alias sshcpid="$HOME/.config/script/sshcpid.sh" ## menyalin SSH public key dengan script bash
-alias static-route="$HOME/.config/script/static_route.sh"
+alias static-route="$HOME/.config/script/static_route.sh" ## menambahkan static route dengan script bash
 alias ipconfig="$HOME/.config/script/mylocalip.sh" ## menampilkan IP lokal dengan script bash
 alias myip="$HOME/.config/script/netinfo.sh" ## menampilkan IP PUBLC,DNS,GATEWAY dengan script bash
 alias reload="source ~/.zshrc" ## Memuat kembali konfigurasi ZSH dengan mengeksekusi file ~/.zshrc
 alias clearall='clear && history -c' ## Menghapus isi direktori dan menghapus riwayat perintah
-alias killapp="pkill -f"
+alias killapp="pkill -f" ## Menghentikan proses aplikasi dengan nama tertentu
 alias lss='ls -lhG' ## Menampilkan isi direktori dengan ukuran file dalam format yang lebacakan
-alias clr="clear"
-alias quit="exit"
-alias du="du -sh ./*"
-alias df="df -h"
-alias h="history"
-alias j="jobs"
-alias now='date +"%T"'
-alias today='date +"%A, %B %d, %Y"'
+alias clr="clear" ## Membersihkan layar terminal
+alias quit="exit" ## Keluar dari terminal
+alias du="du -sh ./*" ## Menampilkan ukuran direktori dan file dalam format yang lebih mudah dibaca
+alias df="df -h" ## Menampilkan penggunaan disk dalam format yang lebih mudah dibaca
+alias h="history" ## Menampilkan riwayat perintah yang telah dijalankan
+alias j="jobs" ## Menampilkan daftar pekerjaan yang sedang berjalan di background
+alias now='date +"%T"' ## Menampilkan waktu saat ini dalam format jam:menit:detik
+alias today='date +"%A, %B %d, %Y"' ## Menampilkan tanggal saat ini dalam format hari, bulan, tanggal, tahun
 alias pwdl="pwd -P" ## Memeriksa semua perintah yang tersedia dengan cara mengeksekusi script bash
-alias showalias='alias | less'
 
 # ========================= Clean Dot Macos Files =========================
 
@@ -143,7 +142,8 @@ netapps() {
       printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" "$app" "$pid" "$port" "$proto" "$addr" "${service:--}"
     done | sort -k3 -n
   else
-    ss -tlupnH | awk '{ proto=$1; local=$5; proc=$7; gsub("\\[","",local); gsub("\\]","",local); split(local,a,":"); port=a[length(a)]; addr=local; sub(":"port,"",addr); app="-"; pid="-"; if (match(proc,/"[^"]+"/)) { app=substr(proc,RSTART+1,RLENGTH-2)}; if (match(proc,/pid=[0-9]+/)) { pid=substr(proc,RSTART+4,RLENGTH-4)}; print app "|" pid "|" port "|" proto "|" addr }' | sort -u | while IFS='|' read -r app pid port proto addr; do
+    ss -tlupnH | awk '{ proto=$1; local=$5; proc=$7; gsub("\\[","",local); gsub("\\]","",local); split(local,a,":"); port=a[length(a)]; addr=local; sub(":"port,"",addr); app="-"; pid="-"; if (match(proc,/"[^"]+"/)) { app=substr(proc,RSTART+1,RLENGTH-
+    2)}; if (match(proc,/pid=[0-9]+/)) { pid=substr(proc,RSTART+4,RLENGTH-4)}; print app "|" pid "|" port "|" proto "|" addr }' | sort -u | while IFS='|' read -r app pid port proto addr; do
       service=$(get_service "$port" "$proto")
       printf "${GREEN}%-30s${YELLOW}%-8s${BLUE}%-7s${MAGENTA}%-7s${CYAN}%-24s${WHITE}%-14s${RESET}\n" "$app" "$pid" "$port" "$proto" "$addr" "${service:--}"
     done | sort -k3 -n
@@ -152,23 +152,22 @@ netapps() {
 # ========================= Konfigurasi bat (Pengganti cat) =========================
 
 if command -v bat &> /dev/null; then
-  alias cat="bat"
-  alias rcat="/bin/cat"
+  alias cat="bat" ## Menggunakan bat sebagai pengganti cat
+  alias rcat="/bin/cat" ## Menggunakan cat asli
   export BAT_THEME="Dracula"
   export BAT_STYLE="snip"
-  alias cat-l="bat --style=numbers"
+  alias cat-l="bat --style=numbers" ## Menampilkan isi file dengan nomor baris
 else
-  alias cat="command cat"
-  alias rcat="/bin/cat"
+  alias cat="command cat" ## Menggunakan cat asli
 fi
 
 # ========================= Konfigurasi eza (Pengganti ls) =========================
 if command -v eza &>/dev/null; then
-  alias ls="eza $eza_params --icons --group-directories-first"
-  alias ll="eza --icons --group-directories-first -AolhM"
-  alias lt="eza --icons -AiolbM --total-size --tree --level=2"
-  alias lg="eza --icons -lbGF --git"
-  alias la="eza -lbhHgUmuSao --total-size --group-directories-first --icons"
+  alias ls="eza $eza_params --icons --group-directories-first" ## Menggunakan eza sebagai pengganti ls
+  alias ll="eza --icons --group-directories-first -AolhM" ## Menampilkan isi direktori dengan format panjang, termasuk file tersembunyi, ukuran total, dan ikon
+  alias lt="eza --icons -AiolbM --total-size --tree --level=2" ## Menampilkan isi direktori dalam format pohon dengan level 2, termasuk file tersembunyi, ukuran total, dan ikon
+  alias lg="eza --icons -lbGF --git" ## Menampilkan isi direktori dengan format panjang, termasuk file tersembunyi, ukuran total, ikon, dan informasi Git
+  alias la="eza -lbhHgUmuSao --total-size --group-directories-first --icons" ## Menampilkan isi direktori dengan format panjang, hide files, ukuran total, ikon, dan pengelompokan direktori
 fi
 
 # ================================= Grc Curl ======================================
@@ -193,11 +192,11 @@ if command -v fzf &>/dev/null; then
   fi
 
   export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border --preview "bat --style=numbers --color=always --line-range :500 {} 2>/dev/null || cat {}"'
-  alias fzf-history='history | fzf'
-  alias fcd='cd "$(fd --type d | fzf)"'
-  alias frun='fzf --preview "bat --style=numbers --color=always {} 2>/dev/null || cat {}" | xargs -r $SHELL'
-  alias fkill="ps aux | fzf --preview 'echo {}' | awk '{print \$2}' | xargs kill -9"
-  alias fe='fzf --preview "bat --style=numbers --color=always --line-range :100 {}" | xargs -r $EDITOR'
+  alias fzf-history='history | fzf' ## Menampilkan riwayat perintah dengan fzf
+  alias fcd='cd "$(fd --type d | fzf)"' ## Memilih direktori dengan fzf dan berpindah ke direktori tersebut
+  alias frun='fzf --preview "bat --style=numbers --color=always {} 2>/dev/null || cat {}" | xargs -r $SHELL' ## Memilih file dengan fzf dan menjalankan perintah di dalamnya
+  alias fkill="ps aux | fzf --preview 'echo {}' | awk '{print \$2}' | xargs kill -9" ## Memilih proses dengan fzf dan menghentikannya
+  alias fe='fzf --preview "bat --style=numbers --color=always --line-range :100 {}" | xargs -r $EDITOR' ## Memilih file dengan fzf dan membukanya di editor
 fi
 
 # Deteksi zoxide
@@ -205,16 +204,16 @@ if command -v zoxide &>/dev/null; then
   eval "$(zoxide init zsh)"
   alias zf='zoxide query -l | fzf'             ## pilih direktori dari daftar zoxide
   alias zj='cd "$(zoxide query -l | fzf)"'     ## cd ke direktori pilihan
-  alias zz='zoxide query -l | fzf --preview "ls -la {}"' # preview isi dir
+  alias zz='zoxide query -l | fzf --preview "ls -la {}"' ## preview isi dir
 fi
 
 # ======================================
 # Aliases untuk penggunaan astro
 # ======================================
-alias astrodev="astro dev"
-alias astrob="astro build"
-alias astroc="astro check"
-alias astronew="npm create astro@latest"
+alias astrodev="astro dev" ## Menjalankan server pengembangan Astro
+alias astrob="astro build" ## Membangun proyek Astro untuk produksi
+alias astroc="astro check" ## Memeriksa kesalahan dan peringatan dalam proyek Astro
+alias astronew="npm create astro@latest" ## Membuat proyek Astro baru dengan npm
 
 # ======================================
 # Aliases untuk penggunaan Node.js
@@ -223,11 +222,11 @@ alias astronew="npm create astro@latest"
 alias difffile="diff <(cat file1.txt) <(cat file2.txt)" ## Memeriksa perbedaan antara dua versi file dengan mengeksekusi script bash
 alias np='npm' ## Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
 alias n='node' ## Mengeksekusi Node.js dan NPM secara pakai dengan alih-alih ke direktori file yang diinginkan
-alias ndev="node -v"
-alias ninsstall="npm install"
-alias nstart="npm start"
-alias nbuild="npm run build"
-alias ntest="npm test"
+alias ndev="node -v" ## Menampilkan versi Node.js yang terpasang
+alias ninsstall="npm install" ## Menginstal dependensi proyek Node.js
+alias nstart="npm start" ## Menjalankan skrip "start" yang didefinisikan dalam package.json
+alias nbuild="npm run build" ## Menjalankan skrip "build" yang didefinisikan dalam package.json
+alias ntest="npm test" ## Menjalankan skrip "test" yang didefinisikan dalam package.json
 
 # ======================================
 # Ollama
@@ -257,10 +256,10 @@ fi
 # openssl
 # ======================================
 # 5. Fingerprint SHA256
-alias crtfp='openssl x509 -noout -fingerprint -sha256 -in'
+alias crtfp='openssl x509 -noout -fingerprint -sha256 -in' ## Menampilkan fingerprint SHA256 dari sertifikat
 
 # 6. Subject Alternative Name
-alias crtsan='openssl x509 -noout -ext subjectAltName -in'
+alias crtsan='openssl x509 -noout -ext subjectAltName -in' ## Menampilkan Subject Alternative Name (SAN) dari sertifikat
 
 # 7. Validasi cert vs private key
 crtmatch() {
@@ -339,9 +338,6 @@ crtall <file.crt> : ringkasan lengkap
 crthelp : tampilkan help
 EOF
 }
-# ===============================
-
-alias UpdateDotfiles='[ -d "$HOME/.dotfiles/.git" ] && git -C "$HOME/.dotfiles" pull || git clone https://github.com/New8ie/Dotfiles.git "$HOME/.dotfiles"'
 
 # =============================================================================
 # ZSH - ALIAS AUDIT
@@ -353,19 +349,20 @@ zsh-alias-audit() {
   local tmp_active
   local tmp_plugin
   local tmp_custom_names
+  local tmp_active_meta
   local plugin
   local file
   local name
 
   local -a plugins=(
-    git
-    zsh-completions
-    zsh-autosuggestions
-    zsh-you-should-use
-    zsh-bat
-    web-search
-    fzf-tab
-    zsh-syntax-highlighting
+  git
+  zsh-completions
+  zsh-autosuggestions
+  zsh-you-should-use
+  zsh-bat
+  web-search
+  fzf-tab
+  zsh-syntax-highlighting
   )
 
   # ---------------------------------------------------------------------------
@@ -376,7 +373,7 @@ zsh-alias-audit() {
   tmp_active=$(mktemp)
   tmp_plugin=$(mktemp)
   tmp_custom_names=$(mktemp)
-
+  tmp_active_meta=$(mktemp)
   # ---------------------------------------------------------------------------
   # CUSTOM ALIAS
   # ---------------------------------------------------------------------------
@@ -390,31 +387,31 @@ zsh-alias-audit() {
   grep -hE \
     '^[[:space:]]*alias[[:space:]]+[A-Za-z_][A-Za-z0-9_!.-]*[[:space:]]*=' \
     "$custom" 2>/dev/null |
-  sed -E \
+    sed -E \
     's/^[[:space:]]*alias[[:space:]]+//' |
-  awk '
-    {
-      pos = index($0, "=")
+    awk '
+      {
+        pos = index($0, "=")
 
-      if (pos > 0) {
-        name = substr($0, 1, pos - 1)
-        value = substr($0, pos + 1)
+        if (pos > 0) {
+          name = substr($0, 1, pos - 1)
+          value = substr($0, pos + 1)
 
-        gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
-        gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+          gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+          gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
 
-        printf "%s → %s\n", name, value
+          printf "%s → %s\n", name, value
+        }
       }
-    }
-  ' |
-  sort -u > "$tmp_custom"
+    ' |
+    sort -u > "$tmp_custom"
   # ---------------------------------------------------------------------------
   # ACTIVE ALIAS
   # ---------------------------------------------------------------------------
 
   alias -L |
-  sed -E 's/^alias[[:space:]]+//' |
-  awk '{
+    sed -E 's/^alias[[:space:]]+//' |
+    awk '{
       pos = index($0, "=")
 
       if (pos > 0) {
@@ -426,7 +423,7 @@ zsh-alias-audit() {
 
         printf "%s → %s\n", name, value
       }
-    }' | 
+    }' |
     sort -u > "$tmp_active"
 
   # ---------------------------------------------------------------------------
@@ -443,7 +440,7 @@ zsh-alias-audit() {
       grep -hE \
         '^[[:space:]]*alias[[:space:]]+[A-Za-z_][A-Za-z0-9_!.-]*[[:space:]]*=' \
         "$file" |
-      sed -E \
+        sed -E \
         's/^[[:space:]]*alias[[:space:]]+([^=]+)=.*/\1/' \
         >> "$tmp_plugin"
 
@@ -498,6 +495,53 @@ zsh-alias-audit() {
     printf '%s\n' '(none)'
   fi
   # ---------------------------------------------------------------------------
+  # ACTIVE ALIAS METADATA
+  # ---------------------------------------------------------------------------
+  # Menghubungkan:
+  #
+  #   nama alias
+  #   command
+  #   komentar ## ...
+  #
+  # dari alias.zsh
+  #
+  # Tujuannya agar ACTIVE ALIAS dapat menampilkan komentar source.
+  # ---------------------------------------------------------------------------
+
+  awk '
+    /^[[:space:]]*alias[[:space:]]+[A-Za-z_][A-Za-z0-9_!.-]*[[:space:]]*=/ {
+
+      line = $0
+
+      # Buang indentation + "alias "
+      sub(/^[[:space:]]*alias[[:space:]]+/, "", line)
+
+      # Pisahkan nama dan value
+      pos = index(line, "=")
+
+      if (pos > 0) {
+        name = substr(line, 1, pos - 1)
+        value = substr(line, pos + 1)
+
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+
+        comment = ""
+
+        # Ambil komentar ## ...
+        cpos = index(value, " ## ")
+
+        if (cpos > 0) {
+          comment = substr(value, cpos)
+          value = substr(value, 1, cpos - 1)
+          gsub(/[[:space:]]+$/, "", value)
+        }
+
+        printf "%s\t%s\t%s\n", name, value, comment
+      }
+    }
+  ' "$custom" > "$tmp_active_meta"
+  # ---------------------------------------------------------------------------
   # ACTIVE ALIAS
   # ---------------------------------------------------------------------------
 
@@ -505,9 +549,53 @@ zsh-alias-audit() {
   printf '%s\n' '────────────────────────────────────────'
 
   if [[ -s "$tmp_active" ]]; then
-    awk -F ' → ' '{
-      printf "\033[1;32m%s\033[0m → %s\n", $1, $2
-    }' "$tmp_active"
+
+    while IFS= read -r line; do
+
+      [[ -n "$line" ]] || continue
+
+      name="${line%% → *}"
+      value="${line#* → }"
+
+      comment=""
+
+      # Cari source alias berdasarkan nama + command.
+      while IFS=$'\t' read -r meta_name meta_value meta_comment; do
+
+        [[ "$meta_name" == "$name" ]] || continue
+
+        # Normalisasi quote sederhana agar:
+        #   "bat"
+        #   'bat'
+        #   bat
+        # dapat dibandingkan.
+        clean_active="${value#\'}"
+        clean_active="${clean_active%\'}"
+        clean_active="${clean_active#\"}"
+        clean_active="${clean_active%\"}"
+
+        clean_meta="${meta_value#\'}"
+        clean_meta="${clean_meta%\'}"
+        clean_meta="${clean_meta#\"}"
+        clean_meta="${clean_meta%\"}"
+
+        if [[ "$clean_active" == "$clean_meta" ]]; then
+          comment="$meta_comment"
+          break
+        fi
+
+      done < "$tmp_active_meta"
+
+      printf "\033[1;32m%-16s\033[0m → %s" "$name" "$value"
+
+      if [[ -n "$comment" ]]; then
+        printf " \033[1;33m%s\033[0m" "$comment"
+      fi
+
+      printf '\n'
+
+    done < "$tmp_active"
+
   else
     printf '%s\n' '(none)'
   fi
@@ -532,5 +620,14 @@ zsh-alias-audit() {
     "$tmp_custom" \
     "$tmp_active" \
     "$tmp_plugin" \
-    "$tmp_custom_names"
+    "$tmp_custom_names" \
+    "$tmp_active_meta"
 }
+# =============================================================================
+# SHOW ALIAS AUDIT
+# =============================================================================
+
+show-alias() {
+  zsh-alias-audit | less -R
+}
+alias help='show-alias' ## Menampilkan daftar alias yang tersedia dengan bantuan
