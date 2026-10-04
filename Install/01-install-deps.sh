@@ -688,6 +688,7 @@ install_packages_macos() {
     zsh
     git
     curl
+    wget
     fzf
     grc
     gnupg
@@ -925,6 +926,7 @@ install_packages() {
         git \
         curl \
         fzf \
+        wget \
         grc \
         gnupg \
         lolcat \
@@ -992,6 +994,7 @@ install_packages() {
         zsh \
         git \
         curl \
+        wget \
         fzf \
         nano \
         grc \
@@ -1028,6 +1031,7 @@ install_packages() {
         zsh \
         git \
         curl \
+        wget \
         fzf \
         nano \
         grc \
@@ -1064,6 +1068,7 @@ install_packages() {
         zsh \
         git \
         curl \
+        wget \
         fzf \
         grc \
         gnupg \
